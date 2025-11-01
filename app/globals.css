@@ -1,26 +1,282 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@custom-variant dark (&:is(.dark *));
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+* {
+  line-height: 1.25;
+  text-wrap-style: pretty;
+}
+body {
+  font-family: var(--font-dm-sans), sans-serif;
+}
+
+button,
+a {
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+button,
+a:hover {
+  opacity: 0.8;
+}
+
+.swiper-pagination {
+  position: static !important;
+  background-color: black;
+  border-radius: 0.125rem !important;
+}
+.swiper-pagination {
+  background-color: transparent !important;
+}
+
+.swiper-pagination-bullet-active {
+  background-color: #f6f6f6 !important;
+}
+
+.swiper-free-mode > .swiper-wrapper {
+  transition-timing-function: linear !important;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+/* Minimal, accessible scrollbar that matches the site palette */
+::-webkit-scrollbar-track {
+  background: rgba(var(--primary-rgb), 0.35); /* subtle cream track */
+  border-radius: 999px;
+}
+
+/* thumb: small gradient using blue -> terracotta from palette, rounded and with subtle outline */
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(
+    180deg,
+    rgba(var(--color-blue-rgb), 0.95),
+    rgba(var(--color-terracotta-rgb), 0.95)
+  );
+  border-radius: 999px;
+  border: 2px solid rgba(var(--primary-rgb), 0.65);
+  min-height: 36px; /* better hit area */
+}
+
+::-webkit-scrollbar-thumb:hover {
+  filter: brightness(0.95);
+}
+
+/* corner */
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* Firefox support */
+html,
+body {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(var(--color-blue-rgb), 0.95)
+    rgba(var(--primary-rgb), 0.25);
+}
+
+:root {
+  --radius: 0.625rem;
+  /* Palette sampled from the provided photo (rounded swatches)
+     Colors (left->right): blue, warm orange, light beige, terracotta, deep brown
+  */
+  --color-blue: #2f6d7a; /* deep teal-blue */
+  --color-warm: #e89a5a; /* warm peach / orange */
+  --color-light: #f8f5ed; /* light cream / beige (primary background) */
+  --color-terracotta: #c44a2f; /* warm terracotta / coral (accent) */
+  --color-deep: #5a2f28; /* deep brown / maroon (text & accents) */
+
+  --color-blue-rgb: 47, 109, 122;
+  --color-warm-rgb: 232, 154, 90;
+  --color-light-rgb: 244, 230, 218;
+  --color-terracotta-rgb: 196, 74, 47;
+  --color-deep-rgb: 90, 47, 40;
+
+  /* 60/30/10 semantic mapping (recommended)
+     - primary (60%): light cream background
+     - secondary (30%): blue (blocks/sections)
+     - accent (10%): terracotta (CTAs/highlights)
+     Support: warm (peach) and deep (text/strong accents)
+  */
+  --primary: var(--color-light);
+  --primary-rgb: var(--color-light-rgb);
+  --primary-foreground: var(--color-deep);
+
+  --secondary: var(--color-blue);
+  --secondary-rgb: var(--color-blue-rgb);
+  --secondary-foreground: #ffffff;
+
+  --accent: var(--color-terracotta);
+  --accent-rgb: var(--color-terracotta-rgb);
+  --accent-foreground: #ffffff;
+
+  --support-warm: var(--color-warm);
+  --support-warm-rgb: var(--color-warm-rgb);
+  --deep: var(--color-deep);
+  --deep-rgb: var(--color-deep-rgb);
+
+  /* app background uses the light cream */
+  --background: var(--primary);
+  --foreground: var(--primary-foreground);
+
+  --card: #ffffff;
+  --card-foreground: var(--foreground);
+  --popover: #ffffff;
+  --popover-foreground: var(--foreground);
+  --destructive: #e91e63;
+  --border: rgba(var(--deep-rgb), 0.08);
+  --input: #ffffff;
+  --ring: rgba(var(--accent-rgb), 0.35);
+  --chart-1: var(--color-terracotta);
+  --chart-2: var(--support-warm);
+  --chart-3: var(--color-light);
+  --chart-4: var(--color-blue);
+  --chart-5: var(--color-deep);
+  --sidebar: #ffffff;
+  --sidebar-foreground: var(--foreground);
+  --sidebar-primary: var(--secondary);
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: var(--primary);
+  --sidebar-accent-foreground: var(--foreground);
+  --sidebar-border: rgba(var(--deep-rgb), 0.06);
+  --sidebar-ring: rgba(var(--secondary-rgb), 0.25);
+}
+
+.dark {
+  --background: #1a1a1a;
+  --foreground: #ffffff;
+  --card: #2a2a2a;
+  --card-foreground: #ffffff;
+  --popover: #2a2a2a;
+  --popover-foreground: #ffffff;
+  --primary: #8bc34a;
+  --primary-foreground: #000000;
+  --secondary: #ffc107;
+  --secondary-foreground: #000000;
+  --muted: #2a2a2a;
+  --muted-foreground: #999999;
+  --accent: #2196f3;
+  --accent-foreground: #ffffff;
+  --destructive: #e91e63;
+  --border: #333333;
+  --input: #2a2a2a;
+  --ring: #2196f3;
+  --chart-1: #8bc34a;
+  --chart-2: #ffc107;
+  --chart-3: #2196f3;
+  --chart-4: #e91e63;
+  --chart-5: #9c27b0;
+  --sidebar: #2a2a2a;
+  --sidebar-foreground: #ffffff;
+  --sidebar-primary: #2196f3;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #333333;
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: #333333;
+  --sidebar-ring: #2196f3;
+}
+
+@layer base {
+  * {
+    /* keep Tailwind utility application here; handled by Tailwind/PostCSS at build time */
+    @apply border-border outline-ring/50;
+  }
+  body {
+    /* use the new cream background and deep foreground by default */
+    @apply bg-background text-foreground;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* small utility helpers for semantic tokens (so components can use `bg-primary`, `btn-accent` etc.) */
+@layer utilities {
+  .bg-primary {
+    background-color: var(--primary) !important;
+  }
+  .bg-secondary {
+    background-color: var(--secondary) !important;
+  }
+  .bg-accent {
+    background-color: var(--accent) !important;
+  }
+  .bg-cream {
+    background-color: var(--color-light) !important;
+  }
+  .bg-warm {
+    background-color: var(--support-warm) !important;
+  }
+  .bg-deep {
+    background-color: var(--deep) !important;
+  }
+
+  .text-deep {
+    color: var(--deep) !important;
+  }
+  .text-on-primary {
+    color: var(--primary-foreground) !important;
+  }
+  .text-on-secondary {
+    color: var(--secondary-foreground) !important;
+  }
+  /* literal helper requested: text-background -> uses the page background color */
+  .text-background {
+    color: var(--background) !important;
+  }
+  .text-on-accent {
+    color: var(--accent-foreground) !important;
+  }
+
+  .btn-accent {
+    background-color: var(--accent);
+    color: var(--accent-foreground);
+  }
+  .btn-secondary {
+    background-color: var(--secondary);
+    color: var(--secondary-foreground);
+  }
+  .btn-warm {
+    background-color: var(--support-warm);
+    color: var(--deep);
+  }
 }

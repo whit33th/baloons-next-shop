@@ -1,0 +1,120 @@
+"use client";
+
+import {
+  Carousel,
+  CarouselApi,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
+import { ArrowRight } from "lucide-react";
+import { useEffect, useLayoutEffect, useState } from "react";
+import ProductCard from "./productCard";
+import { Doc } from "@/convex/_generated/dataModel";
+import Link from "next/link";
+
+export interface ProductCarouselProps {
+  data: Doc<"products">[];
+  label: string;
+  secondaryLabel?: string;
+
+  count?: number;
+}
+
+export function ProductCarousel({
+  data,
+  label,
+  secondaryLabel,
+}: ProductCarouselProps) {
+  const [isMobile, setIsMobile] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const mql = window.matchMedia("(max-width: 768px)");
+    const update = () => setIsMobile(mql.matches);
+    update();
+    if (mql.addEventListener) mql.addEventListener("change", update);
+    else mql.addListener(update);
+    return () => {
+      if (mql.removeEventListener) mql.removeEventListener("change", update);
+      else mql.removeListener(update);
+    };
+  }, []);
+
+  const [api, setApi] = useState<CarouselApi>();
+  const [disabled, setDisabled] = useState(false);
+
+  useLayoutEffect(() => {
+    if (!api) return;
+
+    const onSelect = () => {
+      setDisabled(!api.canScrollNext() && !api.canScrollPrev());
+    };
+    api.on("select", onSelect);
+    onSelect();
+    return () => {
+      api.off("select", onSelect);
+    };
+  }, [api]);
+
+  // Check state
+  const currentSlide = api?.selectedScrollSnap();
+  return (
+    <section className="flex flex-col overflow-hidden">
+      {/* Header */}
+      <div className="flex items-center justify-between p-4 px-4">
+        <h2 className="flex max-w-2xl gap-1.5 truncate text-xl leading-tight md:text-2xl">
+          <span>{label}</span>
+          {secondaryLabel ? (
+            <>
+              <span>✧</span>
+              <span>{secondaryLabel}</span>
+            </>
+          ) : null}
+        </h2>
+        <Link
+          href={"/catalog"}
+          className="flex items-center gap-2 text-sm transition-all hover:gap-3"
+        >
+          More products
+          <ArrowRight className="h-4 w-4" />
+        </Link>
+      </div>
+
+      {/* Carousel */}
+      <div className="relative border-t border-neutral-950">
+        <Carousel
+          className="group"
+          opts={{
+            dragFree: isMobile,
+            // skipSnaps: true,
+            align: "start",
+          }}
+        >
+          <CarouselContent className="ml-0">
+            {data.map((product, index) => (
+              <CarouselItem
+                key={product._id}
+                className="basis-2/3 pl-0 sm:basis-2/5 md:basis-2/7 lg:basis-2/9"
+              >
+                <ProductCard index={index} product={product} />
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+
+          <div className="opacity-0 group-hover:flex lg:hidden lg:group-hover:opacity-100">
+            <CarouselPrevious
+              disabled={disabled}
+              className="left-0 z-50 h-12 w-12 -translate-x-2/5 disabled:opacity-0 lg:left-6 lg:h-9 lg:w-9 lg:translate-x-0"
+            />
+            <CarouselNext
+              disabled={disabled}
+              className="right-0 z-50 h-12 w-12 translate-x-2/5 disabled:opacity-0 lg:right-6 lg:h-9 lg:w-9 lg:translate-x-0"
+            />
+          </div>
+        </Carousel>
+      </div>
+    </section>
+  );
+}
