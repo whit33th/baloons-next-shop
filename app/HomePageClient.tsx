@@ -1,8 +1,8 @@
 "use client";
 
-import { CategoriesCarousel } from "@/components/ui/categories-carousel";
+import { CategoriesCarousel } from "@/components/ui/carousels/categories-carousel";
 import { Hero, Quality, Footer } from "@/components/Containers";
-import { ProductCarousel } from "@/components/ui/product-carousel";
+import { ProductCarousel } from "@/components/ui/carousels/product-carousel";
 import { Preloaded, usePreloadedQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import ParallaxImage from "@/components/ui/parallax-image";
@@ -20,22 +20,22 @@ export function HomePageClient({ preloadedBestsellers }: HomePageClientProps) {
     {
       name: "Round Balloons",
       image: "/img.jpg",
-      link: "/catalog?shape=round",
+      link: "/catalog?search=round",
     },
     {
       name: "Heart Balloons",
       image: "/baloons2.png",
-      link: "/catalog?shape=heart",
+      link: "/catalog?search=heart",
     },
     {
       name: "Star Balloons",
       image: "/baloons3.png",
-      link: "/catalog?shape=star",
+      link: "/catalog?search=star",
     },
     {
       name: "Animal Balloons",
       image: "/baloons4.png",
-      link: "/catalog?shape=animal",
+      link: "/catalog?search=animal",
     },
     {
       name: "Kids Choice",

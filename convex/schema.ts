@@ -7,29 +7,12 @@ const applicationTables = {
     name: v.string(),
     description: v.string(),
     price: v.number(),
-    color: v.string(),
-    size: v.union(v.literal("small"), v.literal("medium"), v.literal("large")),
-    shape: v.union(
-      v.literal("round"),
-      v.literal("heart"),
-      v.literal("star"),
-      v.literal("animal"),
-    ),
     imageIds: v.optional(v.array(v.id("_storage"))),
     imageId: v.optional(v.id("_storage")),
     inStock: v.number(),
-  })
-    .index("by_color", ["color"])
-    .index("by_size", ["size"])
-    .index("by_shape", ["shape"])
-    .index("by_color_and_size", ["color", "size"])
-    .index("by_color_and_shape", ["color", "shape"])
-    .index("by_size_and_shape", ["size", "shape"])
-    .index("by_color_size_and_shape", ["color", "size", "shape"])
-    .searchIndex("search_products", {
-      searchField: "name",
-      filterFields: ["color", "size", "shape"],
-    }),
+  }).searchIndex("search_products", {
+    searchField: "name",
+  }),
 
   cartItems: defineTable({
     userId: v.id("users"),

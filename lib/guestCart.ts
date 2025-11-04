@@ -6,9 +6,6 @@ export type GuestCartProductSnapshot = {
   name: string;
   price: number;
   primaryImageUrl: string | null;
-  color: string;
-  size: string;
-  shape: string;
   inStock: number;
 };
 
@@ -70,9 +67,6 @@ type ProductLike = {
   name: string;
   price: number;
   primaryImageUrl?: string | null;
-  color: string;
-  size: string;
-  shape: string;
   inStock: number;
 };
 
@@ -83,9 +77,6 @@ export const snapshotFromProduct = (
   name: product.name,
   price: product.price,
   primaryImageUrl: product.primaryImageUrl ?? null,
-  color: product.color,
-  size: product.size,
-  shape: product.shape,
   inStock: product.inStock,
 });
 

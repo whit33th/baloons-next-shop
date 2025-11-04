@@ -7,12 +7,12 @@ import {
   CarouselItem,
   CarouselNext,
   CarouselPrevious,
-} from "@/components/ui/carousel";
-import { ArrowRight } from "lucide-react";
-import { useEffect, useLayoutEffect, useState } from "react";
-import ProductCard from "./productCard";
+} from "@/components/ui/carousels/carousel";
 import { Doc } from "@/convex/_generated/dataModel";
+import { ArrowRight } from "lucide-react";
 import Link from "next/link";
+import { useEffect, useLayoutEffect, useState } from "react";
+import ProductCard from "../productCard";
 
 export interface ProductCarouselProps {
   data: Doc<"products">[];
@@ -75,7 +75,7 @@ export function ProductCarousel({
         </h2>
         <Link
           href={"/catalog"}
-          className="flex items-center gap-2 text-sm transition-all hover:gap-3"
+          className="flex items-center gap-2 text-sm hover:gap-3"
         >
           More products
           <ArrowRight className="h-4 w-4" />

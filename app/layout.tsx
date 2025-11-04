@@ -3,6 +3,7 @@ import "./globals.css";
 
 import { Footer, Header } from "@/components/Containers";
 import { ConvexProvider } from "@/components/Providers/ConvexProvider";
+import { LenisProvider } from "@/components/Providers/LenisProvider";
 import { DM_Sans } from "next/font/google";
 import { Toaster } from "sonner";
 
@@ -26,19 +27,18 @@ export default async function RootLayout({
       <body
         className={`${dmSans.variable} relative flex min-h-screen w-full flex-col antialiased`}
       >
-        <ConvexProvider>
-          {/* <div className="absolute top-0 left-0 h-full w-40 bg-linear-to-r from-black/15 to-transparent"></div>
-          <div className="absolute top-0 right-0 h-full w-40 bg-linear-to-l from-black/15 to-transparent"></div> */}
+        <LenisProvider>
+          <ConvexProvider>
+            <div className="border-b py-1 text-center text-sm font-medium backdrop-blur-2xl">
+              New pieces added daily
+            </div>
+            <Header />
+            <main className="h-full w-full flex-1">{children}</main>
+            <Footer />
 
-          <div className="border-b py-1 text-center text-sm font-medium backdrop-blur-2xl">
-            New pieces added daily
-          </div>
-          <Header />
-          <main className="h-full w-full flex-1">{children}</main>
-          <Footer />
-
-          <Toaster richColors position="bottom-right" />
-        </ConvexProvider>
+            <Toaster richColors position="bottom-right" />
+          </ConvexProvider>
+        </LenisProvider>
       </body>
     </html>
   );

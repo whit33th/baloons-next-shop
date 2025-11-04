@@ -9,9 +9,6 @@ import ProductCard from "./ui/productCard";
 interface ProductGridProps {
   filters: {
     search: string;
-    color: string;
-    size: string;
-    shape: string;
   };
   onProductClick?: (productId: string) => void;
 }
@@ -34,9 +31,6 @@ export function ProductGrid({ filters, onProductClick }: ProductGridProps) {
     api.products.list,
     {
       search: filters.search || undefined,
-      color: filters.color || undefined,
-      size: (filters.size as any) || undefined,
-      shape: (filters.shape as any) || undefined,
     },
     { initialNumItems: 10 },
   );

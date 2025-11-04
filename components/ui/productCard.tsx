@@ -8,10 +8,7 @@ export default function ProductCard({
   product,
   index,
 }: {
-  product: Doc<"products"> & {
-    primaryImageUrl: string | null;
-    imageUrls: string[];
-  };
+  product: Doc<"products">;
   index: number;
 }) {
   // Assign colors based on product - matching reference colorful balloon theme
@@ -32,9 +29,9 @@ export default function ProductCard({
           style={{ backgroundColor: bgColor }}
         >
           <div className="flex h-full w-full items-center justify-center">
-            {product.primaryImageUrl ? (
+            {product.imageIds ? (
               <Image
-                src={product.primaryImageUrl}
+                src={product.imageIds[0]}
                 alt={product.name}
                 width={400}
                 height={600}

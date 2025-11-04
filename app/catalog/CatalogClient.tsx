@@ -9,9 +9,6 @@ export default function CatalogClient({ preloaded }: { preloaded: any }) {
 
   const filters = {
     search: searchParams.get("search") || "",
-    color: searchParams.get("color") || "",
-    size: searchParams.get("size") || "",
-    shape: searchParams.get("shape") || "",
     material: searchParams.get("material") || "",
     occasion: searchParams.get("occasion") || "",
     minPrice: searchParams.get("minPrice") || "",
@@ -24,7 +21,11 @@ export default function CatalogClient({ preloaded }: { preloaded: any }) {
     <main className="w-full">
       <div className="w-full">
         <ProductFilters />
-        <ProductGrid filters={filters} />
+        <ProductGrid
+          filters={{
+            search: filters.search,
+          }}
+        />
       </div>
     </main>
   );

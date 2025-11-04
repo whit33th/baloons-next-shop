@@ -52,7 +52,7 @@ export function SearchInput() {
           placeholder="Search balloons..."
           defaultValue={searchValue}
           onChange={(e) => handleSearch(e.target.value)}
-          className="h-10 w-full rounded-full border border-black/20 bg-white py-2 pr-4 pl-10 text-sm transition-all outline-none focus:border-green-300"
+          className="h-10 w-full rounded-full border border-black/20 bg-white py-2 pr-4 pl-10 text-sm transition-colors outline-none focus:border-green-300"
         />
       </div>
     </div>

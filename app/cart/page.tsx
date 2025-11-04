@@ -164,15 +164,7 @@ export default function CartPage() {
                         className="h-full w-full rounded-lg object-cover"
                       />
                     ) : (
-                      <div className="text-2xl">
-                        {item.product.shape === "heart"
-                          ? "💖"
-                          : item.product.shape === "star"
-                            ? "⭐"
-                            : item.product.shape === "animal"
-                              ? "🐶"
-                              : "🎈"}
-                      </div>
+                      <div className="text-2xl">🎈</div>
                     )}
                   </div>
 
@@ -180,10 +172,6 @@ export default function CartPage() {
                     <h3 className="font-semibold text-gray-800">
                       {item.product.name}
                     </h3>
-                    <p className="text-sm text-gray-600">
-                      {item.product.color} • {item.product.size} •{" "}
-                      {item.product.shape}
-                    </p>
                     <p className="text-lg font-bold text-gray-800">
                       ${item.product.price}
                     </p>

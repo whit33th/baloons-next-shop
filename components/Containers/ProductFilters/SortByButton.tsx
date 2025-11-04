@@ -70,7 +70,7 @@ export function SortByButton() {
                 key={option.value}
                 variant={currentSort === option.value ? "secondary" : "outline"}
                 onClick={() => handleSortChange(option.value)}
-                className={`w-full justify-start rounded-sm border text-white transition-all duration-200 hover:opacity-80 ${
+                className={`w-full justify-start rounded-sm border text-white transition-colors duration-200 hover:opacity-80 ${
                   currentSort === option.value
                     ? "btn-secondary text-on-secondary text-background"
                     : "border-secondary text-deep hover:bg-secondary/10 bg-transparent hover:shadow-sm"

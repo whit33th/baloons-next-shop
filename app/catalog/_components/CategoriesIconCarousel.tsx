@@ -7,7 +7,7 @@ import {
   CarouselItem,
   CarouselNext,
   CarouselPrevious,
-} from "@/components/ui/carousel";
+} from "@/components/ui/carousels/carousel";
 import Image from "next/image";
 import { useLayoutEffect, useState } from "react";
 
