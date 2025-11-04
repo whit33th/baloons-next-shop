@@ -29,7 +29,7 @@ export const Hero = () => {
           </p>
           <Link
             href="/catalog"
-            className="btn-accent inline-flex items-center gap-3 rounded-full px-6 py-3 text-lg font-medium transition-all"
+            className="btn-accent inline-flex items-center gap-3 rounded-full px-6 py-3 text-lg font-medium transition-[transform,opacity] duration-200 hover:opacity-90"
           >
             Shop Now
             <ArrowRight className="h-5 w-5" />

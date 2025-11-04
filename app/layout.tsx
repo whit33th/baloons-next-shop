@@ -24,15 +24,15 @@ export default async function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${dmSans.variable} relative flex min-h-screen w-full flex-col antialiased`}
+        className={`${dmSans.variable} relative flex min-h-screen w-full flex-col overflow-x-hidden antialiased`}
       >
         <ConvexProvider>
           {/* <div className="absolute top-0 left-0 h-full w-40 bg-linear-to-r from-black/15 to-transparent"></div>
           <div className="absolute top-0 right-0 h-full w-40 bg-linear-to-l from-black/15 to-transparent"></div> */}
 
-          <div className="border-b py-1 text-center text-sm font-medium backdrop-blur-2xl">
+          {/* <div className="border-b py-1 text-center text-sm font-medium backdrop-blur-2xl">
             New pieces added daily
-          </div>
+          </div> */}
           <Header />
           <main className="h-full w-full flex-1">{children}</main>
           <Footer />

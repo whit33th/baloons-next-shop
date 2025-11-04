@@ -75,7 +75,7 @@ export function ProductCarousel({
         </h2>
         <Link
           href={"/catalog"}
-          className="flex items-center gap-2 text-sm transition-all hover:gap-3"
+          className="flex items-center gap-2 text-sm transition-[gap] duration-200 hover:gap-3"
         >
           More products
           <ArrowRight className="h-4 w-4" />

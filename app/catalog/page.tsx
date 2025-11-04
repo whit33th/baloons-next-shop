@@ -5,9 +5,6 @@ import { Suspense } from "react";
 
 type ProductFilters = Promise<{
   search?: string;
-  color?: string;
-  size?: "small" | "medium" | "large";
-  shape?: "round" | "heart" | "star" | "animal";
   material?: string;
   occasion?: string;
   minPrice?: string;
@@ -22,9 +19,6 @@ export default async function CatalogPage(props: {
   const searchParams = await props.searchParams;
   const filters = {
     search: searchParams.search ?? "",
-    color: searchParams.color ?? "",
-    size: searchParams.size ?? "",
-    shape: searchParams.shape ?? "",
     material: searchParams.material ?? "",
     occasion: searchParams.occasion ?? "",
     minPrice: searchParams.minPrice ?? "",
@@ -36,9 +30,6 @@ export default async function CatalogPage(props: {
   // Preload products with filters
   const preloaded = await preloadQuery(api.products.list, {
     search: searchParams.search ? searchParams.search : undefined,
-    color: searchParams.color ? searchParams.color : undefined,
-    size: searchParams.size ? searchParams.size : undefined,
-    shape: searchParams.shape ? searchParams.shape : undefined,
     paginationOpts: { numItems: 10, cursor: null },
   });
 

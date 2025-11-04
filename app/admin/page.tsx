@@ -20,9 +20,6 @@ export default function AdminPage() {
     name: "",
     description: "",
     price: "",
-    color: "",
-    size: "medium" as const,
-    shape: "round" as const,
     inStock: "",
   });
 
@@ -53,7 +50,6 @@ export default function AdminPage() {
       !formData.name ||
       !formData.description ||
       !formData.price ||
-      !formData.color ||
       !formData.inStock
     ) {
       toast.error("Please fill in all required fields");
@@ -88,9 +84,6 @@ export default function AdminPage() {
         name: formData.name,
         description: formData.description,
         price: parseFloat(formData.price),
-        color: formData.color,
-        size: formData.size,
-        shape: formData.shape,
         inStock: parseInt(formData.inStock),
         imageId,
         imageIds: imageId ? [imageId] : [],
@@ -103,9 +96,6 @@ export default function AdminPage() {
         name: "",
         description: "",
         price: "",
-        color: "",
-        size: "medium",
-        shape: "round",
         inStock: "",
       });
       setSelectedImage(null);
@@ -203,67 +193,6 @@ export default function AdminPage() {
                       placeholder="50"
                       required
                     />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="mb-2 block text-sm font-medium text-gray-700">
-                    Color *
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.color}
-                    onChange={(e) =>
-                      setFormData({ ...formData, color: e.target.value })
-                    }
-                    className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:border-transparent focus:ring-2 focus:ring-blue-500"
-                    placeholder="e.g., red, blue, gold"
-                    required
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="mb-2 block text-sm font-medium text-gray-700">
-                      Size *
-                    </label>
-                    <select
-                      value={formData.size}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          size: e.target.value as any,
-                        })
-                      }
-                      className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:border-transparent focus:ring-2 focus:ring-blue-500"
-                      required
-                    >
-                      <option value="small">Small</option>
-                      <option value="medium">Medium</option>
-                      <option value="large">Large</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="mb-2 block text-sm font-medium text-gray-700">
-                      Shape *
-                    </label>
-                    <select
-                      value={formData.shape}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          shape: e.target.value as any,
-                        })
-                      }
-                      className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:border-transparent focus:ring-2 focus:ring-blue-500"
-                      required
-                    >
-                      <option value="round">Round</option>
-                      <option value="heart">Heart</option>
-                      <option value="star">Star</option>
-                      <option value="animal">Animal</option>
-                    </select>
                   </div>
                 </div>
               </div>
@@ -374,15 +303,7 @@ export default function AdminPage() {
                           className="h-full w-full object-cover"
                         />
                       ) : (
-                        <div className="text-4xl">
-                          {product.shape === "heart"
-                            ? "💖"
-                            : product.shape === "star"
-                              ? "⭐"
-                              : product.shape === "animal"
-                                ? "🐶"
-                                : "🎈"}
-                        </div>
+                        <div className="text-4xl">🎈</div>
                       )}
                     </div>
 
@@ -394,15 +315,6 @@ export default function AdminPage() {
                     </p>
 
                     <div className="mb-2 flex items-center justify-between text-sm text-gray-500">
-                      <span className="flex items-center space-x-1">
-                        <span
-                          className="h-3 w-3 rounded-full"
-                          style={{ backgroundColor: product.color }}
-                        ></span>
-                        <span>{product.size}</span>
-                        <span>•</span>
-                        <span>{product.shape}</span>
-                      </span>
                       <span>{product.inStock} in stock</span>
                     </div>
 

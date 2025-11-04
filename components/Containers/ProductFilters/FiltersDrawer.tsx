@@ -12,55 +12,9 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "@/components/ui/drawer";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
-import { Filter, SlidersHorizontal } from "lucide-react";
-
-const colors = [
-  { value: "red", label: "Red" },
-  { value: "blue", label: "Blue" },
-  { value: "green", label: "Green" },
-  { value: "pink", label: "Pink" },
-  { value: "purple", label: "Purple" },
-  { value: "gold", label: "Gold" },
-  { value: "silver", label: "Silver" },
-  { value: "orange", label: "Orange" },
-];
-
-const sizes = ["small", "medium", "large"];
-
-const shapes = [
-  { value: "round", label: "Round", emoji: "🎈" },
-  { value: "heart", label: "Heart", emoji: "💖" },
-  { value: "star", label: "Star", emoji: "⭐" },
-  { value: "animal", label: "Animal", emoji: "🐶" },
-];
-
-const materials = [
-  { value: "latex", label: "Latex" },
-  { value: "foil", label: "Foil" },
-  { value: "vinyl", label: "Vinyl" },
-  { value: "mylar", label: "Mylar" },
-];
-
-const occasions = [
-  { value: "all", label: "All Occasions" },
-  { value: "birthday", label: "Birthday 🎂" },
-  { value: "wedding", label: "Wedding 💒" },
-  { value: "anniversary", label: "Anniversary 💑" },
-  { value: "graduation", label: "Graduation 🎓" },
-  { value: "baby-shower", label: "Baby Shower 👶" },
-  { value: "holiday", label: "Holiday 🎄" },
-  { value: "corporate", label: "Corporate 💼" },
-  { value: "other", label: "Other 🎉" },
-];
+import { SlidersHorizontal } from "lucide-react";
 
 export function FiltersDrawer() {
   const router = useRouter();
@@ -85,11 +39,6 @@ export function FiltersDrawer() {
   const hasActiveFilters = () => {
     return !!(
       getParam("search") ||
-      getParam("color") ||
-      getParam("size") ||
-      getParam("shape") ||
-      getParam("material") ||
-      // getParam("occasion") ||
       getParam("available") ||
       getParam("sale") ||
       getParam("minPrice") ||
@@ -127,7 +76,7 @@ export function FiltersDrawer() {
           Filters
         </button>
       </DrawerTrigger>
-      <DrawerContent className="bg-primary h-[85vh] rounded-t-2xl">
+      <DrawerContent className="bg-primary max-h-[85vh] rounded-t-2xl">
         <DrawerHeader className="pb-4">
           <DrawerTitle className="text-deep text-center text-2xl font-bold tracking-wide uppercase">
             Filters
@@ -152,7 +101,7 @@ export function FiltersDrawer() {
                 onClick={() =>
                   updateParam("available", getParam("available") ? "" : "true")
                 }
-                className={`h-10 rounded-xl px-4 font-medium tracking-wide uppercase transition-all duration-200 ${
+                className={`h-10 rounded-xl px-4 font-medium tracking-wide uppercase transition-[background-color,box-shadow] duration-200 ${
                   getParam("available")
                     ? "btn-secondary text-on-secondary shadow-md"
                     : "text-deep hover:bg-secondary/10 border-secondary border bg-transparent"
@@ -166,7 +115,7 @@ export function FiltersDrawer() {
                 onClick={() =>
                   updateParam("sale", getParam("sale") ? "" : "true")
                 }
-                className={`h-10 rounded-xl px-4 font-medium tracking-wide uppercase transition-all duration-200 ${
+                className={`h-10 rounded-xl px-4 font-medium tracking-wide uppercase transition-[background-color,box-shadow] duration-200 ${
                   getParam("sale")
                     ? "btn-secondary text-on-secondary shadow-md"
                     : "text-deep hover:bg-secondary/10 border-secondary border bg-transparent"
@@ -229,171 +178,6 @@ export function FiltersDrawer() {
                 </div>
               </div>
             </div>
-            {/* Color Filter */}
-            <div>
-              <h3 className="text-deep mb-4 text-lg font-semibold tracking-wide uppercase">
-                Color
-              </h3>
-              <div
-                className="grid gap-3"
-                style={{
-                  gridTemplateColumns: "repeat(auto-fill, minmax(100px, 1fr))",
-                }}
-              >
-                {colors.map((color) => (
-                  <Button
-                    key={color.value}
-                    variant={
-                      getParam("color") === color.value
-                        ? "secondary"
-                        : "outline"
-                    }
-                    className={`h-12 rounded-xl border tracking-wide uppercase transition-all duration-200 ${
-                      getParam("color") === color.value
-                        ? "btn-secondary text-on-secondary shadow-md"
-                        : "border-secondary text-deep hover:bg-secondary/10 bg-transparent"
-                    }`}
-                    onClick={() =>
-                      updateParam(
-                        "color",
-                        getParam("color") === color.value ? "" : color.value,
-                      )
-                    }
-                  >
-                    {color.label}
-                  </Button>
-                ))}
-              </div>
-            </div>
-            {/* Size Filter */}
-            <div>
-              <h3 className="text-deep mb-4 text-lg font-semibold tracking-wide uppercase">
-                Size
-              </h3>
-              <div
-                className="grid gap-3"
-                style={{
-                  gridTemplateColumns: "repeat(auto-fill, minmax(100px, 1fr))",
-                }}
-              >
-                {sizes.map((size) => (
-                  <Button
-                    key={size}
-                    variant={
-                      getParam("size") === size ? "secondary" : "outline"
-                    }
-                    className={`h-12 rounded-xl border tracking-wide capitalize transition-all duration-200 ${
-                      getParam("size") === size
-                        ? "btn-secondary text-on-secondary shadow-md"
-                        : "border-secondary text-deep hover:bg-secondary/10 bg-transparent"
-                    }`}
-                    onClick={() =>
-                      updateParam("size", getParam("size") === size ? "" : size)
-                    }
-                  >
-                    {size}
-                  </Button>
-                ))}
-              </div>
-            </div>
-            {/* Shape Filter */}
-            <div>
-              <h3 className="text-deep mb-4 text-lg font-semibold tracking-wide uppercase">
-                Shape
-              </h3>
-              <div
-                className="grid gap-3"
-                style={{
-                  gridTemplateColumns: "repeat(auto-fill, minmax(100px, 1fr))",
-                }}
-              >
-                {shapes.map((shape) => (
-                  <Button
-                    key={shape.value}
-                    variant={
-                      getParam("shape") === shape.value
-                        ? "secondary"
-                        : "outline"
-                    }
-                    className={`h-12 rounded-xl border tracking-wide uppercase transition-all duration-200 ${
-                      getParam("shape") === shape.value
-                        ? "btn-secondary text-on-secondary shadow-md"
-                        : "border-secondary text-deep hover:bg-secondary/10 bg-transparent"
-                    }`}
-                    onClick={() =>
-                      updateParam(
-                        "shape",
-                        getParam("shape") === shape.value ? "" : shape.value,
-                      )
-                    }
-                  >
-                    <span className="mr-2">{shape.emoji}</span>
-                    {shape.label}
-                  </Button>
-                ))}
-              </div>
-            </div>
-            {/* Material Filter */}
-            <div>
-              <h3 className="text-deep mb-4 text-lg font-semibold tracking-wide uppercase">
-                Material
-              </h3>
-              <div
-                className="grid gap-3"
-                style={{
-                  gridTemplateColumns: "repeat(auto-fill, minmax(100px, 1fr))",
-                }}
-              >
-                {materials.map((mat) => (
-                  <Button
-                    key={mat.value}
-                    variant={
-                      getParam("material") === mat.value
-                        ? "secondary"
-                        : "outline"
-                    }
-                    className={`h-12 rounded-xl border tracking-wide uppercase transition-all duration-200 ${
-                      getParam("material") === mat.value
-                        ? "btn-secondary text-on-secondary shadow-md"
-                        : "border-secondary text-deep hover:bg-secondary/10 bg-transparent"
-                    }`}
-                    onClick={() =>
-                      updateParam(
-                        "material",
-                        getParam("material") === mat.value ? "" : mat.value,
-                      )
-                    }
-                  >
-                    {mat.label}
-                  </Button>
-                ))}
-              </div>
-            </div>
-            {/* Occasion Filter
-            <div>
-              <h3 className="text-deep mb-4 text-lg font-semibold tracking-wide uppercase">
-                Occasion
-              </h3>
-              <Select
-                value={getParam("occasion") || "all"}
-                onValueChange={(value) => updateParam("occasion", value)}
-              >
-                <SelectTrigger className="border-secondary hover:bg-secondary/10 h-12 rounded-xl border bg-transparent tracking-wide uppercase transition-colors">
-                  <SelectValue placeholder="Select occasion" />
-                </SelectTrigger>
-                <SelectContent className="border-secondary bg-background rounded-xl border">
-                  {occasions.map((occasion) => (
-                    <SelectItem
-                      key={occasion.value}
-                      value={occasion.value}
-                      className="rounded-lg"
-                    >
-                      {occasion.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div> */}
           </div>
         </div>
 
@@ -402,7 +186,7 @@ export function FiltersDrawer() {
             <Button
               variant="outline"
               onClick={clearFilters}
-              className="border-secondary text-deep hover:bg-secondary/10 w-full rounded-xl bg-transparent tracking-wide uppercase transition-all duration-200 hover:shadow-sm"
+              className="border-secondary text-deep hover:bg-secondary/10 w-full rounded-xl bg-transparent tracking-wide uppercase transition-[background-color,box-shadow] duration-200 hover:shadow-sm"
             >
               Clear All Filters
             </Button>

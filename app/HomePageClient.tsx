@@ -18,27 +18,27 @@ export function HomePageClient({ preloadedBestsellers }: HomePageClientProps) {
 
   const categories = [
     {
-      name: "Round Balloons",
+      name: "Party Balloons",
       image: "/img.jpg",
-      link: "/catalog?shape=round",
+      link: "/catalog",
     },
     {
-      name: "Heart Balloons",
+      name: "Birthday Special",
       image: "/baloons2.png",
-      link: "/catalog?shape=heart",
+      link: "/catalog",
     },
     {
-      name: "Star Balloons",
+      name: "Premium Collection",
       image: "/baloons3.png",
-      link: "/catalog?shape=star",
+      link: "/catalog",
     },
     {
-      name: "Animal Balloons",
+      name: "Kids Favorites",
       image: "/baloons4.png",
-      link: "/catalog?shape=animal",
+      link: "/catalog",
     },
     {
-      name: "Kids Choice",
+      name: "All Balloons",
       image: "/img.jpg",
       link: "/catalog",
     },
