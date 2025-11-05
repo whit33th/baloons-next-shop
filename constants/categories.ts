@@ -8,7 +8,7 @@ export const PRODUCT_CATEGORIES = [
   "Surprise in a Balloon",
   "Anniversary",
   "Balloon Bouquets",
-  "For Any Event",
+  // "For Any Event",
 ] as const;
 
 export type ProductCategory = (typeof PRODUCT_CATEGORIES)[number];

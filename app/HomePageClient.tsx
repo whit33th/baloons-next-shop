@@ -1,6 +1,7 @@
 "use client";
 
 import { type Preloaded, usePreloadedQuery } from "convex/react";
+import { motion } from "motion/react";
 import { Hero } from "@/components/Containers";
 import { CategoriesCarousel } from "@/components/ui/categories-carousel";
 import { ProductCarousel } from "@/components/ui/product-carousel";
@@ -20,32 +21,64 @@ export function HomePageClient({ preloadedBestsellers }: HomePageClientProps) {
   const categories = CATEGORIES.map((cat) => ({
     name: cat.name,
     image: cat.icon,
-    link: "/catalog",
+    link: cat.value
+      ? `/catalog?category=${encodeURIComponent(cat.value)}`
+      : "/catalog",
   }));
 
   return (
     <main className="flex min-h-screen flex-col">
-      <Hero />
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.6 }}
+      >
+        <Hero />
+      </motion.div>
 
       {/* Bestsellers Carousel - Instant data from SSR */}
-      {bestsellersProduct?.page && bestsellersProduct.page.length > 0 ? (
-        <ProductCarousel
-          data={bestsellersProduct.page}
-          label="Bestselling"
-          secondaryLabel="Products"
-        />
-      ) : (
-        <div className="flex h-32 items-center justify-center">
-          <div className="text-center text-gray-500">No products available</div>
-        </div>
-      )}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.6 }}
+      >
+        {bestsellersProduct?.page && bestsellersProduct.page.length > 0 ? (
+          <ProductCarousel
+            data={bestsellersProduct.page}
+            label="Bestselling"
+            secondaryLabel="Products"
+          />
+        ) : (
+          <div className="flex h-32 items-center justify-center">
+            <div className="text-center text-gray-500">
+              No products available
+            </div>
+          </div>
+        )}
+      </motion.div>
 
       {/* Categories Carousel */}
-      <CategoriesCarousel categories={categories} />
-      <RainbowArcText
-        className="py-4 text-[10vw] sm:text-[8vw]"
-        text="Lift Your Day"
-      />
+      <motion.div
+        initial={{ opacity: 0 }}
+        whileInView={{ opacity: 1 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.6 }}
+      >
+        <CategoriesCarousel categories={categories} />
+      </motion.div>
+
+      {/* Rainbow Text */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        whileInView={{ opacity: 1 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.6 }}
+      >
+        <RainbowArcText
+          className="py-4 text-[10vw] sm:text-[8vw]"
+          text="Lift Your Day"
+        />
+      </motion.div>
     </main>
   );
 }

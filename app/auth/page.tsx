@@ -76,7 +76,7 @@ export default function AuthPage() {
             type="email"
             required
             autoComplete="email"
-            className="focus:ring-secondary focus:border-secondary mt-1 mb-4 block w-full rounded-lg border px-3 py-2 text-sm shadow-sm focus:ring-2 focus:outline-none sm:text-base"
+            className="focus:ring-secondary focus:border-secondary mt-1 mb-4 block w-full rounded-lg border px-3 py-2 text-base shadow-sm focus:ring-2 focus:outline-none"
           />
 
           <div className="flex items-center justify-between">
@@ -109,7 +109,7 @@ export default function AuthPage() {
             autoComplete={
               flow === "signIn" ? "current-password" : "new-password"
             }
-            className="focus:ring-secondary focus:border-secondary mt-1 mb-2 block w-full rounded-lg border px-3 py-2 text-sm shadow-sm focus:ring-2 focus:outline-none sm:text-base"
+            className="focus:ring-secondary focus:border-secondary mt-1 mb-2 block w-full rounded-lg border px-3 py-2 text-base shadow-sm focus:ring-2 focus:outline-none"
           />
 
           <input name="flow" value={flow} type="hidden" />

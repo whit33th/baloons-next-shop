@@ -104,7 +104,7 @@ export const CATEGORIES = [
     icon: "/baloons2.png",
     value: "Balloon Bouquets",
   },
-  { name: "For Any Event", icon: "/baloons3.png", value: "For Any Event" },
+  // { name: "For Any Event", icon: "/baloons3.png", value: "For Any Event" },
 ] as const;
 
 /**
@@ -116,7 +116,7 @@ export const WHATSAPP_MESSAGES = {
     customerEmail: string,
     shippingAddress: string,
     deliveryType: string,
-    pickupDateTime?: string
+    pickupDateTime?: string,
   ) => {
     const deliveryText = deliveryType === "pickup" ? "Самовывоз" : "Доставка";
     const dateTime = pickupDateTime || "не указано";
@@ -128,7 +128,7 @@ export const WHATSAPP_MESSAGES = {
     customerEmail: string,
     shippingAddress: string,
     deliveryType: string,
-    pickupDateTime?: string
+    pickupDateTime?: string,
   ) => {
     const deliveryText = deliveryType === "pickup" ? "Abholung" : "Lieferung";
     const dateTime = pickupDateTime || "nicht angegeben";
