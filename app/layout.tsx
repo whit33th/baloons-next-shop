@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import "./globals.css";
 
-import { Footer, Header } from "@/components/Containers";
-import { ConvexProvider } from "@/components/Providers/ConvexProvider";
 import { DM_Sans } from "next/font/google";
 import { Toaster } from "sonner";
+import { Footer, Header } from "@/components/Containers";
+import { ConvexProvider } from "@/components/Providers/ConvexProvider";
 
 const dmSans = DM_Sans({
   variable: "--font-dm-sans",

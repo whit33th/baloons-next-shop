@@ -1,7 +1,11 @@
 "use client";
 
+import { SlidersHorizontal } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useState } from "react";
+import { BALLOON_COLORS } from "@/constants/colors";
+import { BALLOON_SIZES } from "@/constants/sizes";
 import { Button } from "@/components/ui/button";
-import { Slider } from "@/components/ui/slider";
 import {
   Drawer,
   DrawerClose,
@@ -12,15 +16,22 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "@/components/ui/drawer";
-import { useRouter, useSearchParams } from "next/navigation";
-import { useState } from "react";
-import { SlidersHorizontal } from "lucide-react";
+
+const PRICE_RANGES = [
+  { label: "Up to €5", min: 0, max: 5 },
+  { label: "Up to €10", min: 0, max: 10 },
+  { label: "Up to €15", min: 0, max: 15 },
+  { label: "Up to €20", min: 0, max: 20 },
+  { label: "Up to €30", min: 0, max: 30 },
+  { label: "Up to €50", min: 0, max: 50 },
+];
 
 export function FiltersDrawer() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [localPriceRange, setLocalPriceRange] = useState([0, 1000]);
+  const minPriceParam = searchParams.get("minPrice");
+  const maxPriceParam = searchParams.get("maxPrice");
 
   const updateParam = (key: string, value: string) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -31,7 +42,8 @@ export function FiltersDrawer() {
       params.delete(key);
     }
 
-    router.push(`/catalog?${params.toString()}`);
+    const queryString = params.toString();
+    router.push(queryString ? `/catalog?${queryString}` : "/catalog");
   };
 
   const getParam = (key: string) => searchParams.get(key) || "";
@@ -40,9 +52,11 @@ export function FiltersDrawer() {
     return !!(
       getParam("search") ||
       getParam("available") ||
-      getParam("sale") ||
       getParam("minPrice") ||
-      getParam("maxPrice")
+      getParam("maxPrice") ||
+      getParam("category") ||
+      getParam("color") ||
+      getParam("size")
     );
   };
 
@@ -50,28 +64,35 @@ export function FiltersDrawer() {
     router.push("/catalog");
   };
 
-  const handlePriceCommit = () => {
+  const handlePriceRangeSelect = (min: number, max: number | undefined) => {
     const params = new URLSearchParams(searchParams.toString());
 
-    if (localPriceRange[0] !== 0) {
-      params.set("minPrice", localPriceRange[0].toString());
+    if (min > 0) {
+      params.set("minPrice", min.toString());
     } else {
       params.delete("minPrice");
     }
 
-    if (localPriceRange[1] !== 1000) {
-      params.set("maxPrice", localPriceRange[1].toString());
+    if (max !== undefined) {
+      params.set("maxPrice", max.toString());
     } else {
       params.delete("maxPrice");
     }
 
-    router.push(`/catalog?${params.toString()}`);
+    const queryString = params.toString();
+    router.push(queryString ? `/catalog?${queryString}` : "/catalog");
+  };
+
+  const isRangeActive = (min: number, max: number | undefined) => {
+    const currentMin = minPriceParam ? Number(minPriceParam) : 0;
+    const currentMax = maxPriceParam ? Number(maxPriceParam) : undefined;
+    return currentMin === min && currentMax === max;
   };
 
   return (
     <Drawer open={drawerOpen} onOpenChange={setDrawerOpen}>
       <DrawerTrigger asChild>
-        <button className="border-border/50 text-deep flex h-10 items-center gap-2 text-xs font-medium tracking-wide underline-offset-1 transition-colors hover:underline">
+        <button className="border-border/50 text-deep flex h-10 items-center gap-2 text-sm font-medium tracking-wide underline-offset-1 transition-colors hover:underline">
           <SlidersHorizontal className="h-4 w-4" />
           Filters
         </button>
@@ -88,13 +109,11 @@ export function FiltersDrawer() {
 
         <div className="flex-1 overflow-y-auto px-6 py-4">
           <div className="space-y-8">
-            {/* Available & Sale Toggles */}
-            <div
-              className="grid gap-3"
-              style={{
-                gridTemplateColumns: "repeat(auto-fill, minmax(120px, 1fr))",
-              }}
-            >
+            {/* Available Toggle */}
+            <div>
+              <h3 className="text-deep mb-3 text-lg font-semibold tracking-wide uppercase">
+                Availability
+              </h3>
               <Button
                 variant={getParam("available") ? "secondary" : "ghost"}
                 size="sm"
@@ -107,75 +126,97 @@ export function FiltersDrawer() {
                     : "text-deep hover:bg-secondary/10 border-secondary border bg-transparent"
                 }`}
               >
-                Available
-              </Button>
-              <Button
-                variant={getParam("sale") ? "secondary" : "ghost"}
-                size="sm"
-                onClick={() =>
-                  updateParam("sale", getParam("sale") ? "" : "true")
-                }
-                className={`h-10 rounded-xl px-4 font-medium tracking-wide uppercase transition-[background-color,box-shadow] duration-200 ${
-                  getParam("sale")
-                    ? "btn-secondary text-on-secondary shadow-md"
-                    : "text-deep hover:bg-secondary/10 border-secondary border bg-transparent"
-                }`}
-              >
-                Sale
+                In Stock
               </Button>
             </div>
-            {/* Price Range Filter */}
+
+            {/* Color Filter */}
             <div>
-              <h3 className="text-deep mb-2 text-lg font-semibold tracking-wide uppercase">
+              <h3 className="text-deep mb-3 text-lg font-semibold tracking-wide uppercase">
+                Balloon Color
+              </h3>
+              <div className="grid grid-cols-3 gap-2">
+                {BALLOON_COLORS.map((color) => (
+                  <button
+                    key={color.name}
+                    onClick={() =>
+                      updateParam(
+                        "color",
+                        getParam("color") === color.name ? "" : color.name,
+                      )
+                    }
+                    className={`flex items-center gap-2 rounded-full border-2 px-3 py-2 transition-all ${
+                      getParam("color") === color.name
+                        ? "border-secondary bg-secondary/10"
+                        : "border-border/30 hover:border-secondary/50 bg-white/50"
+                    }`}
+                  >
+                    <div
+                      className="h-6 w-6 shrink-0 rounded-full shadow-sm"
+                      style={{
+                        backgroundColor: color.hex,
+                        border:
+                          color.name === "White" ? "1px solid #ddd" : "none",
+                      }}
+                    />
+                    <span className="text-deep truncate text-xs font-medium">
+                      {color.label}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Size Filter */}
+            <div>
+              <h3 className="text-deep mb-3 text-lg font-semibold tracking-wide uppercase">
+                Balloon Size
+              </h3>
+              <div className="grid grid-cols-2 gap-3">
+                {BALLOON_SIZES.map((size) => (
+                  <Button
+                    key={size}
+                    onClick={() =>
+                      updateParam("size", getParam("size") === size ? "" : size)
+                    }
+                    variant="outline"
+                    className={`rounded-xl border-2 transition-all ${
+                      getParam("size") === size
+                        ? "border-secondary bg-secondary/10 text-deep font-semibold"
+                        : "border-border/30 text-deep/70 hover:border-secondary/50"
+                    }`}
+                  >
+                    {size}
+                  </Button>
+                ))}
+              </div>
+            </div>
+
+            {/* Price Range Buttons */}
+            <div>
+              <h3 className="text-deep mb-3 text-lg font-semibold tracking-wide uppercase">
                 Price Range
               </h3>
-              <div className="space-y-4">
-                <Slider
-                  value={localPriceRange}
-                  onValueChange={setLocalPriceRange}
-                  onValueCommit={handlePriceCommit}
-                  min={0}
-                  max={1000}
-                  step={10}
-                  className="w-full"
-                />
-                <div className="flex items-center justify-between gap-4">
-                  <div className="flex flex-1 items-center gap-2">
-                    <label className="text-deep/70 text-sm font-medium">
-                      Min:
-                    </label>
-                    <input
-                      type="number"
-                      value={localPriceRange[0]}
-                      onChange={(e) =>
-                        setLocalPriceRange([
-                          Math.max(0, parseInt(e.target.value) || 0),
-                          localPriceRange[1],
-                        ])
-                      }
-                      onBlur={handlePriceCommit}
-                      className="border-secondary text-deep focus:border-secondary focus:ring-secondary/20 w-full rounded-xl border bg-transparent px-3 py-2 text-sm transition-colors outline-none focus:ring-2"
-                    />
-                  </div>
-                  <span className="text-lg font-medium text-black">-</span>
-                  <div className="flex flex-1 items-center gap-2">
-                    <label className="text-deep/70 text-sm font-medium">
-                      Max:
-                    </label>
-                    <input
-                      type="number"
-                      value={localPriceRange[1]}
-                      onChange={(e) =>
-                        setLocalPriceRange([
-                          localPriceRange[0],
-                          Math.min(1000, parseInt(e.target.value) || 1000),
-                        ])
-                      }
-                      onBlur={handlePriceCommit}
-                      className="border-secondary text-deep focus:border-secondary focus:ring-secondary/20 w-full rounded-xl border bg-transparent px-3 py-2 text-sm transition-colors outline-none focus:ring-2"
-                    />
-                  </div>
-                </div>
+              <div className="grid grid-cols-2 gap-3">
+                {PRICE_RANGES.map((range) => (
+                  <Button
+                    key={range.label}
+                    variant={
+                      isRangeActive(range.min, range.max)
+                        ? "secondary"
+                        : "ghost"
+                    }
+                    size="sm"
+                    onClick={() => handlePriceRangeSelect(range.min, range.max)}
+                    className={`h-10 rounded-xl px-4 font-medium tracking-wide transition-[background-color,box-shadow] duration-200 ${
+                      isRangeActive(range.min, range.max)
+                        ? "btn-secondary text-on-secondary shadow-md"
+                        : "text-deep hover:bg-secondary/10 border-secondary border bg-transparent"
+                    }`}
+                  >
+                    {range.label}
+                  </Button>
+                ))}
               </div>
             </div>
           </div>

@@ -1,5 +1,5 @@
-import { internalMutation, internalQuery } from "./_generated/server";
 import { v } from "convex/values";
+import { internalMutation, internalQuery } from "./_generated/server";
 
 const paymentIntentArgs = {
   paymentIntentId: v.string(),
@@ -75,7 +75,10 @@ export const updatePaymentStatus = internalMutation({
 });
 
 export const processSuccessfulPayment = internalMutation({
-  args: { paymentIntentId: v.string() },
+  args: {
+    paymentIntentId: v.string(),
+    paymentType: v.optional(v.union(v.literal("full"), v.literal("partial"))),
+  },
   returns: v.id("orders"),
   handler: async (ctx, args) => {
     const paymentIntent = await ctx.db
@@ -97,14 +100,17 @@ export const processSuccessfulPayment = internalMutation({
         continue;
       }
 
-      if (item.quantity > product.inStock) {
-        throw new Error(`Not enough ${product.name} in stock`);
+      if (!product.inStock) {
+        throw new Error(`${product.name} is out of stock`);
       }
 
       await ctx.db.patch(product._id, {
-        inStock: product.inStock - item.quantity,
+        soldCount: (product.soldCount ?? 0) + item.quantity,
       });
     }
+
+    const paymentMethod =
+      args.paymentType === "partial" ? "partial_online" : "full_online";
 
     const orderId = await ctx.db.insert("orders", {
       userId: paymentIntent.userId,
@@ -115,6 +121,8 @@ export const processSuccessfulPayment = internalMutation({
       customerEmail: paymentIntent.orderData.customerEmail,
       shippingAddress: paymentIntent.orderData.shippingAddress,
       paymentIntentId: args.paymentIntentId,
+      deliveryType: "pickup",
+      paymentMethod: paymentMethod as "full_online" | "partial_online",
     });
 
     const cartQuery = ctx.db

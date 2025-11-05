@@ -1,5 +1,5 @@
-import { mutation } from "./_generated/server";
 import { v } from "convex/values";
+import { mutation } from "./_generated/server";
 import { requireUser } from "./helpers/auth";
 
 const profileResponseValidator = v.object({

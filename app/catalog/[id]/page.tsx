@@ -1,8 +1,8 @@
 import { preloadQuery } from "convex/nextjs";
-import { api } from "@/convex/_generated/api";
-import ProductDetailClient from "./ProductDetailClient";
 import { notFound } from "next/navigation";
-import { Id } from "@/convex/_generated/dataModel";
+import { api } from "@/convex/_generated/api";
+import type { Id } from "@/convex/_generated/dataModel";
+import ProductDetailClient from "./ProductDetailClient";
 
 export default async function ProductDetailPage({
   params,

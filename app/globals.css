@@ -55,7 +55,7 @@ a {
   cursor: pointer;
   transition: all 0.2s ease-in-out;
 }
-button,
+button:hover,
 a:hover {
   opacity: 0.8;
 }
@@ -115,6 +115,8 @@ body {
   scrollbar-width: thin;
   scrollbar-color: rgba(var(--color-blue-rgb), 0.95)
     rgba(var(--primary-rgb), 0.25);
+  /* overscroll-behavior: contain; */
+  /* overflow: hidden; */
 }
 
 :root {

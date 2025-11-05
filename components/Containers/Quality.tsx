@@ -1,4 +1,4 @@
-import { Leaf, Globe, Heart } from "lucide-react";
+import { Globe, Heart, Leaf } from "lucide-react";
 
 export const Quality = () => {
   const qualityItems = [

@@ -1,18 +1,18 @@
 "use client";
 
+import { ArrowRight } from "lucide-react";
+import type { Route } from "next";
+import Image from "next/image";
+import Link from "next/link";
+import { useEffect, useLayoutEffect, useState } from "react";
 import {
   Carousel,
-  CarouselApi,
+  type CarouselApi,
   CarouselContent,
   CarouselItem,
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
-import { useEffect, useLayoutEffect, useState } from "react";
-import Image from "next/image";
-import Link from "next/link";
-import { ArrowRight } from "lucide-react";
-import { Route } from "next";
 
 export interface Category {
   name: string;
@@ -66,7 +66,7 @@ export function CategoriesCarousel({ categories }: CategoriesCarouselProps) {
       </div>
 
       {/* Carousel */}
-      <div className="relative border-t border-neutral-950">
+      <div className="border-foreground relative border-t">
         <Carousel
           setApi={setApi}
           className="group"
@@ -83,7 +83,7 @@ export function CategoriesCarousel({ categories }: CategoriesCarouselProps) {
               >
                 <Link
                   href={category.link as Route}
-                  className="group block border-r border-neutral-950"
+                  className="group border-foreground block border-r"
                 >
                   <article className="relative aspect-square overflow-hidden bg-linear-to-br from-green-100 to-yellow-100">
                     <Image

@@ -1,8 +1,11 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  reactCompiler: true,
+  experimental: {
+    viewTransition: true,
+  },
 
+  reactCompiler: true,
   typedRoutes: true,
   typescript: {
     ignoreBuildErrors: true,

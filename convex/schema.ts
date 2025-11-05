@@ -1,23 +1,54 @@
+import { authTables } from "@convex-dev/auth/server";
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
-import { authTables } from "@convex-dev/auth/server";
 
 const applicationTables = {
   products: defineTable({
     name: v.string(),
     description: v.string(),
     price: v.number(),
-    imageIds: v.optional(v.array(v.id("_storage"))),
-    imageId: v.optional(v.id("_storage")),
-    inStock: v.number(),
-  }).searchIndex("search_products", {
-    searchField: "name",
-  }),
+    category: v.string(),
+    size: v.union(
+      v.literal("30cm"),
+      v.literal("45cm"),
+      v.literal("80cm"),
+      v.literal("100cm"),
+    ),
+    imageIds: v.array(v.id("_storage")),
+    inStock: v.boolean(),
+    soldCount: v.optional(v.number()),
+    isPersonalizable: v.optional(v.boolean()),
+    availableColors: v.optional(v.array(v.string())),
+  })
+    .searchIndex("search_products", {
+      searchField: "name",
+    })
+    // Single field indexes for basic queries
+    .index("by_price", ["price"])
+    .index("by_name", ["name"])
+    .index("by_category", ["category"])
+    .index("by_size", ["size"])
+    // Composite indexes for better e-commerce performance
+    // Default sorting: show bestsellers first (by soldCount desc, then by _creationTime desc)
+    .index("by_popularity", ["soldCount"])
+    // Category + popularity for filtered browsing
+    .index("by_category_and_popularity", ["category", "soldCount"])
+    // Price sorting within category
+    .index("by_category_and_price", ["category", "price"])
+    // Stock + popularity for availability filtering
+    .index("by_stock_and_sold", ["inStock", "soldCount"]),
 
   cartItems: defineTable({
     userId: v.id("users"),
     productId: v.id("products"),
     quantity: v.number(),
+    personalization: v.optional(
+      v.object({
+        text: v.optional(v.string()),
+        color: v.optional(v.string()),
+        number: v.optional(v.string()),
+      }),
+    ),
   })
     .index("by_user", ["userId"])
     .index("by_user_and_product", ["userId", "productId"]),
@@ -30,6 +61,13 @@ const applicationTables = {
         productName: v.string(),
         quantity: v.number(),
         price: v.number(),
+        personalization: v.optional(
+          v.object({
+            text: v.optional(v.string()),
+            color: v.optional(v.string()),
+            number: v.optional(v.string()),
+          }),
+        ),
       }),
     ),
     totalAmount: v.number(),
@@ -42,7 +80,19 @@ const applicationTables = {
     customerEmail: v.string(),
     customerName: v.string(),
     shippingAddress: v.string(),
+    deliveryType: v.optional(
+      v.union(v.literal("pickup"), v.literal("delivery")),
+    ),
+    paymentMethod: v.optional(
+      v.union(
+        v.literal("full_online"),
+        v.literal("partial_online"),
+        v.literal("cash"),
+      ),
+    ),
     paymentIntentId: v.optional(v.string()),
+    whatsappConfirmed: v.optional(v.boolean()),
+    pickupDateTime: v.optional(v.string()),
   })
     .index("by_user", ["userId"])
     .index("by_status", ["status"]),
@@ -63,6 +113,13 @@ const applicationTables = {
           productName: v.string(),
           quantity: v.number(),
           price: v.number(),
+          personalization: v.optional(
+            v.object({
+              text: v.optional(v.string()),
+              color: v.optional(v.string()),
+              number: v.optional(v.string()),
+            }),
+          ),
         }),
       ),
     }),

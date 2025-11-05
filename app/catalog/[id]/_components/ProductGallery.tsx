@@ -2,13 +2,27 @@
 
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import Image from "next/image";
-import { memo } from "react";
+import {
+  memo,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  ViewTransition,
+} from "react";
+import {
+  Carousel,
+  type CarouselApi,
+  CarouselContent,
+  CarouselItem,
+} from "@/components/ui/carousel";
 
 interface ProductGalleryProps {
   images: string[];
   productName: string;
   activeImage: number;
   onImageChange: (index: number) => void;
+  transitionId?: string;
 }
 
 export const ProductGallery = memo(function ProductGallery({
@@ -16,58 +30,123 @@ export const ProductGallery = memo(function ProductGallery({
   productName,
   activeImage,
   onImageChange,
+  transitionId,
 }: ProductGalleryProps) {
   const canNavigate = images.length > 1;
+  const [carouselApi, setCarouselApi] = useState<CarouselApi>();
+  // Use transition name only for the first image to match product card
+  const transitionName = transitionId
+    ? `product-image-${transitionId}`
+    : undefined;
+  const slides = useMemo(
+    () =>
+      images.map((src, index) => ({
+        src,
+        index,
+        key: `${productName}-${index}-${src}`,
+      })),
+    [images, productName],
+  );
 
-  const handlePreviousImage = () => {
-    if (!canNavigate) return;
-    onImageChange((activeImage - 1 + images.length) % images.length);
-  };
+  useEffect(() => {
+    if (!carouselApi) {
+      return;
+    }
 
-  const handleNextImage = () => {
-    if (!canNavigate) return;
-    onImageChange((activeImage + 1) % images.length);
-  };
+    const syncFromCarousel = () => {
+      const selected = carouselApi.selectedScrollSnap();
+      if (selected !== activeImage) {
+        onImageChange(selected);
+      }
+    };
+
+    carouselApi.on("select", syncFromCarousel);
+    return () => {
+      carouselApi.off("select", syncFromCarousel);
+    };
+  }, [carouselApi, activeImage, onImageChange]);
+
+  useEffect(() => {
+    if (!carouselApi) {
+      return;
+    }
+
+    if (activeImage === carouselApi.selectedScrollSnap()) {
+      return;
+    }
+
+    carouselApi.scrollTo(activeImage, true);
+  }, [carouselApi, activeImage]);
+
+  const handlePreviousImage = useCallback(() => {
+    if (!canNavigate) {
+      return;
+    }
+    const nextIndex = (activeImage - 1 + images.length) % images.length;
+    onImageChange(nextIndex);
+  }, [activeImage, canNavigate, images.length, onImageChange]);
+
+  const handleNextImage = useCallback(() => {
+    if (!canNavigate) {
+      return;
+    }
+    const nextIndex = (activeImage + 1) % images.length;
+    onImageChange(nextIndex);
+  }, [activeImage, canNavigate, images.length, onImageChange]);
 
   return (
-    <>
-      <div className="border-border relative flex max-h-[calc(100dvh-57px-55.6px)] flex-1 flex-col border-b md:flex-row md:items-center md:justify-center">
-        <div
-          className="relative aspect-3/4 h-full w-full flex-1 overflow-hidden"
-          onKeyDown={(event) => {
-            if (!canNavigate) return;
-            if (event.key === "ArrowRight" || event.key === "ArrowDown") {
-              event.preventDefault();
-              handleNextImage();
-            }
-            if (event.key === "ArrowLeft" || event.key === "ArrowUp") {
-              event.preventDefault();
-              handlePreviousImage();
-            }
-          }}
-          role="button"
-          tabIndex={0}
+    <div className="border-border relative flex max-h-[calc(100vh-57px-55px)] flex-1 flex-col border-b md:flex-row md:items-center md:justify-center">
+      <ViewTransition name={transitionName}>
+        <Carousel
+          setApi={setCarouselApi}
+          opts={{ align: "start", loop: canNavigate }}
+          className="relative h-full w-full flex-1"
         >
-          <Image
-            key={images[activeImage]}
-            src={images[activeImage]}
-            alt={productName}
-            fill
-            className="aspect-3/4 h-full w-full object-contain drop-shadow"
-            sizes="(min-width: 640px) 800px, 100vw"
-            priority
-          />
+          <CarouselContent className="ml-0 h-full">
+            {slides.map((slide) => (
+              <CarouselItem key={slide.key} className="h-full basis-full pl-0">
+                <div
+                  className="relative aspect-3/4 h-full max-h-[calc(100vh-57px-55px)] w-full overflow-hidden hover:opacity-100"
+                  onKeyDown={(event) => {
+                    if (!canNavigate) return;
+                    if (
+                      event.key === "ArrowRight" ||
+                      event.key === "ArrowDown"
+                    ) {
+                      event.preventDefault();
+                      handleNextImage();
+                    }
+                    if (event.key === "ArrowLeft" || event.key === "ArrowUp") {
+                      event.preventDefault();
+                      handlePreviousImage();
+                    }
+                  }}
+                  onClick={() => handleNextImage()}
+                >
+                  <Image
+                    src={slide.src}
+                    alt={productName}
+                    fill
+                    priority={slide.index === 0}
+                    loading={slide.index === 0 ? "eager" : "lazy"}
+                    className="z-50 aspect-3/4 h-full w-full object-contain drop-shadow"
+                    sizes="(min-width: 640px) 800px, 100vw"
+                  />
+                </div>
+              </CarouselItem>
+            ))}
+          </CarouselContent>
 
           {canNavigate && (
             <>
               <div className="pointer-events-none absolute inset-x-0 bottom-3 flex justify-center gap-2 md:hidden">
-                {images.map((_, index) => (
+                {slides.map((slide) => (
                   <span
-                    key={`dot-${index}`}
-                    className={`h-2 w-2 rounded-full transition-[width,background-color] duration-300 ${
-                      index === activeImage
+                    key={`${slide.key}-dot`}
+                    className={`h-2 rounded-full transition-[width,background-color] duration-300 ${
+                      slide.index === activeImage
                         ? "bg-accent w-8"
-                        : "backdrop-invert"
+                        : "w-2 backdrop-invert"
                     }`}
                   />
                 ))}
@@ -96,34 +175,34 @@ export const ProductGallery = memo(function ProductGallery({
               </div>
             </>
           )}
-        </div>
+        </Carousel>
+      </ViewTransition>
 
-        <div className="border-border flex snap-x gap-3 overflow-x-auto border-t p-4 md:absolute md:bottom-2 md:left-1/2 md:-translate-x-1/2 md:border-t-0">
-          {images.map((image, index) => (
-            <button
-              key={image + index}
-              type="button"
-              onClick={() => onImageChange(index)}
-              className={`group relative aspect-3/4 h-20 w-auto shrink-0 overflow-hidden rounded transition-[transform,box-shadow,ring] duration-200 md:h-24 2xl:h-28 ${
-                activeImage === index
-                  ? "ring-secondary scale-105 shadow-lg ring-2"
-                  : "ring-border hover:ring-secondary/50 ring-1 hover:shadow-md"
-              }`}
-            >
-              <Image
-                src={image}
-                width={100}
-                height={100}
-                alt={`${productName} ${index + 1}`}
-                className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-              />
-              {activeImage === index && (
-                <div className="bg-secondary/10 absolute inset-0" />
-              )}
-            </button>
-          ))}
-        </div>
+      <div className="border-border flex snap-x gap-3 overflow-x-auto border-t p-4 md:absolute md:bottom-2 md:left-1/2 md:-translate-x-1/2 md:border-t-0">
+        {slides.map((slide) => (
+          <button
+            key={slide.key}
+            type="button"
+            onClick={() => onImageChange(slide.index)}
+            className={`group relative aspect-3/4 h-20 w-auto shrink-0 overflow-hidden rounded transition-[transform,box-shadow,ring] duration-200 md:h-24 2xl:h-28 ${
+              activeImage === slide.index
+                ? "ring-secondary scale-105 shadow-lg ring-2"
+                : "ring-border hover:ring-secondary/50 ring-1 hover:shadow-md"
+            }`}
+          >
+            <Image
+              src={slide.src}
+              width={100}
+              height={100}
+              alt={`${productName} ${slide.index + 1}`}
+              className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+            />
+            {activeImage === slide.index && (
+              <div className="bg-secondary/10 absolute inset-0" />
+            )}
+          </button>
+        ))}
       </div>
-    </>
+    </div>
   );
 });

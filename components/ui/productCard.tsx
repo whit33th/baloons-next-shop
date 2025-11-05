@@ -1,100 +1,83 @@
-import { Doc } from "@/convex/_generated/dataModel";
+"use client";
+
+import type { Route } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { Route } from "next";
+import { ViewTransition } from "react";
+
+import type { Doc } from "@/convex/_generated/dataModel";
 import { balloonColors } from "../ProductGrid";
 
-export default function ProductCard({
-  product,
-  index,
-}: {
-  product: Doc<"products"> & {
-    primaryImageUrl: string | null;
-    imageUrls: string[];
-  };
-  index: number;
-}) {
-  // Assign colors based on product - matching reference colorful balloon theme
+type ProductTag = "new" | "bestseller";
 
+type ProductCardProduct = Doc<"products"> & {
+  primaryImageUrl: string | null;
+  imageUrls: string[];
+  tags: ProductTag[];
+};
+
+interface ProductCardProps {
+  product: ProductCardProduct;
+  index: number;
+}
+
+export default function ProductCard({ product, index }: ProductCardProps) {
+  // Assign colors based on product - matching reference colorful balloon theme
   const colorIndex = index % balloonColors.length;
   const bgColor = balloonColors[colorIndex];
+  const productHref = `/catalog/${product._id}` as Route;
+  const transitionName = `product-image-${product._id}`;
 
-  const srcs = ["/baloons2.png", "/baloons3.png", "/img.jpg", "/baloons4.png"];
+  const fallbackImages = [
+    "/baloons2.png",
+    "/baloons3.png",
+    "/img.jpg",
+    "/baloons4.png",
+  ];
+
+  const displayImage =
+    product.primaryImageUrl ?? fallbackImages[index % fallbackImages.length];
+
+  const tags: ProductTag[] = product.tags ?? [];
+  const formattedPrice = `${product.price.toFixed(2)} €`;
+
   return (
-    <Link href={`/catalog/${product._id}` as Route}>
-      <div
-        // style={{ backgroundColor: bgColor }}
-        className={`flex h-full flex-col border-r border-b border-neutral-950`}
-      >
+    <Link
+      href={productHref}
+      className="focus-visible:ring-accent focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
+    >
+      <div className="border-foreground flex h-full flex-col border-r border-b">
         {/* Product Image with colorful balloon background */}
         <div
           className="relative aspect-3/4 w-full"
           style={{ backgroundColor: bgColor }}
         >
-          <div className="flex h-full w-full items-center justify-center">
-            {product.primaryImageUrl ? (
-              <Image
-                src={product.primaryImageUrl}
-                alt={product.name}
-                width={400}
-                height={600}
-                className="aspect-3/4 h-full w-full object-cover"
-                loading={index < 2 ? "eager" : "lazy"}
-              />
-            ) : (
-              <Image
-                src={srcs[index % srcs.length]}
-                alt={"asd"}
-                width={400}
-                height={600}
-                className="aspect-3/4 h-full w-full object-cover"
-                loading={index < 2 ? "eager" : "lazy"}
-              />
-            )}
-          </div>
+          <ViewTransition name={transitionName}>
+            <Image
+              src={displayImage}
+              alt={product.name}
+              width={400}
+              height={600}
+              className="aspect-3/4 h-full w-full object-cover"
+              loading={index < 2 ? "eager" : "lazy"}
+            />
+          </ViewTransition>
         </div>
 
         {/* Product Info */}
-        <div
-          className={`relative overflow-hidden border-t border-neutral-950 px-4 py-2`}
-          style={{ backgroundColor: bgColor }}
-        >
-          {/* Ribbon-like top border accent */}
-          <div className="mb-2 flex items-center gap-2">
-            <div className="via-border h-px flex-1 bg-linear-to-r from-transparent to-transparent" />
-            <div className="flex items-center gap-2">
-              <div className="flex gap-0.5">
-                <div
-                  className="h-1 w-1 rotate-45"
-                  style={{ backgroundColor: "var(--support-warm)" }}
-                />
-                <div
-                  className="h-1.5 w-1.5 rounded-full"
-                  style={{ backgroundColor: "var(--color-blue)" }}
-                />
-              </div>
-
-              <div className="flex gap-0.5">
-                <div
-                  className="h-1.5 w-1.5 rounded-full"
-                  style={{ backgroundColor: "var(--color-terracotta)" }}
-                />
-                <div
-                  className="h-1 w-1 rotate-45"
-                  style={{ backgroundColor: "var(--color-deep)" }}
-                />
-              </div>
-            </div>
-            <div className="via-border h-px flex-1 bg-linear-to-r from-transparent to-transparent" />
+        <div className="border-foreground relative flex flex-col gap-1 border-t px-4 py-3">
+          <div className="flex flex-wrap gap-1">
+            {tags.map((tag) => (
+              <span
+                key={tag}
+                className="bg-primary/20 rounded-full py-0.5 pr-2 text-xs font-medium tracking-wide text-red-500/90 uppercase"
+              >
+                {tag === "new" ? "New" : "Bestseller"}
+              </span>
+            ))}
           </div>
-
-          {/* Price with playful styling */}
-          <div className="space-y-0.5 text-center text-xs">
-            <h3 className="font-bold uppercase">{product.name}</h3>
-            <span>{product.price} €</span>
-          </div>
-
-          {/* Title with decorative underline */}
+          <h3 className="text-sm leading-tight">{product.name}</h3>
+          <span className="text-sm font-semibold">{formattedPrice}</span>
         </div>
       </div>
     </Link>

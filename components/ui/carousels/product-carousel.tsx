@@ -10,9 +10,9 @@ import {
   CarouselItem,
   CarouselNext,
   CarouselPrevious,
-} from "@/components/ui/carousel";
+} from "@/components/ui/carousels/carousel";
 import type { Doc } from "@/convex/_generated/dataModel";
-import ProductCard from "./productCard";
+import ProductCard from "../productCard";
 
 export interface ProductCarouselProps {
   data: Doc<"products">[];
@@ -75,7 +75,7 @@ export function ProductCarousel({
         </h2>
         <Link
           href={"/catalog"}
-          className="flex items-center gap-2 text-sm transition-[gap] duration-200 hover:gap-3"
+          className="flex items-center gap-2 text-sm hover:gap-3"
         >
           More products
           <ArrowRight className="h-4 w-4" />

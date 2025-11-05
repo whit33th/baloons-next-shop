@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { motion } from "motion/react";
 import clsx from "clsx";
+import { motion } from "motion/react";
+import { useEffect, useRef, useState } from "react";
 
 interface Props {
   text: string;

@@ -1,6 +1,6 @@
-import { mutation, query, type MutationCtx } from "./_generated/server";
 import { v } from "convex/values";
 import type { Id } from "./_generated/dataModel";
+import { type MutationCtx, mutation, query } from "./_generated/server";
 import { requireUser } from "./helpers/auth";
 import {
   attachImageToProduct,
@@ -14,6 +14,11 @@ type CartItemResponse = {
   userId: Id<"users">;
   productId: Id<"products">;
   quantity: number;
+  personalization?: {
+    text?: string;
+    color?: string;
+    number?: string;
+  };
   product: ProductWithImage;
 };
 
@@ -23,6 +28,13 @@ const cartItemResponseValidator = v.object({
   userId: v.id("users"),
   productId: v.id("products"),
   quantity: v.number(),
+  personalization: v.optional(
+    v.object({
+      text: v.optional(v.string()),
+      color: v.optional(v.string()),
+      number: v.optional(v.string()),
+    }),
+  ),
   product: productWithImageValidator,
 });
 
@@ -37,6 +49,11 @@ const incrementCartItem = async (
   userId: Id<"users">,
   productId: Id<"products">,
   delta: number,
+  personalization?: {
+    text?: string;
+    color?: string;
+    number?: string;
+  },
 ) => {
   ensurePositiveInteger(delta);
 
@@ -52,18 +69,23 @@ const incrementCartItem = async (
     )
     .unique();
 
-  const newQuantity = (existingItem?.quantity ?? 0) + delta;
-  if (newQuantity > product.inStock) {
-    throw new Error("Not enough items in stock");
+  if (!product.inStock) {
+    throw new Error("Product is out of stock");
   }
 
+  const newQuantity = (existingItem?.quantity ?? 0) + delta;
+
   if (existingItem) {
-    await ctx.db.patch(existingItem._id, { quantity: newQuantity });
+    await ctx.db.patch(existingItem._id, {
+      quantity: newQuantity,
+      personalization,
+    });
   } else {
     await ctx.db.insert("cartItems", {
       userId,
       productId,
       quantity: newQuantity,
+      personalization,
     });
   }
 };
@@ -103,11 +125,24 @@ export const add = mutation({
   args: {
     productId: v.id("products"),
     quantity: v.number(),
+    personalization: v.optional(
+      v.object({
+        text: v.optional(v.string()),
+        color: v.optional(v.string()),
+        number: v.optional(v.string()),
+      }),
+    ),
   },
   returns: v.null(),
   handler: async (ctx, args) => {
     const { userId } = await requireUser(ctx);
-    await incrementCartItem(ctx, userId, args.productId, args.quantity);
+    await incrementCartItem(
+      ctx,
+      userId,
+      args.productId,
+      args.quantity,
+      args.personalization,
+    );
     return null;
   },
 });
@@ -131,8 +166,8 @@ export const updateQuantity = mutation({
       throw new Error("Product not found");
     }
 
-    if (args.quantity > product.inStock) {
-      throw new Error("Not enough items in stock");
+    if (!product.inStock) {
+      throw new Error("Product is out of stock");
     }
 
     if (args.quantity <= 0) {
@@ -186,6 +221,13 @@ export const importGuestItems = mutation({
       v.object({
         productId: v.id("products"),
         quantity: v.number(),
+        personalization: v.optional(
+          v.object({
+            text: v.optional(v.string()),
+            color: v.optional(v.string()),
+            number: v.optional(v.string()),
+          }),
+        ),
       }),
     ),
   },
@@ -202,7 +244,13 @@ export const importGuestItems = mutation({
         continue;
       }
 
-      await incrementCartItem(ctx, userId, item.productId, item.quantity);
+      await incrementCartItem(
+        ctx,
+        userId,
+        item.productId,
+        item.quantity,
+        item.personalization,
+      );
     }
 
     return null;

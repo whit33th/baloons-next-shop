@@ -36,15 +36,18 @@ export const ProductFeatures = memo(function ProductFeatures() {
   return (
     <div className="space-y-2">
       <Accordion type="single" collapsible className="w-full">
-        {FEATURES_SECTIONS.map((section, index) => (
-          <AccordionItem key={index} value={`item-${index}`}>
+        {FEATURES_SECTIONS.map((section) => (
+          <AccordionItem key={section.title} value={section.title}>
             <AccordionTrigger className="text-deep text-left font-semibold">
               {section.title}
             </AccordionTrigger>
             <AccordionContent>
               <ul className="text-deep/70 space-y-2 text-sm">
-                {section.items.map((item, itemIndex) => (
-                  <li key={itemIndex} className="flex items-start gap-3">
+                {section.items.map((item) => (
+                  <li
+                    key={`${section.title}-${item}`}
+                    className="flex items-start gap-3"
+                  >
                     <span className="text-secondary mt-0.5 font-bold">•</span>
                     <span>{item}</span>
                   </li>

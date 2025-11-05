@@ -6,12 +6,17 @@ export type GuestCartProductSnapshot = {
   name: string;
   price: number;
   primaryImageUrl: string | null;
-  inStock: number;
+  inStock: boolean;
 };
 
 export type GuestCartItem = {
   productId: string;
   quantity: number;
+  personalization?: {
+    text?: string;
+    color?: string;
+    number?: string;
+  };
   product: GuestCartProductSnapshot;
 };
 
@@ -58,6 +63,7 @@ const writeGuestCart = (items: GuestCartItem[]) => {
     return;
   }
 
+  console.log("Writing to guest cart:", items);
   window.localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
   window.dispatchEvent(new Event(EVENT_NAME));
 };
@@ -67,7 +73,7 @@ type ProductLike = {
   name: string;
   price: number;
   primaryImageUrl?: string | null;
-  inStock: number;
+  inStock: boolean;
 };
 
 export const snapshotFromProduct = (
@@ -80,61 +86,94 @@ export const snapshotFromProduct = (
   inStock: product.inStock,
 });
 
+const isSamePersonalization = (
+  a?: { text?: string; color?: string; number?: string },
+  b?: { text?: string; color?: string; number?: string },
+) => {
+  if (!a && !b) return true;
+  if (!a || !b) return false;
+  return a.text === b.text && a.color === b.color && a.number === b.number;
+};
+
 export const addGuestCartItem = (
   snapshot: GuestCartProductSnapshot,
   quantity: number,
+  personalization?: {
+    text?: string;
+    color?: string;
+    number?: string;
+  },
 ) => {
+  console.log("🔵 addGuestCartItem called with:", {
+    productId: snapshot.productId,
+    quantity,
+    personalization,
+  });
+
   if (quantity <= 0 || !Number.isFinite(quantity)) {
     return;
   }
 
   const cart = readGuestCart();
-  const existing = cart.find((item) => item.productId === snapshot.productId);
+  // Find item with same product AND same personalization
+  const existing = cart.find(
+    (item) =>
+      item.productId === snapshot.productId &&
+      isSamePersonalization(item.personalization, personalization),
+  );
+
+  console.log("🟢 existing item found:", existing);
+
   if (existing) {
     const desired = existing.quantity + quantity;
-    existing.quantity = Math.min(
-      snapshot.inStock,
-      Math.max(1, Math.floor(desired)),
-    );
+    existing.quantity = Math.max(1, Math.floor(desired));
     existing.product = snapshot;
+    console.log("🟡 Updated existing item quantity to:", existing.quantity);
   } else {
-    cart.push({
+    const newItem = {
       productId: snapshot.productId,
-      quantity: Math.min(snapshot.inStock, Math.max(1, Math.floor(quantity))),
+      quantity: Math.max(1, Math.floor(quantity)),
+      personalization,
       product: snapshot,
-    });
+    };
+    cart.push(newItem);
+    console.log("🟣 Added new item:", newItem);
   }
 
   writeGuestCart(cart);
 };
 
-export const setGuestCartQuantity = (productId: string, quantity: number) => {
+export const setGuestCartQuantity = (index: number, quantity: number) => {
   const cart = readGuestCart();
-  const updated = cart
-    .map((item) => {
-      if (item.productId !== productId) {
-        return item;
-      }
 
-      if (quantity <= 0 || !Number.isFinite(quantity)) {
-        return null;
-      }
+  if (index < 0 || index >= cart.length) {
+    return;
+  }
 
-      const clamped = Math.min(
-        item.product.inStock,
-        Math.max(1, Math.floor(quantity)),
-      );
+  if (quantity <= 0 || !Number.isFinite(quantity)) {
+    // Remove item if quantity is 0 or invalid
+    const updated = cart.filter((_, i) => i !== index);
+    writeGuestCart(updated);
+    return;
+  }
 
-      return { ...item, quantity: clamped };
-    })
-    .filter((item): item is GuestCartItem => item !== null);
+  const clamped = Math.max(1, Math.floor(quantity));
+  const updated = cart.map((item, i) =>
+    i === index ? { ...item, quantity: clamped } : item,
+  );
 
   writeGuestCart(updated);
 };
 
-export const removeGuestCartItem = (productId: string) => {
-  const cart = readGuestCart().filter((item) => item.productId !== productId);
-  writeGuestCart(cart);
+export const removeGuestCartItem = (index: number) => {
+  const cart = readGuestCart();
+
+  if (index < 0 || index >= cart.length) {
+    return;
+  }
+
+  const updated = cart.filter((_, i) => i !== index);
+  writeGuestCart(updated);
 };
 
 export const clearGuestCart = () => {
@@ -168,18 +207,26 @@ export const useGuestCart = () => {
   }, [refresh]);
 
   const addItem = useCallback(
-    (snapshot: GuestCartProductSnapshot, quantity: number) => {
-      addGuestCartItem(snapshot, quantity);
+    (
+      snapshot: GuestCartProductSnapshot,
+      quantity: number,
+      personalization?: {
+        text?: string;
+        color?: string;
+        number?: string;
+      },
+    ) => {
+      addGuestCartItem(snapshot, quantity, personalization);
     },
     [],
   );
 
-  const setQuantity = useCallback((productId: string, quantity: number) => {
-    setGuestCartQuantity(productId, quantity);
+  const setQuantity = useCallback((index: number, quantity: number) => {
+    setGuestCartQuantity(index, quantity);
   }, []);
 
-  const removeItem = useCallback((productId: string) => {
-    removeGuestCartItem(productId);
+  const removeItem = useCallback((index: number) => {
+    removeGuestCartItem(index);
   }, []);
 
   const clear = useCallback(() => {
@@ -208,4 +255,5 @@ export const mapGuestCartForImport = (items: GuestCartItem[]) =>
   items.map((item) => ({
     productId: item.productId as Id<"products">,
     quantity: item.quantity,
+    personalization: item.personalization,
   }));

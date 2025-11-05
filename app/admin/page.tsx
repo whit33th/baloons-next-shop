@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useRef } from "react";
-import { useQuery, useMutation } from "convex/react";
-import { api } from "../../convex/_generated/api";
+import { useMutation, useQuery } from "convex/react";
+import { useRef, useState } from "react";
 import { toast } from "sonner";
 import { Header } from "../../components/Containers/Header";
+import { api } from "../../convex/_generated/api";
 
 export default function AdminPage() {
   const productsResult = useQuery(api.products.list, {
@@ -58,7 +58,7 @@ export default function AdminPage() {
 
     setIsCreating(true);
     try {
-      let imageId = undefined;
+      let imageId: string | undefined;
 
       if (selectedImage) {
         // Step 1: Get upload URL
@@ -84,8 +84,7 @@ export default function AdminPage() {
         name: formData.name,
         description: formData.description,
         price: parseFloat(formData.price),
-        inStock: parseInt(formData.inStock),
-        imageId,
+        inStock: Boolean(formData.inStock),
         imageIds: imageId ? [imageId] : [],
       });
 
@@ -162,7 +161,7 @@ export default function AdminPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="mb-2 block text-sm font-medium text-gray-700">
-                      Price ($) *
+                      Price (€) *
                     </label>
                     <input
                       type="number"
@@ -315,7 +314,9 @@ export default function AdminPage() {
                     </p>
 
                     <div className="mb-2 flex items-center justify-between text-sm text-gray-500">
-                      <span>{product.inStock} in stock</span>
+                      <span>
+                        {product.inStock ? "In stock" : "Out of stock"}
+                      </span>
                     </div>
 
                     <div className="flex items-center justify-between">

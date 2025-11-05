@@ -1,31 +1,36 @@
 "use client";
 
+import { type Preloaded, usePreloadedQuery } from "convex/react";
+import { useSearchParams } from "next/navigation";
 import { ProductFilters } from "@/components/Containers/ProductFilters/ProductFilters";
 import { ProductGrid } from "@/components/ProductGrid";
-import { useSearchParams } from "next/navigation";
+import type { api } from "@/convex/_generated/api";
 
-export default function CatalogClient({ preloaded }: { preloaded: any }) {
+interface CatalogClientProps {
+  preloaded: Preloaded<typeof api.products.list>;
+}
+
+export default function CatalogClient({ preloaded }: CatalogClientProps) {
+  usePreloadedQuery(preloaded);
   const searchParams = useSearchParams();
 
   const filters = {
     search: searchParams.get("search") || "",
-    color: searchParams.get("color") || "",
-    size: searchParams.get("size") || "",
-    shape: searchParams.get("shape") || "",
-    material: searchParams.get("material") || "",
-    occasion: searchParams.get("occasion") || "",
     minPrice: searchParams.get("minPrice") || "",
     maxPrice: searchParams.get("maxPrice") || "",
     available: searchParams.get("available") || "",
     sale: searchParams.get("sale") || "",
+    category: searchParams.get("category") || "",
+    sort: searchParams.get("sort") || "",
+    tag: searchParams.get("tag") || "",
+    color: searchParams.get("color") || "",
+    size: searchParams.get("size") || "",
   };
 
   return (
-    <main className="w-full">
-      <div className="w-full">
-        <ProductFilters />
-        <ProductGrid filters={filters} />
-      </div>
-    </main>
+    <div className="w-full">
+      <ProductFilters />
+      <ProductGrid filters={filters} />
+    </div>
   );
 }

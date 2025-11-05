@@ -1,13 +1,13 @@
 "use client";
 
+import { type Preloaded, usePreloadedQuery } from "convex/react";
+import { Hero } from "@/components/Containers";
 import { CategoriesCarousel } from "@/components/ui/categories-carousel";
-import { Hero, Quality, Footer } from "@/components/Containers";
 import { ProductCarousel } from "@/components/ui/product-carousel";
-import { Preloaded, usePreloadedQuery } from "convex/react";
-import { api } from "@/convex/_generated/api";
-import ParallaxImage from "@/components/ui/parallax-image";
 import RainbowArcText from "@/components/ui/rainbow-text";
-import { DotLottieReact } from "@lottiefiles/dotlottie-react";
+import type { api } from "@/convex/_generated/api";
+import { CATEGORIES } from "@/lib/config";
+
 interface HomePageClientProps {
   preloadedBestsellers: Preloaded<typeof api.products.list>;
 }
@@ -16,33 +16,12 @@ export function HomePageClient({ preloadedBestsellers }: HomePageClientProps) {
   // Use preloaded query for instant data - no loading state!
   const bestsellersProduct = usePreloadedQuery(preloadedBestsellers);
 
-  const categories = [
-    {
-      name: "Party Balloons",
-      image: "/img.jpg",
-      link: "/catalog",
-    },
-    {
-      name: "Birthday Special",
-      image: "/baloons2.png",
-      link: "/catalog",
-    },
-    {
-      name: "Premium Collection",
-      image: "/baloons3.png",
-      link: "/catalog",
-    },
-    {
-      name: "Kids Favorites",
-      image: "/baloons4.png",
-      link: "/catalog",
-    },
-    {
-      name: "All Balloons",
-      image: "/img.jpg",
-      link: "/catalog",
-    },
-  ];
+  // Map categories from config for the carousel
+  const categories = CATEGORIES.map((cat) => ({
+    name: cat.name,
+    image: cat.icon,
+    link: "/catalog",
+  }));
 
   return (
     <main className="flex min-h-screen flex-col">

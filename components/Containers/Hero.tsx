@@ -1,10 +1,10 @@
-import Link from "next/link";
-import Image from "next/image";
 import { ArrowRight } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
 
 export const Hero = () => {
   return (
-    <section className="relative h-[calc(100dvh-57px-26px-62px-20px)] overflow-hidden">
+    <section className="relative h-[calc(100svh-57px-26px-62px-20px)] overflow-hidden">
       {/* Background Image */}
       <Image
         src="/hero-baloons.gif"
@@ -19,13 +19,13 @@ export const Hero = () => {
       <div className="text-background z-10 flex h-full max-w-2xl flex-col justify-between p-4 py-10 md:p-10">
         <div>
           <h1 className="mb-6 text-4xl leading-tight font-light sm:text-5xl md:text-6xl lg:text-7xl">
-            Premium Balloons for Every Celebration
+            Ballonique – When Moments Become Emotions
           </h1>
         </div>
         <div>
           <p className="mb-8 hidden text-xl md:block md:text-2xl">
-            Handcrafted with care, designed to bring joy and create
-            unforgettable moments
+            Designer balloon sets for all celebrations. Emotions and joy in
+            every detail.
           </p>
           <Link
             href="/catalog"

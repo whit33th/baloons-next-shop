@@ -1,5 +1,5 @@
-import { api } from "@/convex/_generated/api";
 import { preloadQuery } from "convex/nextjs";
+import { api } from "@/convex/_generated/api";
 import { HomePageClient } from "./HomePageClient";
 
 export default async function HomePage() {

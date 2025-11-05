@@ -1,29 +1,34 @@
 "use client";
 
+import Image from "next/image";
+import { useLayoutEffect, useState } from "react";
 import {
   Carousel,
-  CarouselApi,
+  type CarouselApi,
   CarouselContent,
   CarouselItem,
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
-import Image from "next/image";
-import { useLayoutEffect, useState } from "react";
 
 export interface Category {
   name: string;
   icon: string;
+  value?: string;
 }
 
 export interface CategoriesCarouselProps {
   categories: Category[];
   className?: string;
+  activeCategory?: string;
+  onCategorySelect?: (categoryValue: string) => void;
 }
 
 export function CategoriesIconCarousel({
   categories,
   className,
+  activeCategory,
+  onCategorySelect,
 }: CategoriesCarouselProps) {
   const [api, setApi] = useState<CarouselApi>();
   const [disabled, setDisabled] = useState(false);
@@ -52,28 +57,47 @@ export function CategoriesIconCarousel({
         }}
       >
         <CarouselContent className="ml-0">
-          {categories.map((category, index) => (
-            <CarouselItem
-              key={category.name}
-              className={index === 0 ? "pl-0" : ""}
-              style={{ maxWidth: "max-content" }}
-            >
-              <div className="flex flex-col items-center">
-                <div className="relative flex aspect-square h-full w-full items-center justify-center rounded-xl">
-                  <Image
-                    src={category.icon}
-                    alt={`${category.name} category`}
-                    height={48}
-                    width={48}
-                    className="aspect-square h-full w-full rounded-xl object-cover text-gray-500 drop-shadow"
-                  />
-                </div>
-                <div className="lg:16 mt-3 w-14 truncate text-center text-xs leading-none font-medium text-black lg:text-[0.8rem]">
-                  {category.name}
-                </div>
-              </div>
-            </CarouselItem>
-          ))}
+          {categories.map((category, index) => {
+            const categoryValue = category.value ?? category.name;
+            const isAllCategory = categoryValue === "";
+            const isActive = isAllCategory
+              ? !activeCategory
+              : activeCategory === categoryValue;
+
+            return (
+              <CarouselItem
+                key={category.name}
+                className={index === 0 ? "pl-0" : ""}
+                style={{ maxWidth: "max-content" }}
+              >
+                <button
+                  type="button"
+                  onClick={() => onCategorySelect?.(categoryValue)}
+                  className={`focus-visible:ring-secondary/70 flex flex-col items-center rounded-xl px-1 py-1 transition-[transform,box-shadow,opacity] duration-200 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none ${
+                    isActive ? "opacity-100" : "opacity-80 hover:opacity-100"
+                  }`}
+                  aria-pressed={isActive}
+                >
+                  <div
+                    className={`relative flex aspect-square h-full w-full items-center justify-center rounded-xl ${
+                      isActive ? "ring-secondary ring-2" : "ring-border ring-1"
+                    }`}
+                  >
+                    <Image
+                      src={category.icon}
+                      alt={`${category.name} category`}
+                      height={48}
+                      width={48}
+                      className="aspect-square h-full w-full rounded-xl object-cover text-gray-500 drop-shadow"
+                    />
+                  </div>
+                  <div className="mt-3 w-14 truncate text-center text-xs font-medium text-black lg:w-16 lg:text-[0.8rem]">
+                    {category.name}
+                  </div>
+                </button>
+              </CarouselItem>
+            );
+          })}
         </CarouselContent>
         <div className="z-50 opacity-0 group-hover:flex lg:hidden lg:group-hover:opacity-100">
           <CarouselPrevious

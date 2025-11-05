@@ -1,5 +1,8 @@
 "use client";
 
+import { ArrowUpDown } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Drawer,
@@ -11,9 +14,6 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "@/components/ui/drawer";
-import { useRouter, useSearchParams } from "next/navigation";
-import { useState } from "react";
-import { ArrowUpDown } from "lucide-react";
 
 const sortOptions = [
   { value: "default", label: "Default" },
@@ -38,7 +38,8 @@ export function SortByButton() {
       params.set("sort", value);
     }
 
-    router.push(`/catalog?${params.toString()}`);
+    const queryString = params.toString();
+    router.push(queryString ? `/catalog?${queryString}` : "/catalog");
     setDrawerOpen(false);
   };
 
@@ -48,7 +49,7 @@ export function SortByButton() {
   return (
     <Drawer open={drawerOpen} onOpenChange={setDrawerOpen}>
       <DrawerTrigger asChild>
-        <button className="border-border/50 text-deep flex h-10 items-center justify-center gap-2 text-xs font-medium tracking-wide underline-offset-1 transition-colors hover:underline">
+        <button className="border-border/50 text-deep flex h-10 items-center justify-center gap-2 text-sm font-medium tracking-wide underline-offset-1 transition-colors hover:underline">
           <ArrowUpDown className="h-4 w-4" />
           Sort By: {currentSortLabel}
         </button>

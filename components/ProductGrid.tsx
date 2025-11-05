@@ -1,19 +1,26 @@
 "use client";
 
-import { useMutation, usePaginatedQuery } from "convex/react";
-import { toast } from "sonner";
-import { api } from "../convex/_generated/api";
+import { usePaginatedQuery } from "convex/react";
+import { useMemo } from "react";
+import { api } from "@/convex/_generated/api";
 import { Button } from "./ui/button";
 import ProductCard from "./ui/productCard";
 
+type ProductGridFilters = {
+  search: string;
+  minPrice?: string;
+  maxPrice?: string;
+  available?: string;
+  sale?: string;
+  category?: string;
+  sort?: string;
+  tag?: string;
+  color?: string;
+  size?: string;
+};
+
 interface ProductGridProps {
-  filters: {
-    search: string;
-    color: string;
-    size: string;
-    shape: string;
-  };
-  onProductClick?: (productId: string) => void;
+  filters: ProductGridFilters;
 }
 
 // Balloon colors for colorful backgrounds
@@ -29,52 +36,133 @@ export const balloonColors = [
   "#FFD93D",
 ];
 
-export function ProductGrid({ filters, onProductClick }: ProductGridProps) {
-  const { results, status, loadMore } = usePaginatedQuery(
-    api.products.list,
-    {
-      search: filters.search || undefined,
-      color: filters.color || undefined,
-      size: (filters.size as any) || undefined,
-      shape: (filters.shape as any) || undefined,
-    },
-    { initialNumItems: 10 },
-  );
+const SORT_OPTIONS = [
+  "default",
+  "price-low",
+  "price-high",
+  "name-asc",
+  "name-desc",
+] as const;
 
-  const addToCart = useMutation(api.cart.add);
+type SortOption = (typeof SORT_OPTIONS)[number];
 
-  const handleAddToCart = async (productId: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    e.preventDefault();
-    try {
-      await addToCart({ productId: productId as any, quantity: 1 });
-      toast.success("Added to cart!");
-    } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Failed to add to cart",
-      );
-    }
-  };
+const SORT_OPTION_SET = new Set<SortOption>(SORT_OPTIONS);
 
-  const handleProductClick = (productId: string) => {
-    if (onProductClick) {
-      onProductClick(productId);
-    }
-  };
+const TAG_OPTIONS = ["new", "bestseller"] as const;
+type TagOption = (typeof TAG_OPTIONS)[number];
+const TAG_OPTION_SET = new Set<TagOption>(TAG_OPTIONS);
+
+export function ProductGrid({ filters }: ProductGridProps) {
+  const {
+    search,
+    minPrice,
+    maxPrice,
+    available,
+    sale,
+    category,
+    sort,
+    tag,
+    color,
+    size,
+  } = filters;
+
+  const queryArgs = useMemo(() => {
+    const parsePrice = (value?: string) => {
+      if (!value) {
+        return undefined;
+      }
+      const parsed = Number(value.trim());
+      return Number.isFinite(parsed) ? parsed : undefined;
+    };
+
+    const normalizeString = (value?: string) => {
+      if (!value) {
+        return undefined;
+      }
+
+      const replaced = value.replace(/\+/g, " ");
+      const trimmed = replaced.trim();
+      if (trimmed.length === 0) {
+        return undefined;
+      }
+
+      try {
+        const decoded = decodeURIComponent(trimmed);
+        return decoded.length > 0 ? decoded : undefined;
+      } catch (error) {
+        return trimmed;
+      }
+    };
+
+    const normalizeSort = (value?: string) => {
+      if (!value) {
+        return undefined;
+      }
+      return SORT_OPTION_SET.has(value as SortOption)
+        ? (value as SortOption)
+        : undefined;
+    };
+
+    const normalizeTag = (value?: string) => {
+      if (!value) {
+        return undefined;
+      }
+      return TAG_OPTION_SET.has(value as TagOption)
+        ? (value as TagOption)
+        : undefined;
+    };
+
+    return {
+      search: normalizeString(search),
+      minPrice: parsePrice(minPrice),
+      maxPrice: parsePrice(maxPrice),
+      available: available === "true" ? true : undefined,
+      sale: sale === "true" ? true : undefined,
+      category: normalizeString(category),
+      sort: normalizeSort(sort),
+      tag: normalizeTag(tag),
+      color: normalizeString(color),
+      size: normalizeString(size),
+    } as const;
+  }, [
+    search,
+    minPrice,
+    maxPrice,
+    available,
+    sale,
+    category,
+    sort,
+    tag,
+    color,
+    size,
+  ]);
+
+  // Casting until Convex codegen picks up extended return signature.
+  const productListQuery = api.products.list as any;
+
+  const {
+    results: products,
+    status,
+    loadMore,
+  } = usePaginatedQuery(productListQuery, queryArgs, { initialNumItems: 10 });
 
   if (status === "LoadingFirstPage") {
     return (
-      <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))]">
-        {Array.from({ length: 12 }).map((_, i) => (
+      <div className="grid grid-cols-2 sm:grid-cols-[repeat(auto-fill,minmax(280px,1fr))]">
+        {Array.from({ length: 12 }).map((_, index) => (
           <div
-            key={i}
-            className="animate-pulse"
-            style={{ backgroundColor: balloonColors[i % balloonColors.length] }}
+            key={`skeleton-${index}`}
+            className="border-border flex flex-col border-r border-b"
           >
-            <div className="aspect-3/4" />
-            <div className="bg-white px-4 py-6">
-              <div className="mx-auto mb-2 h-6 w-3/4 bg-gray-200" />
-              <div className="mx-auto h-8 w-20 bg-gray-200" />
+            <div
+              className="aspect-3/4 animate-pulse"
+              style={{
+                backgroundColor: balloonColors[index % balloonColors.length],
+              }}
+            />
+            <div className="px-4 py-3">
+              <div className="mb-2 h-4 w-3/4 bg-white/60" />
+              <div className="h-4 w-20 bg-white/40" />
             </div>
           </div>
         ))}
@@ -82,9 +170,9 @@ export function ProductGrid({ filters, onProductClick }: ProductGridProps) {
     );
   }
 
-  if (results.length === 0) {
+  if (products.length === 0) {
     return (
-      <div className="bg-[#F8F5ED] py-16 text-center">
+      <div className="py-16 text-center">
         <div className="mb-4 text-6xl">🎈</div>
         <h3 className="mb-2 text-xl font-semibold text-black">
           No balloons found
@@ -97,15 +185,15 @@ export function ProductGrid({ filters, onProductClick }: ProductGridProps) {
   return (
     <div className="w-full">
       {/* Seamless Product Grid - no gaps */}
-      <div className="grid w-full grid-cols-2 border-t border-neutral-950 sm:grid-cols-[repeat(auto-fill,minmax(280px,1fr))]">
-        {results.map((product, i) => (
-          <ProductCard index={i} key={i} product={product} />
+      <div className="border-foreground grid w-full grid-cols-2 border-t sm:grid-cols-[repeat(auto-fill,minmax(280px,1fr))]">
+        {products.map((product, index) => (
+          <ProductCard index={index} key={product._id} product={product} />
         ))}
       </div>
 
       {/* Load More Button */}
       {status === "CanLoadMore" && (
-        <div className="bg-[#F8F5ED] px-8 py-12 text-center">
+        <div className="px-8 py-12 text-center">
           <Button
             onClick={() => loadMore(10)}
             disabled={status !== "CanLoadMore"}

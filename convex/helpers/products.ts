@@ -26,13 +26,7 @@ export const attachImageToProduct = async (
   ctx: ProductCtx,
   product: Doc<"products">,
 ): Promise<ProductWithImage> => {
-  const storageIds: Array<Id<"_storage">> = [
-    ...(product.imageIds ?? []),
-    ...(product.imageId ? [product.imageId] : []),
-  ];
-
-  const uniqueIds = Array.from(new Set(storageIds.map((id) => id)));
-  const imageUrls = await resolveImageUrls(ctx, uniqueIds);
+  const imageUrls = await resolveImageUrls(ctx, product.imageIds);
   const primaryImageUrl = imageUrls[0] ?? null;
 
   return { ...product, imageUrls, primaryImageUrl };

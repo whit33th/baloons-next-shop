@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { motion } from "motion/react";
 import { useMutation, useQuery } from "convex/react";
+import { motion } from "motion/react";
 import Link from "next/link";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { api } from "@/convex/_generated/api";
 import { SignOutButton } from "@/components/SignOutButton";
+import { api } from "@/convex/_generated/api";
 
 type TabId = "profile" | "orders" | "settings";
 
@@ -57,7 +57,7 @@ export default function ProfilePage() {
 
   if (user === undefined) {
     return (
-      <div className="min-h-screen bg-[#F8F5ED]">
+      <div className="min-h-screen">
         <div className="mx-auto grid max-w-5xl gap-6 px-4 py-16 md:grid-cols-2">
           <div className="h-60 animate-pulse rounded-3xl bg-white/70" />
           <div className="space-y-4">
@@ -75,7 +75,7 @@ export default function ProfilePage() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-[#F8F5ED]">
+      <div className="min-h-screen">
         <div className="mx-auto flex min-h-screen max-w-3xl flex-col items-center justify-center px-4 text-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -102,7 +102,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F8F5ED] pb-16">
+    <div className="min-h-screen pb-16">
       <main className="mx-auto w-full max-w-6xl px-4 pt-12">
         <motion.section
           initial={{ opacity: 0, y: 24 }}

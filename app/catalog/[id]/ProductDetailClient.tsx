@@ -1,9 +1,7 @@
 "use client";
 
-import { api } from "@/convex/_generated/api";
-import { snapshotFromProduct, useGuestCart } from "@/lib/guestCart";
 import {
-  Preloaded,
+  type Preloaded,
   useMutation,
   usePreloadedQuery,
   useQuery,
@@ -12,12 +10,15 @@ import { motion } from "motion/react";
 import Link from "next/link";
 import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
+import { api } from "@/convex/_generated/api";
+import { snapshotFromProduct, useGuestCart } from "@/lib/guestCart";
 import {
+  ProductFeatures,
   ProductGallery,
   ProductHeader,
   ProductInfo,
-  ProductFeatures,
 } from "./_components";
+import { ProductPersonalization } from "./_components/ProductPersonalization";
 
 interface Props {
   preloaded: Preloaded<typeof api.products.get>;
@@ -37,10 +38,20 @@ export default function ProductDetailClient({ preloaded }: Props) {
   const { addItem: addGuestItem } = useGuestCart();
   const [quantity, setQuantity] = useState(1);
   const [activeImage, setActiveImage] = useState(0);
+  const [personalization, setPersonalization] = useState<{
+    text?: string;
+    color?: string;
+    number?: string;
+  }>({});
 
   const galleryImages = useMemo(() => {
     if (!product) {
       return [];
+    }
+    // Use primaryImageUrl if available, otherwise use imageUrls array
+    // If neither exists, use fallback
+    if (product.primaryImageUrl) {
+      return [product.primaryImageUrl, ...product.imageUrls.slice(1)];
     }
     if (product.imageUrls.length > 0) {
       return product.imageUrls;
@@ -62,34 +73,45 @@ export default function ProductDetailClient({ preloaded }: Props) {
         return;
       }
 
+      if (!product.inStock) {
+        toast.error("Product is out of stock");
+        return;
+      }
+
       const safeQuantity = Math.max(1, Math.floor(desired));
-      const clampedQuantity = Math.min(safeQuantity, product.inStock);
+
+      // Only include personalization if product supports it and at least one field is filled
+      const hasPersonalization =
+        personalization.text || personalization.color || personalization.number;
+      const personalizedData =
+        product.isPersonalizable && hasPersonalization
+          ? personalization
+          : undefined;
 
       if (!user) {
-        addGuestItem(snapshotFromProduct(product), clampedQuantity);
-        if (clampedQuantity < safeQuantity) {
-          toast.info(
-            `Added only ${clampedQuantity} item(s) due to stock limits.`,
-          );
-        } else {
-          toast.success(`Added ${clampedQuantity} item(s) to cart!`);
-        }
+        addGuestItem(
+          snapshotFromProduct(product),
+          safeQuantity,
+          personalizedData,
+        );
+        toast.success(`Added ${safeQuantity} item(s) to cart!`);
         return;
       }
 
       try {
         await addToCart({
-          productId: product._id as any,
-          quantity: clampedQuantity,
+          productId: product._id,
+          quantity: safeQuantity,
+          personalization: personalizedData,
         });
-        toast.success(`Added ${clampedQuantity} item(s) to cart!`);
+        toast.success(`Added ${safeQuantity} item(s) to cart!`);
       } catch (error) {
         toast.error(
           error instanceof Error ? error.message : "Failed to add to cart",
         );
       }
     },
-    [product, user, addGuestItem, addToCart],
+    [product, user, addGuestItem, addToCart, personalization],
   );
 
   if (product === undefined) {
@@ -138,12 +160,12 @@ export default function ProductDetailClient({ preloaded }: Props) {
   }
 
   return (
-    <section className="grid w-full grid-cols-1 lg:h-[calc(100dvh-57px)] lg:grid-cols-[minmax(0,1fr)_minmax(320px,1fr)]">
+    <section className="flex w-full flex-col lg:flex-row">
       <motion.div
-        initial={{ opacity: 0, x: -30 }}
-        whileInView={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.5, ease: "easeOut" }}
-        className="border-border relative flex flex-col lg:border-r"
+        // initial={{ opacity: 0, x: -30 }}
+        // whileInView={{ opacity: 1, x: 0 }}
+        // transition={{ duration: 0.5, ease: "easeOut" }}
+        className="border-border relative flex flex-col lg:sticky lg:top-0 lg:h-[calc(100svh-57px)] lg:w-1/2 lg:overflow-hidden lg:border-r"
       >
         <ProductHeader />
         <ProductGallery
@@ -151,26 +173,37 @@ export default function ProductDetailClient({ preloaded }: Props) {
           productName={product.name}
           activeImage={activeImage}
           onImageChange={handleImageChange}
+          transitionId={product._id}
         />
       </motion.div>
 
       <motion.div
-        initial={{ opacity: 0, x: 30 }}
-        whileInView={{ opacity: 1, x: 0 }}
-        viewport={{ once: true }}
-        transition={{ duration: 0.5, ease: "easeOut" }}
-        className="to-primary/20 flex flex-col justify-between bg-linear-to-br from-white/50 px-8 py-10"
+        // initial={{ opacity: 0, x: 30 }}
+        // whileInView={{ opacity: 1, x: 0 }}
+        // viewport={{ once: true }}
+        // transition={{ duration: 0.5, ease: "easeOut" }}
+        className="to-primary/20 flex flex-col justify-between bg-linear-to-br from-white/50 px-8 py-10 lg:w-1/2"
       >
-        <ProductInfo
-          name={product.name}
-          description={product.description}
-          price={product.price}
-          inStock={product.inStock}
-          quantity={quantity}
-          onQuantityChange={handleQuantityChange}
-          onAddToCart={handleAddToCart}
-        />
-        <ProductFeatures />
+        <div className="flex h-full flex-col justify-between gap-6">
+          <div className="space-y-6">
+            <ProductInfo
+              name={product.name}
+              description={product.description}
+              price={product.price}
+              inStock={product.inStock}
+              quantity={quantity}
+              onQuantityChange={handleQuantityChange}
+              onAddToCart={handleAddToCart}
+            />
+            {product.isPersonalizable && product.availableColors && (
+              <ProductPersonalization
+                availableColors={product.availableColors}
+                onChange={setPersonalization}
+              />
+            )}
+          </div>
+          <ProductFeatures />
+        </div>
       </motion.div>
     </section>
   );

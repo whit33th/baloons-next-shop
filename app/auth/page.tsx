@@ -1,13 +1,11 @@
 "use client";
 
-import { useState } from "react";
 import { useAuthActions } from "@convex-dev/auth/react";
-import { ConvexError } from "convex/values";
-import { toast } from "sonner";
-import { redirect } from "next/dist/client/components/navigation";
 import { useConvexAuth } from "convex/react";
-import { useLayoutEffect } from "react";
+import { ConvexError } from "convex/values";
 import { useRouter } from "next/navigation";
+import { useLayoutEffect, useState } from "react";
+import { toast } from "sonner";
 
 export default function AuthPage() {
   const { signIn } = useAuthActions();
@@ -22,15 +20,15 @@ export default function AuthPage() {
     if (isAuthenticated) {
       router.replace("/");
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, router]);
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-linear-to-br from-sky-50 to-white p-6">
-      <div className="w-full max-w-md rounded-xl bg-white/80 p-8 shadow-lg backdrop-blur-md">
-        <h1 className="mb-2 text-2xl font-semibold text-slate-800">
+    <main className="bg-primary flex min-h-screen items-center justify-center p-4 sm:p-6">
+      <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-lg sm:p-8">
+        <h1 className="text-deep mb-2 text-xl font-semibold sm:text-2xl">
           {flow === "signIn" ? "Sign in" : "Create account"}
         </h1>
-        <p className="mb-6 text-sm text-slate-500">
+        <p className="text-deep/70 mb-6 text-sm">
           {flow === "signIn"
             ? "Welcome back — enter your email and password to sign in."
             : "Create a new account to start shopping."}
@@ -55,16 +53,21 @@ export default function AuthPage() {
               .catch((error) => {
                 console.error(error);
                 let message = "Something went wrong. Please try again.";
-                if (error instanceof ConvexError && (error as any).data) {
-                  // attempt to show a helpful error if available
-                  message = (error as any).data || message;
+                if (error instanceof ConvexError) {
+                  const errorData = error.data;
+                  if (typeof errorData === "string" && errorData.length > 0) {
+                    message = errorData;
+                  }
                 }
                 toast.error(message);
               })
               .finally(() => setSubmitting(false));
           }}
         >
-          <label htmlFor="email" className="text-sm font-medium text-slate-700">
+          <label
+            htmlFor="email"
+            className="text-deep text-xs font-medium sm:text-sm"
+          >
             Email
           </label>
           <input
@@ -73,13 +76,13 @@ export default function AuthPage() {
             type="email"
             required
             autoComplete="email"
-            className="mt-1 mb-4 block w-full rounded-md border border-slate-200 px-3 py-2 shadow-sm focus:ring-2 focus:ring-sky-400 focus:outline-none"
+            className="focus:ring-secondary focus:border-secondary mt-1 mb-4 block w-full rounded-lg border px-3 py-2 text-sm shadow-sm focus:ring-2 focus:outline-none sm:text-base"
           />
 
           <div className="flex items-center justify-between">
             <label
               htmlFor="password"
-              className="text-sm font-medium text-slate-700"
+              className="text-deep text-xs font-medium sm:text-sm"
             >
               Password
             </label>
@@ -91,7 +94,7 @@ export default function AuthPage() {
                     "Password reset is supported via email — enter your email and click Reset below.",
                   )
                 }
-                className="text-sm text-sky-600 hover:underline"
+                className="text-secondary text-xs hover:underline sm:text-sm"
               >
                 Forgot?
               </button>
@@ -106,7 +109,7 @@ export default function AuthPage() {
             autoComplete={
               flow === "signIn" ? "current-password" : "new-password"
             }
-            className="mt-1 mb-2 block w-full rounded-md border border-slate-200 px-3 py-2 shadow-sm focus:ring-2 focus:ring-sky-400 focus:outline-none"
+            className="focus:ring-secondary focus:border-secondary mt-1 mb-2 block w-full rounded-lg border px-3 py-2 text-sm shadow-sm focus:ring-2 focus:outline-none sm:text-base"
           />
 
           <input name="flow" value={flow} type="hidden" />
@@ -114,7 +117,7 @@ export default function AuthPage() {
           <button
             type="submit"
             disabled={submitting}
-            className="mt-4 inline-flex items-center justify-center rounded-md bg-sky-600 px-4 py-2 text-white hover:bg-sky-700 disabled:opacity-60"
+            className="btn-accent mt-4 inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-semibold transition-opacity hover:opacity-90 disabled:opacity-60 sm:text-base"
           >
             {submitting
               ? "Working..."
@@ -126,7 +129,7 @@ export default function AuthPage() {
           <button
             type="button"
             onClick={() => setFlow(flow === "signIn" ? "signUp" : "signIn")}
-            className="mt-3 text-sm text-slate-600 hover:underline"
+            className="text-deep/70 hover:text-deep mt-3 text-xs hover:underline sm:text-sm"
           >
             {flow === "signIn"
               ? "Don't have an account? Sign up"
@@ -134,9 +137,9 @@ export default function AuthPage() {
           </button>
         </form>
 
-        <hr className="my-6 border-slate-100" />
+        <hr className="border-secondary/20 my-6" />
 
-        <p className="text-sm text-slate-500">
+        <p className="text-deep/70 text-center text-xs sm:text-sm">
           Or sign in with a provider (coming soon)
         </p>
       </div>

@@ -8,10 +8,10 @@ interface ProductInfoProps {
   name: string;
   description: string;
   price: number;
-  inStock: number;
+  inStock: boolean;
   quantity: number;
   onQuantityChange: (quantity: number) => void;
-  onAddToCart: (quantity: number) => void;
+  onAddToCart: (quantity?: number) => Promise<void>;
 }
 
 export const ProductInfo = memo(function ProductInfo({
@@ -31,7 +31,7 @@ export const ProductInfo = memo(function ProductInfo({
   );
 
   const handleAddToCart = useCallback(() => {
-    onAddToCart(quantity);
+    void onAddToCart(quantity);
   }, [onAddToCart, quantity]);
 
   return (
@@ -56,19 +56,17 @@ export const ProductInfo = memo(function ProductInfo({
               Price
             </span>
             <span className="text-deep text-5xl font-bold">
-              ${price.toFixed(2)}
+              {price.toFixed(2)} €
             </span>
           </div>
           <span
             className={`rounded-full px-5 py-2 text-sm font-semibold tracking-wide uppercase ${
-              inStock > 10
+              inStock
                 ? "bg-secondary/10 text-secondary"
-                : inStock > 0
-                  ? "bg-support-warm/10 text-support-warm"
-                  : "bg-deep/10 text-deep"
+                : "bg-deep/10 text-deep"
             }`}
           >
-            {inStock > 0 ? `${inStock} in stock` : "Out of stock"}
+            {inStock ? "In stock" : "Out of stock"}
           </span>
         </div>
 
@@ -78,12 +76,10 @@ export const ProductInfo = memo(function ProductInfo({
             <select
               value={quantity}
               onChange={handleQuantityChange}
-              className="border-border text-deep hover:border-secondary focus:border-secondary focus:ring-secondary/20 h-11 rounded-xl border-2 bg-white px-4 text-sm font-semibold transition-colors outline-none focus:ring-2"
+              disabled={!inStock}
+              className="border-border text-deep hover:border-secondary focus:border-secondary focus:ring-secondary/20 h-11 rounded-xl border-2 bg-white px-4 text-sm font-semibold transition-colors outline-none focus:ring-2 disabled:opacity-50"
             >
-              {Array.from(
-                { length: Math.max(1, Math.min(10, inStock)) },
-                (_, idx) => idx + 1,
-              ).map((value) => (
+              {Array.from({ length: 10 }, (_, idx) => idx + 1).map((value) => (
                 <option value={value} key={value}>
                   {value}
                 </option>
@@ -95,10 +91,10 @@ export const ProductInfo = memo(function ProductInfo({
         <motion.button
           whileTap={{ scale: 0.97 }}
           onClick={handleAddToCart}
-          disabled={inStock === 0}
+          disabled={!inStock}
           className="btn-accent text-on-accent mt-2 inline-flex h-14 items-center justify-center rounded-xl text-sm font-bold tracking-widest uppercase shadow-lg transition-[box-shadow,filter,opacity] duration-200 hover:shadow-xl hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:shadow-lg"
         >
-          {inStock === 0 ? "Sold out" : "Add to cart"}
+          {!inStock ? "Sold out" : "Add to cart"}
         </motion.button>
 
         <div className="text-secondary flex items-center gap-2 text-sm font-medium">
