@@ -1,11 +1,12 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { upload } from "@imagekit/next";
 import { useMutation } from "convex/react";
 import { useQuery } from "convex-helpers/react/cache";
-import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, type FieldErrors, type Path } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 
@@ -19,6 +20,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import ImageKitPicture from "@/components/ui/ImageKitPicture";
 import Input from "@/components/ui/input";
 import {
   Select,
@@ -32,9 +34,11 @@ import { Textarea } from "@/components/ui/textarea";
 import type { CategoryGroupValue } from "@/constants/categories";
 import { PRODUCT_CATEGORY_GROUPS } from "@/constants/categories";
 import { BALLOON_COLORS } from "@/constants/colors";
+import { ADMIN_PRODUCT_IMAGE_TRANSFORMATION } from "@/lib/imagekit";
 import { cn } from "@/lib/utils";
 import { api } from "../../convex/_generated/api";
-import type { Doc, Id } from "../../convex/_generated/dataModel";
+import type { Doc } from "../../convex/_generated/dataModel";
+import Image from "next/image";
 
 const SIZE_OPTIONS = ["30cm", "45cm", "80cm", "100cm"] as const;
 
@@ -45,6 +49,8 @@ type PendingImage = {
   file: File;
   preview: string;
 };
+
+type ProductCardData = Doc<"products"> & { primaryImageUrl: string | null };
 
 const DEFAULT_CATEGORY_GROUP = PRODUCT_CATEGORY_GROUPS[0];
 const DEFAULT_CATEGORY =
@@ -132,6 +138,9 @@ const productDefaultValues: ProductFormValues = {
 };
 
 export default function AdminPage() {
+  const router = useRouter();
+  const user = useQuery(api.auth.loggedInUser);
+
   const [activeTab, setActiveTab] = useState<
     "products" | "orders" | "insights"
   >("products");
@@ -140,13 +149,17 @@ export default function AdminPage() {
   const [sortOrder, setSortOrder] = useState<"newest" | "oldest">("newest");
   const [pendingImages, setPendingImages] = useState<PendingImage[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [existingImageUrls, setExistingImageUrls] = useState<string[]>([]);
+  const [editingProductId, setEditingProductId] = useState<
+    Doc<"products">["_id"] | null
+  >(null);
 
   const previewUrlsRef = useRef<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const formPanelRef = useRef<HTMLDivElement>(null);
 
   const createProduct = useMutation(api.products.create);
-  const generateUploadUrl = useMutation(api.products.generateUploadUrl);
+  const updateProduct = useMutation(api.products.update);
 
   const productsResult = useQuery(api.products.list, {
     paginationOpts: { numItems: 100, cursor: null },
@@ -163,6 +176,20 @@ export default function AdminPage() {
   });
 
   const categoryGroup = form.watch("categoryGroup");
+  const isEditing = editingProductId !== null;
+
+  const isCheckingAccess = user === undefined;
+  const isAdmin = user?.isAdmin === true;
+
+  // Client-side admin guard: redirect non-admins to home
+  useEffect(() => {
+    if (isCheckingAccess) {
+      return; // still loading
+    }
+    if (!isAdmin) {
+      router.replace("/");
+    }
+  }, [isAdmin, isCheckingAccess, router]);
 
   useEffect(() => {
     if (formOpen && formPanelRef.current) {
@@ -199,9 +226,10 @@ export default function AdminPage() {
     }
   }, [categoryGroup, form]);
 
-  const products = productsResult?.page ?? [];
+  const products = (productsResult?.page ?? []) as ProductCardData[];
   const ordersLoading = ordersResult === undefined;
   const orders = ordersResult ?? [];
+  const totalImages = existingImageUrls.length + pendingImages.length;
 
   const currentGroup = PRODUCT_CATEGORY_GROUPS.find(
     (item) => item.value === (categoryGroup as CategoryGroupValue),
@@ -255,7 +283,10 @@ export default function AdminPage() {
       return;
     }
 
-    const availableSlots = Math.max(0, 8 - pendingImages.length);
+    const availableSlots = Math.max(
+      0,
+      8 - (existingImageUrls.length + pendingImages.length),
+    );
     const selected = Array.from(files).slice(0, availableSlots);
 
     if (!selected.length) {
@@ -296,69 +327,167 @@ export default function AdminPage() {
     URL.revokeObjectURL(preview);
   };
 
-  const resetImages = () => {
+  const handleRemoveExistingImage = (url: string) => {
+    setExistingImageUrls((prev) => prev.filter((item) => item !== url));
+  };
+
+  const handleCollapseForm = () => {
+    form.reset(productDefaultValues);
+    resetImages();
+    setEditingProductId(null);
+    setFormOpen(false);
+  };
+
+  const startCreateFlow = () => {
+    setActiveTab("products");
+    setEditingProductId(null);
+    form.reset(productDefaultValues);
+    resetImages();
+    setFormOpen(true);
+  };
+
+  const handleEditProduct = (product: ProductCardData) => {
+    setActiveTab("products");
+    setFormOpen(true);
+    setEditingProductId(product._id);
+    resetImages({ preserveExisting: true });
+    form.reset({
+      name: product.name,
+      description: product.description,
+      price: String(product.price),
+      categoryGroup: product.categoryGroup,
+      category: product.category,
+      size: product.size,
+      inStock: product.inStock,
+      isPersonalizable: product.isPersonalizable ?? false,
+      availableColors: product.availableColors ?? [],
+    });
+    setExistingImageUrls(product.imageUrls ?? []);
+  };
+
+  const resetImages = (options?: { preserveExisting?: boolean }) => {
     previewUrlsRef.current.forEach((url) => {
       URL.revokeObjectURL(url);
     });
     previewUrlsRef.current = [];
     setPendingImages([]);
+    if (!options?.preserveExisting) {
+      setExistingImageUrls([]);
+    }
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
   };
 
-  const onSubmit = form.handleSubmit(async (values) => {
+  const handleValidSubmit = async (values: ProductFormValues) => {
     setIsSubmitting(true);
     try {
-      const imageIds: Id<"_storage">[] = [];
+      const uploadedImageUrls: string[] = [];
 
       for (const pending of pendingImages) {
-        const uploadUrl = await generateUploadUrl();
-        const response = await fetch(uploadUrl, {
-          method: "POST",
-          headers: { "Content-Type": pending.file.type },
-          body: pending.file,
-        });
+        const authResponse = await fetch("/api/imagekit-auth");
+        const authPayload = await authResponse.json();
 
-        const payload = await response.json();
-        if (!response.ok) {
+        if (!authResponse.ok) {
           throw new Error(
-            typeof payload?.message === "string"
-              ? payload.message
-              : "Не удалось загрузить изображение",
+            typeof authPayload?.error === "string"
+              ? authPayload.error
+              : "Не удалось получить авторизацию для загрузки",
           );
         }
 
-        imageIds.push(payload.storageId as Id<"_storage">);
+        const uploadResponse = await upload({
+          file: pending.file,
+          fileName: pending.file.name,
+          folder:
+            process.env.NEXT_PUBLIC_IMAGEKIT_PRODUCTS_FOLDER ?? "/products",
+          useUniqueFileName: true,
+          publicKey: authPayload.publicKey,
+          signature: authPayload.signature,
+          token: authPayload.token,
+          expire: authPayload.expire,
+        });
+
+        if (!uploadResponse?.url) {
+          throw new Error("ImageKit не вернул ссылку на изображение");
+        }
+
+        uploadedImageUrls.push(uploadResponse.url);
       }
 
       const numericPrice = Number(values.price.replace(",", "."));
-
-      await createProduct({
+      const payload = {
         name: values.name.trim(),
         description: values.description.trim(),
         price: numericPrice,
         categoryGroup: values.categoryGroup,
         category: values.category,
         size: values.size,
-        imageIds,
+        imageUrls: [...existingImageUrls, ...uploadedImageUrls],
         inStock: values.inStock,
         isPersonalizable: values.isPersonalizable,
         availableColors: values.availableColors.length
           ? values.availableColors
           : undefined,
-      });
+      };
 
-      toast.success("Товар сохранён");
+      if (isEditing && editingProductId) {
+        await updateProduct({
+          productId: editingProductId,
+          ...payload,
+        });
+        toast.success("Товар обновлён");
+      } else {
+        await createProduct(payload);
+        toast.success("Товар сохранён");
+      }
+
       form.reset(productDefaultValues);
       resetImages();
+      setEditingProductId(null);
       setFormOpen(false);
     } catch (error) {
       console.error(error);
       toast.error(
-        error instanceof Error ? error.message : "Не удалось создать товар",
+        error instanceof Error
+          ? error.message
+          : isEditing
+            ? "Не удалось обновить товар"
+            : "Не удалось создать товар",
       );
     } finally {
       setIsSubmitting(false);
     }
-  });
+  };
+
+  const handleInvalidSubmit = (errors: FieldErrors<ProductFormValues>) => {
+    const firstErrorEntry = Object.entries(errors)[0];
+    if (!firstErrorEntry) {
+      return;
+    }
+
+    const [fieldName, fieldError] = firstErrorEntry as [
+      Path<ProductFormValues>,
+      { message?: string },
+    ];
+
+    if (fieldError?.message) {
+      toast.error(fieldError.message);
+    }
+
+    form.setFocus(fieldName);
+  };
+
+  const onSubmit = form.handleSubmit(handleValidSubmit, handleInvalidSubmit);
+
+  // Avoid flashing admin UI while deciding access
+  if (isCheckingAccess) {
+    return null;
+  }
+
+  if (!isAdmin) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-linear-to-br from-slate-50 via-white to-purple-50">
@@ -387,14 +516,7 @@ export default function AdminPage() {
               <TabsTrigger value="insights">Аналитика</TabsTrigger>
             </TabsList>
 
-            <Button
-              onClick={() => {
-                setActiveTab("products");
-                setFormOpen(true);
-              }}
-            >
-              + Товар
-            </Button>
+            <Button onClick={startCreateFlow}>+ Товар</Button>
           </div>
 
           <TabsContent value="products">
@@ -408,15 +530,19 @@ export default function AdminPage() {
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <div>
                         <h2 className="text-xl font-semibold text-slate-900">
-                          Новый продукт
+                          {isEditing
+                            ? "Редактирование товара"
+                            : "Новый продукт"}
                         </h2>
                         <p className="text-sm text-slate-500">
-                          Заполните ключевые параметры и прикрепите фотографии.
+                          {isEditing
+                            ? "Обновите характеристики и фотографии выбранного товара."
+                            : "Заполните ключевые параметры и прикрепите фотографии."}
                         </p>
                       </div>
                       <Button
                         variant="ghost"
-                        onClick={() => setFormOpen(false)}
+                        onClick={handleCollapseForm}
                         type="button"
                         className="text-sm text-slate-500 hover:text-slate-900"
                       >
@@ -426,20 +552,132 @@ export default function AdminPage() {
 
                     <Form {...form}>
                       <form onSubmit={onSubmit} className="mt-6 grid gap-6">
+                        <div className="rounded-2xl border border-slate-200 bg-white/70 p-5 shadow-sm">
+                          <div className="flex items-center justify-between">
+                            <h3 className="text-sm font-semibold text-slate-900">
+                              Фотографии товара
+                            </h3>
+                            {totalImages > 0 ? (
+                              <button
+                                type="button"
+                                className="text-xs text-slate-500 hover:text-slate-900"
+                                onClick={() => resetImages()}
+                              >
+                                Очистить
+                              </button>
+                            ) : null}
+                          </div>
+
+                          <div className="mt-4 space-y-3">
+                            {totalImages === 0 ? (
+                              <label className="flex cursor-pointer flex-col items-center gap-3 rounded-xl border border-dashed border-slate-300 bg-slate-50/70 px-4 py-6 text-center text-sm text-slate-600 transition hover:border-slate-400">
+                                <div className="text-3xl">📷</div>
+                                <div>
+                                  Перетащите файлы или{" "}
+                                  <span className="font-semibold text-slate-900">
+                                    выберите на компьютере
+                                  </span>
+                                </div>
+                                <p className="text-xs text-slate-400">
+                                  До 8 изображений, максимум 3 MB каждое
+                                </p>
+                                <input
+                                  ref={fileInputRef}
+                                  type="file"
+                                  multiple
+                                  accept="image/*"
+                                  onChange={handleSelectImages}
+                                  className="hidden"
+                                />
+                              </label>
+                            ) : (
+                              <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">
+                                {existingImageUrls.map((url) => (
+                                  <div
+                                    key={url}
+                                    className="group relative aspect-3/4 overflow-hidden rounded-xl border border-slate-200"
+                                  >
+                                    <div className="relative aspect-3/4 w-full overflow-hidden">
+                                      <ImageKitPicture
+                                        src={url}
+                                        alt="Фотография товара"
+                                        fill
+                                        sizes="(min-width: 1280px) 15vw, (min-width: 768px) 25vw, 90vw"
+                                        className="object-cover"
+                                        transformation={
+                                          ADMIN_PRODUCT_IMAGE_TRANSFORMATION
+                                        }
+                                      />
+                                    </div>
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        handleRemoveExistingImage(url)
+                                      }
+                                      className="absolute inset-x-2 bottom-2 rounded-full bg-black/60 px-2 py-1 text-xs text-white opacity-0 transition group-hover:opacity-100"
+                                    >
+                                      Удалить
+                                    </button>
+                                  </div>
+                                ))}
+
+                                {pendingImages.map((image) => (
+                                  <div
+                                    key={image.preview}
+                                    className="group relative aspect-3/4 overflow-hidden rounded-xl border border-slate-200"
+                                  >
+                                    {/* biome-ignore lint/performance/noImgElement: native preview for local uploads */}
+                                    <Image
+                                      src={image.preview}
+                                      alt="Загруженное изображение"
+                                      width={320}
+                                      height={240}
+                                      className="aspect-3/4 w-full object-cover"
+                                    />
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        handleRemoveImage(image.preview)
+                                      }
+                                      className="absolute inset-x-2 bottom-2 rounded-full bg-black/60 px-2 py-1 text-xs text-white opacity-0 transition group-hover:opacity-100"
+                                    >
+                                      Удалить
+                                    </button>
+                                  </div>
+                                ))}
+
+                                {totalImages < 8 ? (
+                                  <label className="flex aspect-3/4 cursor-pointer items-center justify-center rounded-xl border border-dashed border-slate-300 bg-slate-50/70 text-slate-500 transition hover:border-slate-400">
+                                    <span className="text-sm font-medium">
+                                      + Добавить
+                                    </span>
+                                    <input
+                                      ref={fileInputRef}
+                                      type="file"
+                                      multiple
+                                      accept="image/*"
+                                      onChange={handleSelectImages}
+                                      className="hidden"
+                                    />
+                                  </label>
+                                ) : null}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
                         <div className="grid gap-6 md:grid-cols-2">
                           <FormField
                             control={form.control}
                             name="name"
-                            render={({ field }) => (
+                            render={({ field, fieldState }) => (
                               <FormItem>
                                 <FormLabel>Название</FormLabel>
                                 <FormControl>
                                   <Input
-                                    value={field.value}
-                                    onChange={field.onChange}
-                                    onBlur={field.onBlur}
-                                    name={field.name}
+                                    {...field}
                                     placeholder="Aurora Glow Balloon"
+                                    aria-invalid={fieldState.invalid}
                                   />
                                 </FormControl>
                                 <FormMessage />
@@ -450,26 +688,21 @@ export default function AdminPage() {
                           <FormField
                             control={form.control}
                             name="price"
-                            render={({ field }) => (
+                            render={({ field, fieldState }) => (
                               <FormItem>
                                 <FormLabel>Цена (€)</FormLabel>
                                 <FormControl>
                                   <Input
+                                    {...field}
                                     type="number"
                                     inputMode="decimal"
                                     step="0.1"
                                     min="0"
-                                    value={field.value}
-                                    onChange={field.onChange}
-                                    onBlur={field.onBlur}
-                                    name={field.name}
                                     placeholder="6.50"
+                                    aria-invalid={fieldState.invalid}
                                   />
                                 </FormControl>
-                                <FormDescription>
-                                  Цена указывается в евро. Можно использовать
-                                  запятую или точку.
-                                </FormDescription>
+
                                 <FormMessage />
                               </FormItem>
                             )}
@@ -478,7 +711,7 @@ export default function AdminPage() {
                           <FormField
                             control={form.control}
                             name="categoryGroup"
-                            render={({ field }) => (
+                            render={({ field, fieldState }) => (
                               <FormItem>
                                 <FormLabel>Группа</FormLabel>
                                 <Select
@@ -488,7 +721,10 @@ export default function AdminPage() {
                                   }
                                 >
                                   <FormControl>
-                                    <SelectTrigger className="w-full">
+                                    <SelectTrigger
+                                      className="h-11 w-full"
+                                      aria-invalid={fieldState.invalid}
+                                    >
                                       <SelectValue placeholder="Выберите группу" />
                                     </SelectTrigger>
                                   </FormControl>
@@ -511,7 +747,7 @@ export default function AdminPage() {
                           <FormField
                             control={form.control}
                             name="size"
-                            render={({ field }) => (
+                            render={({ field, fieldState }) => (
                               <FormItem>
                                 <FormLabel>Размер</FormLabel>
                                 <Select
@@ -521,7 +757,10 @@ export default function AdminPage() {
                                   }
                                 >
                                   <FormControl>
-                                    <SelectTrigger className="w-full">
+                                    <SelectTrigger
+                                      className="h-11 w-full"
+                                      aria-invalid={fieldState.invalid}
+                                    >
                                       <SelectValue placeholder="Размер" />
                                     </SelectTrigger>
                                   </FormControl>
@@ -541,16 +780,38 @@ export default function AdminPage() {
                           <FormField
                             control={form.control}
                             name="category"
-                            render={({ field }) => (
-                              <FormItem className="md:col-span-2">
-                                <FormLabel>Категория</FormLabel>
-                                {categoryOptions.length > 0 ? (
+                            render={({ field, fieldState }) => {
+                              const hasSubcategories =
+                                categoryOptions.length > 0;
+
+                              if (!hasSubcategories) {
+                                return (
+                                  <FormItem className="hidden">
+                                    <FormControl>
+                                      <input
+                                        type="hidden"
+                                        value={field.value}
+                                        onChange={field.onChange}
+                                        name={field.name}
+                                      />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                );
+                              }
+
+                              return (
+                                <FormItem className="md:col-span-2">
+                                  <FormLabel>Категория</FormLabel>
                                   <Select
                                     value={field.value}
                                     onValueChange={field.onChange}
                                   >
                                     <FormControl>
-                                      <SelectTrigger className="w-full">
+                                      <SelectTrigger
+                                        className="h-11 w-full"
+                                        aria-invalid={fieldState.invalid}
+                                      >
                                         <SelectValue placeholder="Категория" />
                                       </SelectTrigger>
                                     </FormControl>
@@ -565,35 +826,25 @@ export default function AdminPage() {
                                       ))}
                                     </SelectContent>
                                   </Select>
-                                ) : (
-                                  <FormControl>
-                                    <Input
-                                      value={fallbackCategory}
-                                      readOnly
-                                      name={field.name}
-                                    />
-                                  </FormControl>
-                                )}
-                                <FormMessage />
-                              </FormItem>
-                            )}
+                                  <FormMessage />
+                                </FormItem>
+                              );
+                            }}
                           />
                         </div>
 
                         <FormField
                           control={form.control}
                           name="description"
-                          render={({ field }) => (
+                          render={({ field, fieldState }) => (
                             <FormItem>
                               <FormLabel>Описание</FormLabel>
                               <FormControl>
                                 <Textarea
+                                  {...field}
                                   rows={4}
-                                  value={field.value}
-                                  onChange={field.onChange}
-                                  onBlur={field.onBlur}
-                                  name={field.name}
                                   placeholder="Уникальные особенности, сценарии использования, материалы..."
+                                  aria-invalid={fieldState.invalid}
                                 />
                               </FormControl>
                               <FormMessage />
@@ -605,7 +856,7 @@ export default function AdminPage() {
                           <FormField
                             control={form.control}
                             name="inStock"
-                            render={({ field }) => (
+                            render={({ field, fieldState }) => (
                               <FormItem>
                                 <FormLabel>Статус наличия</FormLabel>
                                 <Select
@@ -615,7 +866,10 @@ export default function AdminPage() {
                                   }
                                 >
                                   <FormControl>
-                                    <SelectTrigger className="w-full">
+                                    <SelectTrigger
+                                      className="h-11 w-full"
+                                      aria-invalid={fieldState.invalid}
+                                    >
                                       <SelectValue placeholder="Выберите статус" />
                                     </SelectTrigger>
                                   </FormControl>
@@ -636,7 +890,7 @@ export default function AdminPage() {
                           <FormField
                             control={form.control}
                             name="isPersonalizable"
-                            render={({ field }) => (
+                            render={({ field, fieldState }) => (
                               <FormItem>
                                 <FormLabel>Персонализация</FormLabel>
                                 <Select
@@ -646,7 +900,10 @@ export default function AdminPage() {
                                   }
                                 >
                                   <FormControl>
-                                    <SelectTrigger className="w-full">
+                                    <SelectTrigger
+                                      className="h-11 w-full"
+                                      aria-invalid={fieldState.invalid}
+                                    >
                                       <SelectValue placeholder="Персонализация" />
                                     </SelectTrigger>
                                   </FormControl>
@@ -659,9 +916,7 @@ export default function AdminPage() {
                                     </SelectItem>
                                   </SelectContent>
                                 </Select>
-                                <FormDescription>
-                                  Можно ли добавить текст, цвет или номер.
-                                </FormDescription>
+
                                 <FormMessage />
                               </FormItem>
                             )}
@@ -671,8 +926,9 @@ export default function AdminPage() {
                         <FormField
                           control={form.control}
                           name="availableColors"
-                          render={({ field }) => {
+                          render={({ field, fieldState }) => {
                             const selected = field.value ?? [];
+                            const hasError = Boolean(fieldState.error);
 
                             const toggleColor = (colorName: string) => {
                               if (selected.includes(colorName)) {
@@ -685,10 +941,16 @@ export default function AdminPage() {
                             };
 
                             return (
-                              <FormItem>
+                              <FormItem className="flex flex-col gap-2">
                                 <FormLabel>Популярные цвета</FormLabel>
                                 <FormControl>
-                                  <div className="flex flex-wrap gap-2">
+                                  <div
+                                    className={cn(
+                                      "flex flex-wrap gap-2",
+                                      hasError &&
+                                        "border-destructive/40 ring-destructive/20 rounded-xl border p-2 ring-1",
+                                    )}
+                                  >
                                     {BALLOON_COLORS.map((color) => {
                                       const active = selected.includes(
                                         color.name,
@@ -719,10 +981,7 @@ export default function AdminPage() {
                                     })}
                                   </div>
                                 </FormControl>
-                                <FormDescription>
-                                  Выберите до 8 оттенков, которые есть в
-                                  наличии.
-                                </FormDescription>
+
                                 <FormMessage />
                               </FormItem>
                             );
@@ -794,20 +1053,32 @@ export default function AdminPage() {
                       Пока нет товаров — самое время добавить первые позиции.
                     </div>
                   ) : (
-                    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                    <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
                       {products.map((product) => (
-                        <div
+                        <button
                           key={product._id}
-                          className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white/80 p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-md"
+                          type="button"
+                          aria-label={`Редактировать ${product.name}`}
+                          onClick={() => handleEditProduct(product)}
+                          className="group relative flex w-full cursor-pointer flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white/80 p-5 text-left shadow-sm transition hover:-translate-y-1 hover:shadow-md focus-visible:ring-2 focus-visible:ring-slate-300 focus-visible:outline-none"
                         >
-                          <div className="relative mb-4 aspect-4/3 overflow-hidden rounded-xl bg-slate-100">
+                          <div className="relative mb-4 aspect-3/4 overflow-hidden rounded-xl bg-slate-100">
                             {product.primaryImageUrl ? (
-                              <Image
+                              <ImageKitPicture
                                 src={product.primaryImageUrl}
                                 alt={product.name}
                                 fill
+                                loading="lazy"
                                 sizes="(min-width: 1280px) 20vw, (min-width: 768px) 30vw, 90vw"
                                 className="object-cover transition group-hover:scale-105"
+                                transformation={
+                                  ADMIN_PRODUCT_IMAGE_TRANSFORMATION
+                                }
+                                placeholderOptions={{
+                                  width: 40,
+                                  quality: 10,
+                                  blur: 35,
+                                }}
                               />
                             ) : (
                               <div className="flex h-full items-center justify-center text-4xl">
@@ -817,12 +1088,12 @@ export default function AdminPage() {
                           </div>
 
                           <div className="flex items-center justify-between gap-3">
-                            <h4 className="text-base font-semibold text-slate-900">
+                            <h4 className="line-clamp-2 text-base font-semibold wrap-break-word text-slate-900">
                               {product.name}
                             </h4>
                             <span
                               className={cn(
-                                "rounded-full px-2.5 py-1 text-xs font-semibold",
+                                "flex rounded-full px-2.5 py-1 text-xs font-semibold text-nowrap",
                                 product.inStock
                                   ? "bg-emerald-50 text-emerald-700"
                                   : "bg-rose-50 text-rose-700",
@@ -862,7 +1133,7 @@ export default function AdminPage() {
                               #{product._id.slice(-6)}
                             </span>
                           </div>
-                        </div>
+                        </button>
                       ))}
                     </div>
                   )}
@@ -870,87 +1141,6 @@ export default function AdminPage() {
               </div>
 
               <aside className="space-y-4">
-                <div className="rounded-2xl border border-slate-200 bg-white/80 p-5 shadow-sm">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-semibold text-slate-900">
-                      Фотографии товара
-                    </h3>
-                    {pendingImages.length ? (
-                      <button
-                        type="button"
-                        className="text-xs text-slate-500 hover:text-slate-900"
-                        onClick={resetImages}
-                      >
-                        Очистить
-                      </button>
-                    ) : null}
-                  </div>
-
-                  <div className="mt-4 space-y-3">
-                    {pendingImages.length === 0 ? (
-                      <label className="flex cursor-pointer flex-col items-center gap-3 rounded-xl border border-dashed border-slate-300 bg-slate-50/70 px-4 py-6 text-center text-sm text-slate-600 transition hover:border-slate-400">
-                        <div className="text-3xl">📷</div>
-                        <div>
-                          Перетащите файлы или{" "}
-                          <span className="font-semibold text-slate-900">
-                            выберите на компьютере
-                          </span>
-                        </div>
-                        <p className="text-xs text-slate-400">
-                          До 8 изображений, максимум 6 MB каждое
-                        </p>
-                        <input
-                          ref={fileInputRef}
-                          type="file"
-                          multiple
-                          accept="image/*"
-                          onChange={handleSelectImages}
-                          className="hidden"
-                        />
-                      </label>
-                    ) : (
-                      <div className="grid grid-cols-2 gap-3">
-                        {pendingImages.map((image) => (
-                          <div
-                            key={image.preview}
-                            className="group relative overflow-hidden rounded-xl border border-slate-200"
-                          >
-                            <Image
-                              src={image.preview}
-                              alt="Загруженное изображение"
-                              width={320}
-                              height={240}
-                              className="h-32 w-full object-cover"
-                            />
-                            <button
-                              type="button"
-                              onClick={() => handleRemoveImage(image.preview)}
-                              className="absolute inset-x-2 bottom-2 rounded-full bg-black/60 px-2 py-1 text-xs text-white opacity-0 transition group-hover:opacity-100"
-                            >
-                              Удалить
-                            </button>
-                          </div>
-                        ))}
-
-                        {pendingImages.length < 8 ? (
-                          <label className="flex h-32 cursor-pointer items-center justify-center rounded-xl border border-dashed border-slate-300 bg-slate-50/70 text-slate-500 transition hover:border-slate-400">
-                            <span className="text-sm font-medium">
-                              + Добавить
-                            </span>
-                            <input
-                              type="file"
-                              multiple
-                              accept="image/*"
-                              onChange={handleSelectImages}
-                              className="hidden"
-                            />
-                          </label>
-                        ) : null}
-                      </div>
-                    )}
-                  </div>
-                </div>
-
                 <div className="space-y-4 rounded-2xl border border-slate-200 bg-white/80 p-5 shadow-sm">
                   <div>
                     <p className="text-xs font-semibold text-slate-400 uppercase">

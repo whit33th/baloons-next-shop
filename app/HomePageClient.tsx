@@ -2,13 +2,14 @@
 
 import { type Preloaded, usePreloadedQuery } from "convex/react";
 import { motion } from "motion/react";
-import Image from "next/image";
 import Link from "next/link";
 import { Hero } from "@/components/Containers";
 import { ProductCarousel } from "@/components/ui/carousels/product-carousel";
+import ImageKitPicture from "@/components/ui/ImageKitPicture";
 import RainbowArcText from "@/components/ui/rainbow-text";
 import { PRODUCT_CATEGORY_GROUPS } from "@/constants/categories";
 import type { api } from "@/convex/_generated/api";
+import { DEFAULT_PRODUCT_IMAGE_TRANSFORMATION } from "@/lib/imagekit";
 
 interface HomePageClientProps {
   preloadedBestsellers: Preloaded<typeof api.products.getNewProducts>;
@@ -122,13 +123,19 @@ export function HomePageClient({
                       className="relative aspect-square w-full sm:aspect-3/4"
                       style={{ backgroundColor: bgColor }}
                     >
-                      <Image
+                      <ImageKitPicture
                         src={group.icon}
                         alt={group.label}
                         fill
                         className="object-cover"
                         sizes="(min-width: 640px) 25vw, 50vw"
                         priority={index < 2}
+                        transformation={DEFAULT_PRODUCT_IMAGE_TRANSFORMATION}
+                        placeholderOptions={{
+                          width: 48,
+                          quality: 12,
+                          blur: 40,
+                        }}
                       />
                     </div>
 

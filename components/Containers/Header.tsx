@@ -11,7 +11,6 @@ import {
   User,
   UserCircle,
 } from "lucide-react";
-import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef } from "react";
@@ -25,6 +24,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { mapGuestCartForImport, useGuestCart } from "@/lib/guestCart";
 import { api } from "../../convex/_generated/api";
+import ImageKitPicture from "../ui/ImageKitPicture";
 import IconButton from "../ui/icon-button";
 
 export function Header() {
@@ -99,13 +99,15 @@ export function Header() {
 
   return (
     <header className="bg-primary/95 group sticky top-0 z-50 grid w-full grid-cols-3 border-b py-2 backdrop-blur-sm">
-      <Image
+      <ImageKitPicture
         src="/hero-baloons.gif"
         alt="Premium Balloons Collection"
         width={100}
         height={58}
         className="absolute inset-0 -z-10 h-full w-full object-cover opacity-0 blur transition group-hover:opacity-15"
         priority
+        transformation={[{ width: 1920, quality: 60, format: "auto" }]}
+        placeholderOptions={{ width: 64, quality: 15, blur: 45 }}
       />
 
       <nav className="flex items-center gap-4 justify-self-start px-4 sm:gap-6 sm:px-8">

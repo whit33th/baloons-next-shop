@@ -1,6 +1,6 @@
 import { paginationOptsValidator } from "convex/server";
 import { v } from "convex/values";
-import type { Doc, Id } from "./_generated/dataModel";
+import type { Doc } from "./_generated/dataModel";
 import { internalMutation, mutation, query } from "./_generated/server";
 import { requireUser } from "./helpers/auth";
 import { attachImageToProduct } from "./helpers/products";
@@ -640,7 +640,7 @@ export const create = mutation({
       v.literal("80cm"),
       v.literal("100cm"),
     ),
-    imageIds: v.array(v.id("_storage")),
+    imageUrls: v.array(v.string()),
     inStock: v.boolean(),
     isPersonalizable: v.optional(v.boolean()),
     availableColors: v.optional(v.array(v.string())),
@@ -664,7 +664,7 @@ export const create = mutation({
       categoryGroup,
       category: assignment.category,
       size: args.size,
-      imageIds: args.imageIds,
+      imageUrls: args.imageUrls,
       inStock: args.inStock,
       soldCount: 0,
       isPersonalizable: args.isPersonalizable,
@@ -673,12 +673,56 @@ export const create = mutation({
   },
 });
 
-export const generateUploadUrl = mutation({
-  args: {},
-  returns: v.string(),
-  handler: async (ctx) => {
+export const update = mutation({
+  args: {
+    productId: v.id("products"),
+    name: v.string(),
+    description: v.string(),
+    price: v.number(),
+    category: v.string(),
+    categoryGroup: v.optional(v.string()),
+    size: v.union(
+      v.literal("30cm"),
+      v.literal("45cm"),
+      v.literal("80cm"),
+      v.literal("100cm"),
+    ),
+    imageUrls: v.array(v.string()),
+    inStock: v.boolean(),
+    isPersonalizable: v.optional(v.boolean()),
+    availableColors: v.optional(v.array(v.string())),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
     await requireUser(ctx);
-    return ctx.storage.generateUploadUrl();
+
+    const existing = await ctx.db.get(args.productId);
+    if (!existing) {
+      throw new Error("Product not found");
+    }
+
+    if (args.price < 0) {
+      throw new Error("Price must be non-negative");
+    }
+
+    const assignment = resolveCategoryAssignment(args.category);
+    const providedGroup = normalizeCategoryGroupInput(args.categoryGroup);
+    const categoryGroup = providedGroup ?? assignment.group;
+
+    await ctx.db.patch(args.productId, {
+      name: args.name,
+      description: args.description,
+      price: args.price,
+      category: assignment.category,
+      categoryGroup,
+      size: args.size,
+      imageUrls: args.imageUrls,
+      inStock: args.inStock,
+      isPersonalizable: args.isPersonalizable,
+      availableColors: args.availableColors,
+    });
+
+    return null;
   },
 });
 
@@ -733,7 +777,7 @@ export const seedSampleProducts = internalMutation({
 
       await ctx.db.insert("products", {
         ...product,
-        imageIds: [] as Array<Id<"_storage">>,
+        imageUrls: [],
         soldCount: 0,
       });
       inserted += 1;

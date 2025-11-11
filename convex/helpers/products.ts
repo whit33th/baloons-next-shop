@@ -26,7 +26,16 @@ export const attachImageToProduct = async (
   ctx: ProductCtx,
   product: Doc<"products">,
 ): Promise<ProductWithImage> => {
-  const imageUrls = await resolveImageUrls(ctx, product.imageIds);
+  let imageUrls = product.imageUrls ?? [];
+
+  if (imageUrls.length === 0) {
+    const legacyIds = (product as { imageIds?: Array<Id<"_storage">> })
+      .imageIds;
+    if (legacyIds?.length) {
+      imageUrls = await resolveImageUrls(ctx, legacyIds);
+    }
+  }
+
   const primaryImageUrl = imageUrls[0] ?? null;
 
   return { ...product, imageUrls, primaryImageUrl };
@@ -41,5 +50,5 @@ export const loadProductWithImage = async (
     return null;
   }
 
-  return attachImageToProduct(ctx, product);
+  return attachImageToProduct(ctx, product as Doc<"products">);
 };

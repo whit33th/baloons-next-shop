@@ -1,7 +1,6 @@
 "use client";
 
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import Image from "next/image";
 import {
   memo,
   useCallback,
@@ -16,6 +15,11 @@ import {
   CarouselContent,
   CarouselItem,
 } from "@/components/ui/carousels/carousel";
+import ImageKitPicture from "@/components/ui/ImageKitPicture";
+import {
+  ADMIN_PREVIEW_IMAGE_TRANSFORMATION,
+  PRODUCT_DETAIL_IMAGE_TRANSFORMATION,
+} from "@/lib/imagekit";
 
 interface ProductGalleryProps {
   images: string[];
@@ -126,7 +130,7 @@ export const ProductGallery = memo(function ProductGallery({
                   }}
                   onClick={() => handleNextImage()}
                 >
-                  <Image
+                  <ImageKitPicture
                     src={slide.src}
                     alt={productName}
                     fill
@@ -134,6 +138,8 @@ export const ProductGallery = memo(function ProductGallery({
                     loading={slide.index === 0 ? "eager" : "lazy"}
                     className="z-50 aspect-3/4 h-full w-full object-contain drop-shadow"
                     sizes="(min-width: 640px) 800px, 100vw"
+                    transformation={PRODUCT_DETAIL_IMAGE_TRANSFORMATION}
+                    placeholderOptions={{ width: 48, quality: 12, blur: 45 }}
                   />
                 </button>
               </CarouselItem>
@@ -193,12 +199,14 @@ export const ProductGallery = memo(function ProductGallery({
                 : "ring-border hover:ring-secondary/50 ring-1 hover:shadow-md"
             }`}
           >
-            <Image
+            <ImageKitPicture
               src={slide.src}
               width={100}
               height={100}
               alt={`${productName} ${slide.index + 1}`}
               className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+              transformation={ADMIN_PREVIEW_IMAGE_TRANSFORMATION}
+              placeholderOptions={{ width: 24, quality: 12, blur: 40 }}
             />
             {activeImage === slide.index && (
               <div className="bg-secondary/10 absolute inset-0" />

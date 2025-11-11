@@ -14,7 +14,7 @@ export const productDocumentFields = {
     v.literal("80cm"),
     v.literal("100cm"),
   ),
-  imageIds: v.array(v.id("_storage")),
+  imageUrls: v.array(v.string()),
   inStock: v.boolean(),
   soldCount: v.optional(v.number()),
   isPersonalizable: v.optional(v.boolean()),

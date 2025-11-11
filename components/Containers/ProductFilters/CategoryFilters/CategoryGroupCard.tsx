@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import ImageKitPicture from "@/components/ui/ImageKitPicture";
 import { Popover, PopoverTrigger } from "@/components/ui/popover";
 import type { PRODUCT_CATEGORY_GROUPS } from "@/constants/categories";
 import { SubcategoryMenu } from "./SubcategoryMenu";
@@ -93,13 +93,17 @@ export function CategoryGroupCard({
             {group.icon && (
               <div className="pointer-events-none absolute top-1/2 right-3 z-0 -translate-y-1/2">
                 <div className="relative h-12 w-12 overflow-hidden rounded-lg opacity-90">
-                  <Image
+                  <ImageKitPicture
                     src={group.icon}
                     alt={group.label}
                     fill
                     className="object-contain object-center"
                     sizes="48px"
                     priority={false}
+                    transformation={[
+                      { width: 96, quality: 65, format: "auto" },
+                    ]}
+                    placeholderOptions={{ width: 24, quality: 10, blur: 45 }}
                   />
                 </div>
               </div>

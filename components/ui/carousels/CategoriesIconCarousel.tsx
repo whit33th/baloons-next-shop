@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import { useLayoutEffect, useState } from "react";
 import {
   Carousel,
@@ -10,6 +9,7 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousels/carousel";
+import ImageKitPicture from "@/components/ui/ImageKitPicture";
 
 export interface Category {
   name: string;
@@ -83,12 +83,16 @@ export function CategoriesIconCarousel({
                       isActive ? "ring-secondary ring-2" : "ring-border ring-1"
                     }`}
                   >
-                    <Image
+                    <ImageKitPicture
                       src={category.icon}
                       alt={`${category.name} category`}
                       height={48}
                       width={48}
                       className="aspect-square h-full w-full rounded-xl object-cover text-gray-500 drop-shadow"
+                      transformation={[
+                        { width: 96, quality: 60, format: "auto" },
+                      ]}
+                      placeholderOptions={{ width: 28, quality: 12, blur: 45 }}
                     />
                   </div>
                   <div className="mt-3 truncate text-center text-xs font-medium text-black lg:text-[0.8rem]">

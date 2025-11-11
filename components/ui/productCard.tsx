@@ -1,11 +1,12 @@
 "use client";
 
 import type { Route } from "next";
-import Image from "next/image";
 import Link from "next/link";
 import { ViewTransition } from "react";
 
+import ImageKitPicture from "@/components/ui/ImageKitPicture";
 import type { Doc } from "@/convex/_generated/dataModel";
+import { DEFAULT_PRODUCT_IMAGE_TRANSFORMATION } from "@/lib/imagekit";
 import { balloonColors } from "../ProductGrid";
 
 type ProductTag = "new" | "bestseller";
@@ -53,13 +54,16 @@ export default function ProductCard({ product, index }: ProductCardProps) {
           style={{ backgroundColor: bgColor }}
         >
           <ViewTransition name={transitionName}>
-            <Image
+            <ImageKitPicture
               src={displayImage}
               alt={product.name}
               width={400}
               height={600}
               className="aspect-3/4 h-full w-full object-cover"
               loading={index < 2 ? "eager" : "lazy"}
+              transformation={DEFAULT_PRODUCT_IMAGE_TRANSFORMATION}
+              placeholderOptions={{ width: 36, quality: 12, blur: 40 }}
+              sizes="(min-width: 1280px) 20vw, (min-width: 768px) 30vw, 90vw"
             />
           </ViewTransition>
         </div>
