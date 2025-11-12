@@ -234,7 +234,6 @@ export function ProductGrid({ filters }: ProductGridProps) {
           alt="No balloons found"
           width={200}
           height={200}
-          className="mb-4"
         />
         <h3 className="mb-2 text-xl font-semibold text-black">
           No balloons found
