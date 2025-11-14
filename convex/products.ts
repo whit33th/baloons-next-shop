@@ -148,15 +148,25 @@ const sanitizeCategoriesSelection = (
     if (!trimmed) {
       continue;
     }
-    const assignment = resolveCategoryAssignment(trimmed);
-    if (resolvedGroup && assignment.group !== resolvedGroup) {
-      throw new Error(
-        "All selected categories must belong to the same category group",
-      );
-    }
-    resolvedGroup = resolvedGroup ?? assignment.group;
-    if (!canonicalCategories.includes(assignment.category)) {
-      canonicalCategories.push(assignment.category);
+    
+    // When a categoryGroup is explicitly provided, trust it and just use the
+    // category label as-is. Only infer the group from the category name if
+    // no explicit group was given.
+    if (providedGroup) {
+      if (!canonicalCategories.includes(trimmed)) {
+        canonicalCategories.push(trimmed);
+      }
+    } else {
+      const assignment = resolveCategoryAssignment(trimmed);
+      if (resolvedGroup && assignment.group !== resolvedGroup) {
+        throw new Error(
+          "All selected categories must belong to the same category group",
+        );
+      }
+      resolvedGroup = resolvedGroup ?? assignment.group;
+      if (!canonicalCategories.includes(assignment.category)) {
+        canonicalCategories.push(assignment.category);
+      }
     }
   }
 
