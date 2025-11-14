@@ -2,29 +2,25 @@
 
 import { useMutation, useQuery } from "convex/react";
 import {
+  AlertCircle,
+  ArrowLeft,
+  ArrowRight,
+  Calendar,
+  CheckCircle2,
+  Clock,
   CreditCard,
   DollarSign,
+  Loader2,
+  Lock,
   Mail,
   MapPin,
+  MessageCircle,
+  ShieldCheck,
+  ShoppingBag,
   Store,
   Truck,
   User,
-  Wallet,
 } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
-import { toast } from "sonner";
-import {
-  getWhatsAppLink,
-  STORE_INFO,
-  WHATSAPP_MESSAGES,
-} from "../../constants/config";
-import { api } from "../../convex/_generated/api";
-import type { Id } from "../../convex/_generated/dataModel";
-import type { ProductWithImage } from "../../convex/helpers/products";
-import { type GuestCartItem, useGuestCart } from "../../lib/guestCart";
-
-type PaymentMethod = "full_online" | "partial_online" | "cash";
 type DeliveryType = "pickup" | "delivery";
 
 // Cart item from server (authenticated users)
@@ -584,37 +580,6 @@ export default function CheckoutPage() {
                           >
                             Pay the full amount online — your set will be
                             reserved immediately
-                          </div>
-                        </div>
-                      </label>
-
-                      <label
-                        className="hover:bg-primary flex cursor-pointer items-center space-x-2 rounded-lg border p-3 transition-colors sm:space-x-3 sm:p-4"
-                        htmlFor="payment-partial"
-                      >
-                        <input
-                          type="radio"
-                          name="paymentMethod"
-                          id="payment-partial"
-                          value="partial_online"
-                          checked={paymentMethod === "partial_online"}
-                          onChange={(e) =>
-                            setPaymentMethod(e.target.value as PaymentMethod)
-                          }
-                          aria-describedby="payment-partial-details"
-                          className="text-secondary mt-0.5 h-4 w-4 shrink-0 sm:mt-1"
-                        />
-                        <Wallet className="text-secondary mt-0.5 h-5 w-5 shrink-0 sm:mt-1 sm:h-6 sm:w-6" />
-                        <div className="min-w-0 flex-1">
-                          <div className="text-deep text-sm font-medium sm:text-base">
-                            30% Deposit
-                          </div>
-                          <div
-                            className="text-deep/70 text-xs sm:text-sm"
-                            id="payment-partial-details"
-                          >
-                            Pay 30% online to reserve. Remaining amount paid in
-                            cash upon pickup
                           </div>
                         </div>
                       </label>

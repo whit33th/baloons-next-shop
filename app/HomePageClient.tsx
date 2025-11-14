@@ -36,11 +36,14 @@ export function HomePageClient({
         <Hero />
       </motion.div>
 
-      {/* Bestsellers Carousel - Instant data from SSR */}
       <div className="flex flex-col gap-6">
+        <CategorySection />
+
+        {/* Bestsellers Carousel - Instant data from SSR */}
         <motion.div
           initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
           transition={{ duration: 0.6 }}
         >
           {bestsellersProduct?.page && bestsellersProduct.page.length > 0 ? (
@@ -62,7 +65,8 @@ export function HomePageClient({
         {/* New Products Carousel */}
         <motion.div
           initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
           transition={{ duration: 0.6 }}
         >
           {newProducts?.page && newProducts.page.length > 0 ? (
@@ -80,8 +84,6 @@ export function HomePageClient({
             </div>
           )}
         </motion.div>
-
-        <CategorySection />
       </div>
 
       {/* Rainbow Text */}

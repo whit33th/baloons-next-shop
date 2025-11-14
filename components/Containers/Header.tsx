@@ -176,7 +176,7 @@ export function Header() {
       <div className="flex items-center justify-center">
         <Link
           href="/"
-          className="text-deep flex items-center text-xl font-semibold tracking-tight"
+          className="text-deep text-md flex items-center text-center font-semibold tracking-tight sm:text-xl"
         >
           Ballon Boutique
         </Link>

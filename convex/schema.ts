@@ -23,12 +23,6 @@ const applicationTables = {
     price: v.number(),
     categoryGroup: v.string(),
     category: v.string(),
-    size: v.union(
-      v.literal("30cm"),
-      v.literal("45cm"),
-      v.literal("80cm"),
-      v.literal("100cm"),
-    ),
     imageUrls: v.array(v.string()),
     inStock: v.boolean(),
     soldCount: v.optional(v.number()),
@@ -44,7 +38,6 @@ const applicationTables = {
     .index("by_category", ["category"])
     .index("by_category_group", ["categoryGroup"])
     .index("by_group_and_category", ["categoryGroup", "category"])
-    .index("by_size", ["size"])
     // Composite indexes for better e-commerce performance
     // Default sorting: show bestsellers first (by soldCount desc, then by _creationTime desc)
     .index("by_popularity", ["soldCount"])

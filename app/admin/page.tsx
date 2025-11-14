@@ -4,23 +4,11 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { upload } from "@imagekit/next";
 import { useMutation } from "convex/react";
 import { useQuery } from "convex-helpers/react/cache";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { type FieldErrors, type Path, useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { z } from "zod";
 import { Button } from "@/components/ui/button";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import ImageKitPicture from "@/components/ui/ImageKitPicture";
-import Input from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -29,26 +17,24 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Textarea } from "@/components/ui/textarea";
 import type { CategoryGroupValue } from "@/constants/categories";
 import { PRODUCT_CATEGORY_GROUPS } from "@/constants/categories";
-import { BALLOON_COLORS } from "@/constants/colors";
-import { ADMIN_PRODUCT_IMAGE_TRANSFORMATION } from "@/lib/imagekit";
-import { cn } from "@/lib/utils";
 import { api } from "../../convex/_generated/api";
 import type { Doc } from "../../convex/_generated/dataModel";
-
-const SIZE_OPTIONS = ["30cm", "45cm", "80cm", "100cm"] as const;
-
-type OrderStatus = Doc<"orders">["status"];
-type BalloonSize = (typeof SIZE_OPTIONS)[number];
-
-type PendingImage = {
-  file: File;
-  preview: string;
-};
-
-type ProductCardData = Doc<"products"> & { primaryImageUrl: string | null };
+import {
+  ProductForm,
+  ProductCard,
+  OrdersTable,
+  ProductMetricsCard,
+  OrderMetricsCards,
+  EmptyProductsState,
+  productFormSchema,
+  type ProductFormValues,
+  type PendingImage,
+  type ProductCardData,
+  type OrderStatus,
+  ORDER_STATUS_FILTERS,
+} from "./_components";
 
 const DEFAULT_CATEGORY_GROUP = PRODUCT_CATEGORY_GROUPS[0];
 const DEFAULT_CATEGORY =
@@ -56,129 +42,12 @@ const DEFAULT_CATEGORY =
   DEFAULT_CATEGORY_GROUP.categoryValue ??
   "";
 
-const currencyFormatter = new Intl.NumberFormat("ru-RU", {
-  style: "currency",
-  currency: "EUR",
-  minimumFractionDigits: 2,
-});
-
-const formatCurrency = (value: number) => currencyFormatter.format(value);
-
-const formatDateTime = (timestamp: number) =>
-  new Date(timestamp).toLocaleString("ru-RU", {
-    day: "2-digit",
-    month: "short",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-
-const ORDER_STATUS_META: Record<OrderStatus, { label: string; tone: string }> =
-  {
-    pending: {
-      label: "В обработке",
-      tone: "bg-amber-100 text-amber-900",
-    },
-    confirmed: {
-      label: "Подтверждён",
-      tone: "bg-sky-100 text-sky-900",
-    },
-    shipped: {
-      label: "Отправлен",
-      tone: "bg-indigo-100 text-indigo-900",
-    },
-    delivered: {
-      label: "Доставлен",
-      tone: "bg-emerald-100 text-emerald-900",
-    },
-  };
-
-const ORDER_STATUS_FILTERS: Array<{
-  value: OrderStatus | "all";
-  label: string;
-}> = [
-  { value: "all", label: "Все статусы" },
-  { value: "pending", label: "В обработке" },
-  { value: "confirmed", label: "Подтверждён" },
-  { value: "shipped", label: "Отправлен" },
-  { value: "delivered", label: "Доставлен" },
-];
-
-const productFormSchema = z.object({
-  name: z.string().min(3, "Минимум 3 символа"),
-  description: z.string().min(10, "Добавьте более детальное описание"),
-  price: z
-    .string()
-    .min(1, "Укажите цену")
-    .refine((raw) => {
-      const numeric = Number(raw.replace(",", "."));
-      return !Number.isNaN(numeric) && numeric >= 0;
-    }, "Некорректная цена"),
-  categoryGroup: z.string().min(1, "Выберите группу"),
-  category: z.string().min(1, "Выберите категорию"),
-  size: z.enum(SIZE_OPTIONS),
-  inStock: z.boolean(),
-  isPersonalizable: z.boolean(),
-  availableColors: z.array(z.string()).default([]),
-});
-
-type ProductFormValues = z.infer<typeof productFormSchema>;
-
-const collectErrorMessages = (
-  errors: FieldErrors<ProductFormValues>,
-): string[] => {
-  const extract = (error: unknown): string[] => {
-    if (!error) {
-      return [];
-    }
-
-    if (Array.isArray(error)) {
-      return error.flatMap(extract);
-    }
-
-    if (typeof error === "object") {
-      const err = error as Record<string, unknown>;
-      const messages: string[] = [];
-
-      if (typeof err.message === "string") {
-        messages.push(err.message);
-      }
-
-      if (typeof err.types === "object" && err.types !== null) {
-        messages.push(
-          ...Object.values(err.types as Record<string, unknown>).flatMap(
-            (value) => (typeof value === "string" ? [value] : []),
-          ),
-        );
-      }
-
-      for (const [key, value] of Object.entries(err)) {
-        if (
-          key === "message" ||
-          key === "type" ||
-          key === "ref" ||
-          key === "types"
-        ) {
-          continue;
-        }
-        messages.push(...extract(value));
-      }
-
-      return messages;
-    }
-
-    return [];
-  };
-
-  return Array.from(new Set(Object.values(errors).flatMap(extract)));
-};
-
 const productDefaultValues: ProductFormValues = {
   name: "",
   description: "",
   price: "",
   categoryGroup: DEFAULT_CATEGORY_GROUP.value,
   category: DEFAULT_CATEGORY,
-  size: SIZE_OPTIONS[0],
   inStock: true,
   isPersonalizable: false,
   availableColors: [],
@@ -276,12 +145,6 @@ export default function AdminPage() {
   const products = (productsResult?.page ?? []) as ProductCardData[];
   const ordersLoading = ordersResult === undefined;
   const orders = ordersResult ?? [];
-  const totalImages = existingImageUrls.length + pendingImages.length;
-
-  const currentGroup = PRODUCT_CATEGORY_GROUPS.find(
-    (item) => item.value === (categoryGroup as CategoryGroupValue),
-  );
-  const categoryOptions = currentGroup?.subcategories ?? [];
 
   const productMetrics = useMemo(() => {
     if (!products.length) {
@@ -403,7 +266,6 @@ export default function AdminPage() {
       price: String(product.price),
       categoryGroup: product.categoryGroup,
       category: product.category,
-      size: product.size,
       inStock: product.inStock,
       isPersonalizable: product.isPersonalizable ?? false,
       availableColors: product.availableColors ?? [],
@@ -462,13 +324,20 @@ export default function AdminPage() {
       }
 
       const numericPrice = Number(values.price.replace(",", "."));
+      const groupFallback = PRODUCT_CATEGORY_GROUPS.find(
+        (entry) => entry.value === values.categoryGroup,
+      );
+      const normalizedCategory = values.category?.trim()
+        ? values.category.trim()
+        : (groupFallback?.subcategories[0]?.value ??
+          groupFallback?.categoryValue ??
+          "");
       const payload = {
         name: values.name.trim(),
         description: values.description.trim(),
         price: numericPrice,
         categoryGroup: values.categoryGroup,
-        category: values.category,
-        size: values.size,
+        category: normalizedCategory,
         imageUrls: [...existingImageUrls, ...uploadedImageUrls],
         inStock: values.inStock,
         isPersonalizable: values.isPersonalizable,
@@ -507,21 +376,45 @@ export default function AdminPage() {
   };
 
   const handleInvalidSubmit = (errors: FieldErrors<ProductFormValues>) => {
-    const firstErrorEntry = Object.entries(errors)[0];
-    if (!firstErrorEntry) {
+    // Get all error entries
+    const errorEntries = Object.entries(errors);
+
+    if (errorEntries.length === 0) {
       return;
     }
 
-    const [fieldName] = firstErrorEntry as [Path<ProductFormValues>, unknown];
+    // Focus on the first field with an error
+    const [firstFieldName] = errorEntries[0] as [
+      Path<ProductFormValues>,
+      unknown,
+    ];
+    form.setFocus(firstFieldName);
 
-    const messages = collectErrorMessages(errors);
-    if (messages.length > 0) {
-      toast.error("Заполните обязательные поля", {
-        description: messages.map((message) => `• ${message}`).join("\n"),
-      });
-    }
+    // Show individual toast for each field error
+    errorEntries.forEach(([fieldName, error]) => {
+      if (error && typeof error === "object" && "message" in error) {
+        const message = error.message as string;
+        if (message) {
+          toast.error(message, {
+            description: `Поле: ${getFieldLabel(fieldName)}`,
+          });
+        }
+      }
+    });
+  };
 
-    form.setFocus(fieldName);
+  const getFieldLabel = (fieldName: string): string => {
+    const labels: Record<string, string> = {
+      name: "Название",
+      description: "Описание",
+      price: "Цена",
+      categoryGroup: "Группа",
+      category: "Категория",
+      availableColors: "Цвета",
+      inStock: "Статус наличия",
+      isPersonalizable: "Персонализация",
+    };
+    return labels[fieldName] || fieldName;
   };
 
   const onSubmit = form.handleSubmit(handleValidSubmit, handleInvalidSubmit);
@@ -569,508 +462,31 @@ export default function AdminPage() {
             <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
               <div className="space-y-6">
                 {formOpen ? (
-                  <div
-                    ref={formPanelRef}
-                    className="rounded-2xl border border-slate-200 bg-white/80 p-6 shadow-sm backdrop-blur"
-                  >
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <div>
-                        <h2 className="text-xl font-semibold text-slate-900">
-                          {isEditing
-                            ? "Редактирование товара"
-                            : "Новый продукт"}
-                        </h2>
-                        <p className="text-sm text-slate-500">
-                          {isEditing
-                            ? "Обновите характеристики и фотографии выбранного товара."
-                            : "Заполните ключевые параметры и прикрепите фотографии."}
-                        </p>
-                      </div>
-                      <Button
-                        variant="ghost"
-                        onClick={handleCollapseForm}
-                        type="button"
-                        className="text-sm text-slate-500 hover:text-slate-900"
-                      >
-                        Свернуть
-                      </Button>
-                    </div>
-
-                    <Form {...form}>
-                      <form onSubmit={onSubmit} className="mt-6 grid gap-6">
-                        <div className="rounded-2xl border border-slate-200 bg-white/70 p-5 shadow-sm">
-                          <div className="flex items-center justify-between">
-                            <h3 className="text-sm font-semibold text-slate-900">
-                              Фотографии товара
-                            </h3>
-                            {totalImages > 0 ? (
-                              <button
-                                type="button"
-                                className="text-xs text-slate-500 hover:text-slate-900"
-                                onClick={() => resetImages()}
-                              >
-                                Очистить
-                              </button>
-                            ) : null}
-                          </div>
-
-                          <div className="mt-4 space-y-3">
-                            {totalImages === 0 ? (
-                              <label className="flex cursor-pointer flex-col items-center gap-3 rounded-xl border border-dashed border-slate-300 bg-slate-50/70 px-4 py-6 text-center text-sm text-slate-600 transition hover:border-slate-400">
-                                <div className="text-3xl font-semibold text-slate-950">
-                                  📷
-                                </div>
-                                <div className="text-sm font-medium text-slate-700">
-                                  Выберите файлы
-                                </div>
-                                <p className="text-xs text-slate-400">
-                                  До 8 изображений, максимум 3 MB каждое
-                                </p>
-                                <input
-                                  ref={fileInputRef}
-                                  type="file"
-                                  multiple
-                                  accept="image/*"
-                                  onChange={handleSelectImages}
-                                  className="hidden"
-                                />
-                              </label>
-                            ) : (
-                              <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">
-                                {existingImageUrls.map((url) => (
-                                  <div
-                                    key={url}
-                                    className="group relative aspect-3/4 overflow-hidden rounded-xl border border-slate-200"
-                                  >
-                                    <div className="relative aspect-3/4 w-full overflow-hidden">
-                                      <ImageKitPicture
-                                        src={url}
-                                        alt="Фотография товара"
-                                        fill
-                                        sizes="(min-width: 1280px) 15vw, (min-width: 768px) 25vw, 90vw"
-                                        className="object-cover"
-                                        transformation={
-                                          ADMIN_PRODUCT_IMAGE_TRANSFORMATION
-                                        }
-                                      />
-                                    </div>
-                                    <button
-                                      type="button"
-                                      onClick={() =>
-                                        handleRemoveExistingImage(url)
-                                      }
-                                      className="absolute inset-x-2 bottom-2 rounded-full bg-black/60 px-2 py-1 text-xs text-white opacity-0 transition group-hover:opacity-100"
-                                    >
-                                      Удалить
-                                    </button>
-                                  </div>
-                                ))}
-
-                                {pendingImages.map((image) => (
-                                  <div
-                                    key={image.preview}
-                                    className="group relative aspect-3/4 overflow-hidden rounded-xl border border-slate-200"
-                                  >
-                                    <Image
-                                      src={image.preview}
-                                      alt="Загруженное изображение"
-                                      width={320}
-                                      height={240}
-                                      className="aspect-3/4 w-full object-cover"
-                                    />
-                                    <button
-                                      type="button"
-                                      onClick={() =>
-                                        handleRemoveImage(image.preview)
-                                      }
-                                      className="absolute inset-x-2 bottom-2 rounded-full bg-black/60 px-2 py-1 text-xs text-white opacity-0 transition group-hover:opacity-100"
-                                    >
-                                      Удалить
-                                    </button>
-                                  </div>
-                                ))}
-
-                                {totalImages < 8 ? (
-                                  <label className="flex aspect-3/4 cursor-pointer items-center justify-center rounded-xl border border-dashed border-slate-300 bg-slate-50/70 text-slate-500 transition hover:border-slate-400">
-                                    <span className="text-sm font-medium">
-                                      + Добавить
-                                    </span>
-                                    <input
-                                      ref={fileInputRef}
-                                      type="file"
-                                      multiple
-                                      accept="image/*"
-                                      onChange={handleSelectImages}
-                                      className="hidden"
-                                    />
-                                  </label>
-                                ) : null}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-
-                        <div className="grid gap-6 md:grid-cols-2">
-                          <FormField
-                            control={form.control}
-                            name="name"
-                            render={({ field, fieldState }) => (
-                              <FormItem>
-                                <FormLabel>Название</FormLabel>
-                                <FormControl>
-                                  <Input
-                                    {...field}
-                                    placeholder="Aurora Glow Balloon"
-                                    aria-invalid={fieldState.invalid}
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-
-                          <FormField
-                            control={form.control}
-                            name="price"
-                            render={({ field, fieldState }) => (
-                              <FormItem>
-                                <FormLabel>Цена (€)</FormLabel>
-                                <FormControl>
-                                  <Input
-                                    {...field}
-                                    type="number"
-                                    inputMode="decimal"
-                                    step="0.1"
-                                    min="0"
-                                    placeholder="6.50"
-                                    aria-invalid={fieldState.invalid}
-                                  />
-                                </FormControl>
-
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-
-                          <FormField
-                            control={form.control}
-                            name="categoryGroup"
-                            render={({ field, fieldState }) => (
-                              <FormItem>
-                                <FormLabel>Группа</FormLabel>
-                                <Select
-                                  value={field.value}
-                                  onValueChange={(value) =>
-                                    field.onChange(value)
-                                  }
-                                >
-                                  <FormControl>
-                                    <SelectTrigger
-                                      className="h-11 w-full"
-                                      aria-invalid={fieldState.invalid}
-                                    >
-                                      <SelectValue placeholder="Выберите группу" />
-                                    </SelectTrigger>
-                                  </FormControl>
-                                  <SelectContent>
-                                    {PRODUCT_CATEGORY_GROUPS.map((group) => (
-                                      <SelectItem
-                                        key={group.value}
-                                        value={group.value}
-                                      >
-                                        {group.label}
-                                      </SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-
-                          <FormField
-                            control={form.control}
-                            name="size"
-                            render={({ field, fieldState }) => (
-                              <FormItem>
-                                <FormLabel>Размер</FormLabel>
-                                <Select
-                                  value={field.value}
-                                  onValueChange={(value) =>
-                                    field.onChange(value as BalloonSize)
-                                  }
-                                >
-                                  <FormControl>
-                                    <SelectTrigger
-                                      className="h-11 w-full"
-                                      aria-invalid={fieldState.invalid}
-                                    >
-                                      <SelectValue placeholder="Размер" />
-                                    </SelectTrigger>
-                                  </FormControl>
-                                  <SelectContent>
-                                    {SIZE_OPTIONS.map((size) => (
-                                      <SelectItem key={size} value={size}>
-                                        {size}
-                                      </SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-
-                          <FormField
-                            control={form.control}
-                            name="category"
-                            render={({ field, fieldState }) => {
-                              const hasSubcategories =
-                                categoryOptions.length > 0;
-
-                              if (!hasSubcategories) {
-                                return (
-                                  <FormItem className="hidden">
-                                    <FormControl>
-                                      <input
-                                        type="hidden"
-                                        value={field.value}
-                                        onChange={field.onChange}
-                                        name={field.name}
-                                      />
-                                    </FormControl>
-                                    <FormMessage />
-                                  </FormItem>
-                                );
-                              }
-
-                              return (
-                                <FormItem className="md:col-span-2">
-                                  <FormLabel>Категория</FormLabel>
-                                  <Select
-                                    value={field.value}
-                                    onValueChange={field.onChange}
-                                  >
-                                    <FormControl>
-                                      <SelectTrigger
-                                        className="h-11 w-full"
-                                        aria-invalid={fieldState.invalid}
-                                      >
-                                        <SelectValue placeholder="Категория" />
-                                      </SelectTrigger>
-                                    </FormControl>
-                                    <SelectContent>
-                                      {categoryOptions.map((subcategory) => (
-                                        <SelectItem
-                                          key={subcategory.value}
-                                          value={subcategory.value}
-                                        >
-                                          {subcategory.label}
-                                        </SelectItem>
-                                      ))}
-                                    </SelectContent>
-                                  </Select>
-                                  <FormMessage />
-                                </FormItem>
-                              );
-                            }}
-                          />
-                        </div>
-
-                        <FormField
-                          control={form.control}
-                          name="description"
-                          render={({ field, fieldState }) => (
-                            <FormItem>
-                              <FormLabel>Описание</FormLabel>
-                              <FormControl>
-                                <Textarea
-                                  {...field}
-                                  rows={4}
-                                  placeholder="Уникальные особенности, сценарии использования, материалы..."
-                                  aria-invalid={fieldState.invalid}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                        <div className="grid gap-6 md:grid-cols-2">
-                          <FormField
-                            control={form.control}
-                            name="inStock"
-                            render={({ field, fieldState }) => (
-                              <FormItem>
-                                <FormLabel>Статус наличия</FormLabel>
-                                <Select
-                                  value={field.value ? "in" : "out"}
-                                  onValueChange={(value) =>
-                                    field.onChange(value === "in")
-                                  }
-                                >
-                                  <FormControl>
-                                    <SelectTrigger
-                                      className="h-11 w-full"
-                                      aria-invalid={fieldState.invalid}
-                                    >
-                                      <SelectValue placeholder="Выберите статус" />
-                                    </SelectTrigger>
-                                  </FormControl>
-                                  <SelectContent>
-                                    <SelectItem value="in">
-                                      В наличии
-                                    </SelectItem>
-                                    <SelectItem value="out">
-                                      Нет на складе
-                                    </SelectItem>
-                                  </SelectContent>
-                                </Select>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-
-                          <FormField
-                            control={form.control}
-                            name="isPersonalizable"
-                            render={({ field, fieldState }) => (
-                              <FormItem>
-                                <FormLabel>Персонализация</FormLabel>
-                                <Select
-                                  value={field.value ? "yes" : "no"}
-                                  onValueChange={(value) =>
-                                    field.onChange(value === "yes")
-                                  }
-                                >
-                                  <FormControl>
-                                    <SelectTrigger
-                                      className="h-11 w-full"
-                                      aria-invalid={fieldState.invalid}
-                                    >
-                                      <SelectValue placeholder="Персонализация" />
-                                    </SelectTrigger>
-                                  </FormControl>
-                                  <SelectContent>
-                                    <SelectItem value="yes">
-                                      Возможна
-                                    </SelectItem>
-                                    <SelectItem value="no">
-                                      Не требуется
-                                    </SelectItem>
-                                  </SelectContent>
-                                </Select>
-
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                        </div>
-
-                        <FormField
-                          control={form.control}
-                          name="availableColors"
-                          render={({ field, fieldState }) => {
-                            const selected = field.value ?? [];
-                            const hasError = Boolean(fieldState.error);
-
-                            const toggleColor = (colorName: string) => {
-                              if (selected.includes(colorName)) {
-                                field.onChange(
-                                  selected.filter((item) => item !== colorName),
-                                );
-                                return;
-                              }
-                              field.onChange([...selected, colorName]);
-                            };
-
-                            return (
-                              <FormItem className="flex flex-col gap-2">
-                                <FormLabel>Цвета</FormLabel>
-                                <FormControl>
-                                  <div
-                                    className={cn(
-                                      "flex flex-wrap gap-2",
-                                      hasError &&
-                                        "border-destructive/40 ring-destructive/20 rounded-xl border p-2 ring-1",
-                                    )}
-                                  >
-                                    {BALLOON_COLORS.map((color) => {
-                                      const active = selected.includes(
-                                        color.name,
-                                      );
-                                      return (
-                                        <button
-                                          key={color.name}
-                                          type="button"
-                                          onClick={() =>
-                                            toggleColor(color.name)
-                                          }
-                                          className={cn(
-                                            "flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-medium transition",
-                                            active
-                                              ? "border-accent bg-accent text-white shadow-sm"
-                                              : "border-transparent bg-slate-100 text-slate-700 hover:border-slate-300",
-                                          )}
-                                        >
-                                          <span
-                                            className="h-3 w-3 rounded-full"
-                                            style={{
-                                              backgroundColor: color.hex,
-                                            }}
-                                          />
-                                          {color.label}
-                                        </button>
-                                      );
-                                    })}
-                                  </div>
-                                </FormControl>
-
-                                <FormMessage />
-                              </FormItem>
-                            );
-                          }}
-                        />
-
-                        <div className="flex items-center justify-end gap-3">
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            onClick={() => {
-                              form.reset(productDefaultValues);
-                              resetImages();
-                              setFormOpen(false);
-                            }}
-                          >
-                            Отмена
-                          </Button>
-                          <Button type="submit" disabled={isSubmitting}>
-                            {isSubmitting ? "Сохраняем..." : "Сохранить товар"}
-                          </Button>
-                        </div>
-                      </form>
-                    </Form>
+                  <div ref={formPanelRef}>
+                    <ProductForm
+                      form={form}
+                      isEditing={isEditing}
+                      isSubmitting={isSubmitting}
+                      existingImageUrls={existingImageUrls}
+                      pendingImages={pendingImages}
+                      fileInputRef={fileInputRef}
+                      onSubmit={onSubmit}
+                      onCancel={() => {
+                        form.reset(productDefaultValues);
+                        resetImages();
+                        setFormOpen(false);
+                      }}
+                      onSelectImages={handleSelectImages}
+                      onRemoveImage={handleRemoveImage}
+                      onRemoveExistingImage={handleRemoveExistingImage}
+                      onClearImages={() => resetImages()}
+                      onCollapse={handleCollapseForm}
+                    />
                   </div>
                 ) : (
-                  <div className="rounded-2xl border border-dashed border-slate-300 bg-white/60 p-8 text-center shadow-sm">
-                    <Image
-                      src="/imgs/cat.png"
-                      alt="No products"
-                      width={90}
-                      height={90}
-                      className="mx-auto"
-                    />
-                    <h2 className="text-lg font-semibold text-slate-900">
-                      Добавьте первый товар
-                    </h2>
-                    <p className="mt-2 text-sm text-slate-500">
-                      Нажмите на кнопку «+ Товар», чтобы открыть расширенную
-                      форму с изображениями и характеристиками.
-                    </p>
-                    <Button className="mt-5" onClick={() => setFormOpen(true)}>
-                      + Товар
-                    </Button>
-                  </div>
+                  <EmptyProductsState
+                    onCreateProduct={() => setFormOpen(true)}
+                  />
                 )}
 
                 <section className="space-y-4">
@@ -1103,85 +519,11 @@ export default function AdminPage() {
                   ) : (
                     <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
                       {products.map((product) => (
-                        <button
+                        <ProductCard
                           key={product._id}
-                          type="button"
-                          aria-label={`Редактировать ${product.name}`}
-                          onClick={() => handleEditProduct(product)}
-                          className="group relative flex w-full cursor-pointer flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white/80 p-5 text-left shadow-sm transition hover:-translate-y-1 hover:shadow-md focus-visible:ring-2 focus-visible:ring-slate-300 focus-visible:outline-none"
-                        >
-                          <div className="relative mb-4 aspect-3/4 overflow-hidden rounded-xl bg-slate-100">
-                            {product.primaryImageUrl ? (
-                              <ImageKitPicture
-                                src={product.primaryImageUrl}
-                                alt={product.name}
-                                fill
-                                loading="lazy"
-                                sizes="(min-width: 1280px) 20vw, (min-width: 768px) 30vw, 90vw"
-                                className="object-cover transition group-hover:scale-105"
-                                transformation={
-                                  ADMIN_PRODUCT_IMAGE_TRANSFORMATION
-                                }
-                                placeholderOptions={{
-                                  width: 40,
-                                  quality: 10,
-                                  blur: 35,
-                                }}
-                              />
-                            ) : (
-                              <div className="flex h-full items-center justify-center text-4xl">
-                                🎈
-                              </div>
-                            )}
-                          </div>
-
-                          <div className="flex items-center justify-between gap-3">
-                            <h4 className="line-clamp-2 text-base font-semibold wrap-break-word text-slate-900">
-                              {product.name}
-                            </h4>
-                            <span
-                              className={cn(
-                                "flex rounded-full px-2.5 py-1 text-xs font-semibold text-nowrap",
-                                product.inStock
-                                  ? "bg-emerald-50 text-emerald-700"
-                                  : "bg-rose-50 text-rose-700",
-                              )}
-                            >
-                              {product.inStock ? "В наличии" : "Нет"}
-                            </span>
-                          </div>
-
-                          <p className="mt-2 line-clamp-2 text-sm wrap-break-word text-slate-600">
-                            {product.description}
-                          </p>
-
-                          <div className="mt-4 flex items-center justify-between text-sm text-slate-500">
-                            <span>{product.category}</span>
-                            <span>{product.size}</span>
-                          </div>
-
-                          {product.availableColors?.length ? (
-                            <div className="mt-3 flex flex-wrap gap-1.5">
-                              {product.availableColors?.map((color) => (
-                                <span
-                                  key={`${product._id}-${color}`}
-                                  className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-600"
-                                >
-                                  {color}
-                                </span>
-                              ))}
-                            </div>
-                          ) : null}
-
-                          <div className="mt-4 flex items-center justify-between">
-                            <span className="text-lg font-semibold text-slate-900">
-                              {formatCurrency(product.price)}
-                            </span>
-                            <span className="text-xs text-slate-400">
-                              #{product._id.slice(-6)}
-                            </span>
-                          </div>
-                        </button>
+                          product={product}
+                          onClick={handleEditProduct}
+                        />
                       ))}
                     </div>
                   )}
@@ -1189,75 +531,14 @@ export default function AdminPage() {
               </div>
 
               <aside className="space-y-4">
-                <div className="space-y-4 rounded-2xl border border-slate-200 bg-white/80 p-5 shadow-sm">
-                  <div>
-                    <p className="text-xs font-semibold text-slate-400 uppercase">
-                      Всего товаров
-                    </p>
-                    <p className="mt-1 text-2xl font-semibold text-slate-900">
-                      {productMetrics.total}
-                    </p>
-                    <p className="text-xs text-slate-500">
-                      {productMetrics.available} в наличии ·{" "}
-                      {productMetrics.outOfStock} нет на складе
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-xs font-semibold text-slate-400 uppercase">
-                      Средняя цена
-                    </p>
-                    <p className="mt-1 text-xl font-semibold text-slate-900">
-                      {productMetrics.total
-                        ? formatCurrency(productMetrics.averagePrice)
-                        : "—"}
-                    </p>
-                    <p className="text-xs text-slate-500">
-                      {productMetrics.personalizable} персонализируемых позиций
-                    </p>
-                  </div>
-                </div>
+                <ProductMetricsCard metrics={productMetrics} />
               </aside>
             </div>
           </TabsContent>
 
           <TabsContent value="orders">
             <div className="space-y-6">
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                <div className="rounded-2xl border border-slate-200 bg-white/80 p-5 shadow-sm">
-                  <p className="text-xs font-semibold text-slate-400 uppercase">
-                    Всего заказов
-                  </p>
-                  <p className="mt-2 text-2xl font-semibold text-slate-900">
-                    {orderMetrics.total}
-                  </p>
-                </div>
-                <div className="rounded-2xl border border-slate-200 bg-white/80 p-5 shadow-sm">
-                  <p className="text-сlate-400 text-xs font-semibold uppercase">
-                    Ожидают обработки
-                  </p>
-                  <p className="mt-2 text-2xl font-semibold text-amber-600">
-                    {orderMetrics.pending}
-                  </p>
-                </div>
-                <div className="rounded-2xl border border-slate-200 bg-white/80 p-5 shadow-sm">
-                  <p className="text-сlate-400 text-xs font-semibold uppercase">
-                    Доставлены
-                  </p>
-                  <p className="mt-2 text-2xl font-semibold text-emerald-600">
-                    {orderMetrics.delivered}
-                  </p>
-                </div>
-                <div className="rounded-2xl border border-slate-200 bg-white/80 p-5 shadow-sm">
-                  <p className="text-сlate-400 text-xs font-semibold uppercase">
-                    Выручка
-                  </p>
-                  <p className="mt-2 text-2xl font-semibold text-slate-900">
-                    {orderMetrics.revenue
-                      ? formatCurrency(orderMetrics.revenue)
-                      : "—"}
-                  </p>
-                </div>
-              </div>
+              <OrderMetricsCards metrics={orderMetrics} />
 
               <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-slate-200 bg-white/80 p-4 shadow-sm">
                 <Select
@@ -1294,90 +575,7 @@ export default function AdminPage() {
                 </Select>
               </div>
 
-              <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white/80 shadow-sm">
-                <table className="min-w-full divide-y divide-slate-200 text-sm">
-                  <thead className="bg-slate-50 text-xs tracking-wide text-slate-500 uppercase">
-                    <tr>
-                      <th className="px-6 py-3 text-left">Заказ</th>
-                      <th className="px-6 py-3 text-left">Клиент</th>
-                      <th className="px-6 py-3 text-left">Состав</th>
-                      <th className="px-6 py-3 text-left">Статус</th>
-                      <th className="px-6 py-3 text-right">Сумма</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100 bg-white text-slate-700">
-                    {ordersLoading ? (
-                      <tr>
-                        <td colSpan={5} className="текст-center px-6 py-12">
-                          <div className="mx-auto h-6 w-6 animate-spin rounded-full border-2 border-slate-300 border-t-slate-900" />
-                          <p className="mt-3 text-sm text-slate-500">
-                            Загружаем список заказов...
-                          </p>
-                        </td>
-                      </tr>
-                    ) : orders.length === 0 ? (
-                      <tr>
-                        <td
-                          colSpan={5}
-                          className="px-6 py-12 text-center text-slate-500"
-                        >
-                          Заказы пока не оформлены или доступ к ним ограничен.
-                        </td>
-                      </tr>
-                    ) : (
-                      orders.map((order) => (
-                        <tr key={order._id} className="hover:bg-slate-50/60">
-                          <td className="px-6 py-4 font-semibold whitespace-nowrap text-slate-900">
-                            #{order._id.slice(-6)}
-                            <div className="text-xs font-normal text-slate-400">
-                              {formatDateTime(order._creationTime)}
-                            </div>
-                          </td>
-                          <td className="max-w-[220px] px-6 py-4">
-                            <div className="font-medium">
-                              {order.customerName}
-                            </div>
-                            <div className="text-xs text-slate-400">
-                              {order.customerEmail}
-                            </div>
-                          </td>
-                          <td className="max-w-[280px] px-6 py-4 text-sm text-slate-600">
-                            {order.items.slice(0, 2).map((item, idx) => (
-                              <span
-                                key={`${order._id}-${item.productId}-${idx}`}
-                              >
-                                {item.productName} ×{item.quantity}
-                                {idx < order.items.slice(0, 2).length - 1
-                                  ? ", "
-                                  : ""}
-                              </span>
-                            ))}
-                            {order.items.length > 2 ? (
-                              <span className="text-xs text-slate-400">
-                                {" "}
-                                + ещё {order.items.length - 2}
-                              </span>
-                            ) : null}
-                          </td>
-                          <td className="px-6 py-4">
-                            <span
-                              className={cn(
-                                "inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold",
-                                ORDER_STATUS_META[order.status].tone,
-                              )}
-                            >
-                              {ORDER_STATUS_META[order.status].label}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 text-right font-semibold whitespace-nowrap text-slate-900">
-                            {formatCurrency(order.totalAmount)}
-                          </td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
+              <OrdersTable orders={orders} isLoading={ordersLoading} />
             </div>
           </TabsContent>
 

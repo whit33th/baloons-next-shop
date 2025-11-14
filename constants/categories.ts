@@ -31,6 +31,27 @@ export const BALLOON_SUBCATEGORIES: readonly CategoryDescriptor[] = [
   { value: "Any Event", label: "Any Event" },
 ] as const;
 
+const BOUQUET_CATEGORY_VALUES = [
+  "For Kids Boys",
+  "For Kids Girls",
+  "For Her",
+  "For Him",
+] as const;
+
+type BouquetCategoryValue = (typeof BOUQUET_CATEGORY_VALUES)[number];
+
+const BOUQUET_SUBCATEGORIES: readonly CategoryDescriptor[] =
+  BALLOON_SUBCATEGORIES.filter(
+    (
+      subcategory,
+    ): subcategory is CategoryDescriptor & {
+      value: BouquetCategoryValue;
+    } =>
+      BOUQUET_CATEGORY_VALUES.includes(
+        subcategory.value as BouquetCategoryValue,
+      ),
+  );
+
 export const PRODUCT_CATEGORY_GROUPS: readonly CategoryGroup[] = [
   {
     value: "balloons",
@@ -51,7 +72,7 @@ export const PRODUCT_CATEGORY_GROUPS: readonly CategoryGroup[] = [
     label: "Bouquets",
     icon: "/imgs/categories/bouquets.jpg",
     categoryValue: "Balloon Bouquets",
-    subcategories: [],
+    subcategories: BOUQUET_SUBCATEGORIES,
   },
   {
     value: "mini-sets",

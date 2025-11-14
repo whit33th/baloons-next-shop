@@ -23,6 +23,26 @@ export const STORE_INFO = {
     country: "Austria",
   },
 
+  contact: {
+    email: "service@ballonboutique.at",
+    phone: "+43 660 713 90 12",
+    phoneDisplay: "+43 660 713 90 12",
+  },
+
+  legal: {
+    companyName: "Ballon Boutique e.U.",
+    owner: "Ekaterina Petrova",
+    registrationNumber: "FN 582931 z",
+    vatNumber: "ATU78965432",
+    competentAuthority: "Bezirkshauptmannschaft Murtal",
+    tradeAuthority: "Bezirkshauptmannschaft Murtal - Gewerberecht",
+    professionalRegulation: "Gewerbeordnung 1994 (GewO 1994)",
+    chamberMembership:
+      "Mitglied der Wirtschaftskammer Steiermark (Sparte Handel)",
+    supervisoryAuthority: "Bezirkshauptmannschaft Murtal",
+    euDisputeResolutionUrl: "https://ec.europa.eu/consumers/odr",
+  },
+
   pickup: {
     schedule: "24/7",
     scheduleRu: "7 дней в неделю, 24 часа в сутки",
@@ -58,15 +78,6 @@ export const PAYMENT_CONFIG = {
       labelDe: "Vollständige Online-Zahlung",
       description:
         "Оплатите заказ полностью онлайн — набор будет забронирован сразу после оплаты",
-    },
-    partialOnline: {
-      enabled: true,
-      percentage: 30, // deposit percentage
-      label: "Предоплата 30% / 30% Deposit",
-      labelRu: "Предоплата 30%",
-      labelDe: "Anzahlung 30%",
-      description:
-        "Внесите 30% онлайн для бронирования. Остаток оплачивается наличными при самовывозе",
     },
     cash: {
       enabled: true,

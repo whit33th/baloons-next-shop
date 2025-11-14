@@ -18,7 +18,6 @@ export default function CatalogClient() {
     sort: searchParams.get("sort") || "",
     tag: searchParams.get("tag") || "",
     color: searchParams.get("color") || "",
-    size: searchParams.get("size") || "",
   };
 
   return (

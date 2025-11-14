@@ -14,7 +14,6 @@ const productPageValidator = v.object({
   continueCursor: v.string(),
 });
 
-const BALLOON_SIZES = ["30cm", "45cm", "80cm", "100cm"] as const;
 const BALLOON_COLORS = [
   "Gold",
   "Rose Gold",
@@ -43,8 +42,6 @@ const BALLOON_COLORS = [
   "Emerald",
 ];
 
-const randomSize = () =>
-  BALLOON_SIZES[Math.floor(Math.random() * BALLOON_SIZES.length)];
 const randomColors = (count: number) => {
   const shuffled = [...BALLOON_COLORS].sort(() => 0.5 - Math.random());
   return shuffled.slice(0, count);
@@ -134,7 +131,6 @@ const SAMPLE_PRODUCTS: Array<{
   price: number;
   categoryGroup: CategoryGroupValue;
   category: string;
-  size: "30cm" | "45cm" | "80cm" | "100cm";
   inStock: boolean;
   isPersonalizable?: boolean;
   availableColors?: string[];
@@ -146,7 +142,6 @@ const SAMPLE_PRODUCTS: Array<{
     price: 6,
     categoryGroup: "balloons",
     category: "For Kids Girls",
-    size: randomSize(),
     inStock: true,
     isPersonalizable: true,
     availableColors: randomColors(4),
@@ -157,7 +152,6 @@ const SAMPLE_PRODUCTS: Array<{
     price: 5.5,
     categoryGroup: "balloons",
     category: "For Her",
-    size: randomSize(),
     inStock: true,
     isPersonalizable: true,
     availableColors: randomColors(4),
@@ -168,7 +162,6 @@ const SAMPLE_PRODUCTS: Array<{
     price: 4.5,
     categoryGroup: "balloons",
     category: "For Kids Boys",
-    size: randomSize(),
     inStock: true,
     isPersonalizable: true,
     availableColors: randomColors(4),
@@ -179,7 +172,6 @@ const SAMPLE_PRODUCTS: Array<{
     price: 5,
     categoryGroup: "balloons",
     category: "For Kids Girls",
-    size: randomSize(),
     inStock: true,
   },
   {
@@ -188,7 +180,6 @@ const SAMPLE_PRODUCTS: Array<{
     price: 7,
     categoryGroup: "balloons",
     category: "For Him",
-    size: randomSize(),
     inStock: true,
   },
   {
@@ -197,7 +188,6 @@ const SAMPLE_PRODUCTS: Array<{
     price: 4,
     categoryGroup: "balloons",
     category: "Anniversary",
-    size: randomSize(),
     inStock: true,
   },
   {
@@ -206,7 +196,6 @@ const SAMPLE_PRODUCTS: Array<{
     price: 3.5,
     categoryGroup: "balloons",
     category: "Any Event",
-    size: randomSize(),
     inStock: true,
   },
   {
@@ -215,7 +204,6 @@ const SAMPLE_PRODUCTS: Array<{
     price: 4.5,
     categoryGroup: "balloons",
     category: "Baby Birth",
-    size: randomSize(),
     inStock: true,
   },
   {
@@ -224,7 +212,6 @@ const SAMPLE_PRODUCTS: Array<{
     price: 5,
     categoryGroup: "balloons",
     category: "For Her",
-    size: randomSize(),
     inStock: true,
   },
   {
@@ -233,7 +220,6 @@ const SAMPLE_PRODUCTS: Array<{
     price: 8,
     categoryGroup: "balloons",
     category: "Anniversary",
-    size: randomSize(),
     inStock: true,
     isPersonalizable: true,
     availableColors: randomColors(3),
@@ -244,7 +230,6 @@ const SAMPLE_PRODUCTS: Array<{
     price: 7.5,
     categoryGroup: "balloons",
     category: "Any Event",
-    size: randomSize(),
     inStock: true,
     isPersonalizable: true,
     availableColors: randomColors(3),
@@ -254,8 +239,7 @@ const SAMPLE_PRODUCTS: Array<{
     description: "Jewel-toned balloon with subtle glitter overlay.",
     price: 6.5,
     categoryGroup: "balloon-bouquets",
-    category: "Balloon Bouquets",
-    size: randomSize(),
+    category: "For Her",
     inStock: true,
     isPersonalizable: true,
     availableColors: randomColors(3),
@@ -266,7 +250,6 @@ const SAMPLE_PRODUCTS: Array<{
     price: 8.5,
     categoryGroup: "balloons",
     category: "For Her",
-    size: randomSize(),
     inStock: true,
     isPersonalizable: true,
     availableColors: randomColors(4),
@@ -277,7 +260,6 @@ const SAMPLE_PRODUCTS: Array<{
     price: 9,
     categoryGroup: "toy-in-balloon",
     category: "Toy in a Balloon",
-    size: randomSize(),
     inStock: true,
   },
   {
@@ -286,7 +268,6 @@ const SAMPLE_PRODUCTS: Array<{
     price: 5.5,
     categoryGroup: "balloons",
     category: "For Her",
-    size: randomSize(),
     inStock: true,
   },
   {
@@ -295,7 +276,6 @@ const SAMPLE_PRODUCTS: Array<{
     price: 6,
     categoryGroup: "balloons",
     category: "For Kids Boys",
-    size: randomSize(),
     inStock: true,
   },
   {
@@ -304,7 +284,6 @@ const SAMPLE_PRODUCTS: Array<{
     price: 7.5,
     categoryGroup: "balloons",
     category: "For Kids Boys",
-    size: randomSize(),
     inStock: true,
   },
   {
@@ -313,7 +292,6 @@ const SAMPLE_PRODUCTS: Array<{
     price: 6.5,
     categoryGroup: "balloons",
     category: "Baby Birth",
-    size: randomSize(),
     inStock: true,
   },
   {
@@ -322,7 +300,6 @@ const SAMPLE_PRODUCTS: Array<{
     price: 5.5,
     categoryGroup: "balloons",
     category: "Love",
-    size: randomSize(),
     inStock: true,
   },
   {
@@ -331,7 +308,6 @@ const SAMPLE_PRODUCTS: Array<{
     price: 6.5,
     categoryGroup: "balloons",
     category: "Any Event",
-    size: randomSize(),
     inStock: true,
   },
   {
@@ -340,7 +316,6 @@ const SAMPLE_PRODUCTS: Array<{
     price: 6,
     categoryGroup: "balloons",
     category: "Anniversary",
-    size: randomSize(),
     inStock: true,
   },
   {
@@ -349,7 +324,6 @@ const SAMPLE_PRODUCTS: Array<{
     price: 5,
     categoryGroup: "balloons",
     category: "Mom",
-    size: randomSize(),
     inStock: true,
   },
   {
@@ -358,7 +332,6 @@ const SAMPLE_PRODUCTS: Array<{
     price: 5.5,
     categoryGroup: "balloons",
     category: "Any Event",
-    size: randomSize(),
     inStock: true,
   },
   {
@@ -367,7 +340,6 @@ const SAMPLE_PRODUCTS: Array<{
     price: 4.5,
     categoryGroup: "balloons",
     category: "Love",
-    size: randomSize(),
     inStock: true,
   },
   {
@@ -376,7 +348,6 @@ const SAMPLE_PRODUCTS: Array<{
     price: 7,
     categoryGroup: "balloons",
     category: "For Kids Girls",
-    size: randomSize(),
     inStock: true,
   },
   {
@@ -385,7 +356,6 @@ const SAMPLE_PRODUCTS: Array<{
     price: 5.5,
     categoryGroup: "balloons",
     category: "Any Event",
-    size: randomSize(),
     inStock: true,
   },
   {
@@ -394,7 +364,6 @@ const SAMPLE_PRODUCTS: Array<{
     price: 6.5,
     categoryGroup: "balloons",
     category: "Love",
-    size: randomSize(),
     inStock: true,
   },
   {
@@ -403,7 +372,6 @@ const SAMPLE_PRODUCTS: Array<{
     price: 4,
     categoryGroup: "balloons",
     category: "Surprise Box",
-    size: randomSize(),
     inStock: true,
   },
   {
@@ -412,7 +380,6 @@ const SAMPLE_PRODUCTS: Array<{
     price: 5.5,
     categoryGroup: "balloons",
     category: "Love",
-    size: randomSize(),
     inStock: true,
   },
   {
@@ -421,7 +388,6 @@ const SAMPLE_PRODUCTS: Array<{
     price: 4.5,
     categoryGroup: "mini-sets",
     category: "Mini Sets",
-    size: randomSize(),
     inStock: true,
   },
 ];
@@ -468,14 +434,6 @@ export const list = query({
     category: v.optional(v.string()),
     categoryGroup: v.optional(v.string()),
     color: v.optional(v.string()),
-    size: v.optional(
-      v.union(
-        v.literal("30cm"),
-        v.literal("45cm"),
-        v.literal("80cm"),
-        v.literal("100cm"),
-      ),
-    ),
     sort: v.optional(
       v.union(
         v.literal("price-low"),
@@ -512,7 +470,6 @@ export const list = query({
     const categoryGroup =
       normalizeString(args.categoryGroup) ?? categoryNorm?.group;
     const color = normalizeString(args.color);
-    const size = args.size;
     const available = args.available;
     const minPrice =
       typeof args.minPrice === "number" && Number.isFinite(args.minPrice)
@@ -550,11 +507,6 @@ export const list = query({
           q.eq("categoryGroup", categoryGroup),
         )
         .collect();
-    } else if (size) {
-      allProducts = await ctx.db
-        .query("products")
-        .withIndex("by_size", (q) => q.eq("size", size))
-        .collect();
     } else {
       allProducts = await ctx.db.query("products").collect();
     }
@@ -564,7 +516,6 @@ export const list = query({
       if (available && !product.inStock) return false;
       if (minPrice !== undefined && product.price < minPrice) return false;
       if (maxPrice !== undefined && product.price > maxPrice) return false;
-      if (size && product.size !== size) return false;
       if (color) {
         const hasColor = product.availableColors?.some(
           (c) => c.toLowerCase() === color.toLowerCase(),
@@ -624,12 +575,6 @@ export const create = mutation({
     price: v.number(),
     category: v.string(),
     categoryGroup: v.optional(v.string()),
-    size: v.union(
-      v.literal("30cm"),
-      v.literal("45cm"),
-      v.literal("80cm"),
-      v.literal("100cm"),
-    ),
     imageUrls: v.array(v.string()),
     inStock: v.boolean(),
     isPersonalizable: v.optional(v.boolean()),
@@ -653,7 +598,6 @@ export const create = mutation({
       price: args.price,
       categoryGroup,
       category: assignment.category,
-      size: args.size,
       imageUrls: args.imageUrls,
       inStock: args.inStock,
       soldCount: 0,
@@ -671,12 +615,6 @@ export const update = mutation({
     price: v.number(),
     category: v.string(),
     categoryGroup: v.optional(v.string()),
-    size: v.union(
-      v.literal("30cm"),
-      v.literal("45cm"),
-      v.literal("80cm"),
-      v.literal("100cm"),
-    ),
     imageUrls: v.array(v.string()),
     inStock: v.boolean(),
     isPersonalizable: v.optional(v.boolean()),
@@ -705,7 +643,6 @@ export const update = mutation({
       price: args.price,
       category: assignment.category,
       categoryGroup,
-      size: args.size,
       imageUrls: args.imageUrls,
       inStock: args.inStock,
       isPersonalizable: args.isPersonalizable,
@@ -756,7 +693,6 @@ export const seedSampleProducts = internalMutation({
           price: product.price,
           categoryGroup: product.categoryGroup,
           category: product.category,
-          size: product.size,
           inStock: product.inStock,
           isPersonalizable: product.isPersonalizable,
           availableColors: product.availableColors,

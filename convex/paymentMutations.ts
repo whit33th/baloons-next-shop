@@ -77,7 +77,7 @@ export const updatePaymentStatus = internalMutation({
 export const processSuccessfulPayment = internalMutation({
   args: {
     paymentIntentId: v.string(),
-    paymentType: v.optional(v.union(v.literal("full"), v.literal("partial"))),
+    paymentType: v.optional(v.literal("full")),
   },
   returns: v.id("orders"),
   handler: async (ctx, args) => {
@@ -109,9 +109,6 @@ export const processSuccessfulPayment = internalMutation({
       });
     }
 
-    const paymentMethod =
-      args.paymentType === "partial" ? "partial_online" : "full_online";
-
     const orderId = await ctx.db.insert("orders", {
       userId: paymentIntent.userId,
       items: paymentIntent.orderData.items,
@@ -122,7 +119,7 @@ export const processSuccessfulPayment = internalMutation({
       shippingAddress: paymentIntent.orderData.shippingAddress,
       paymentIntentId: args.paymentIntentId,
       deliveryType: "pickup",
-      paymentMethod: paymentMethod as "full_online" | "partial_online",
+      paymentMethod: "full_online",
     });
 
     const cartQuery = ctx.db

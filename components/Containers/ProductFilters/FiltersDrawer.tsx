@@ -15,7 +15,6 @@ import {
   DrawerTrigger,
 } from "@/components/ui/drawer";
 import { BALLOON_COLORS } from "@/constants/colors";
-import { BALLOON_SIZES } from "@/constants/sizes";
 
 const PRICE_RANGES = [
   { label: "Up to €5", min: 0, max: 5 },
@@ -55,8 +54,7 @@ export function FiltersDrawer() {
       getParam("minPrice") ||
       getParam("maxPrice") ||
       getParam("category") ||
-      getParam("color") ||
-      getParam("size")
+      getParam("color")
     );
   };
 
@@ -167,31 +165,6 @@ export function FiltersDrawer() {
                       {color.label}
                     </span>
                   </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Size Filter */}
-            <div>
-              <h3 className="text-deep mb-3 text-lg font-semibold tracking-wide uppercase">
-                Balloon Size
-              </h3>
-              <div className="grid grid-cols-2 gap-3">
-                {BALLOON_SIZES.map((size) => (
-                  <Button
-                    key={size}
-                    onClick={() =>
-                      updateParam("size", getParam("size") === size ? "" : size)
-                    }
-                    variant="outline"
-                    className={`rounded-xl border-2 transition-all ${
-                      getParam("size") === size
-                        ? "border-secondary bg-secondary/10 text-deep font-semibold"
-                        : "border-border/30 text-deep/70 hover:border-secondary/50"
-                    }`}
-                  >
-                    {size}
-                  </Button>
                 ))}
               </div>
             </div>

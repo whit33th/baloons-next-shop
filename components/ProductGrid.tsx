@@ -20,7 +20,6 @@ type ProductGridFilters = {
   sort?: string;
   tag?: string;
   color?: string;
-  size?: string;
 };
 
 interface ProductGridProps {
@@ -62,7 +61,6 @@ export function ProductGrid({ filters }: ProductGridProps) {
     sort,
     tag,
     color,
-    size,
   } = filters;
 
   // Avoid SSR flash of default skeleton count (8) by waiting for mount
@@ -136,17 +134,6 @@ export function ProductGrid({ filters }: ProductGridProps) {
         : undefined;
     };
 
-    const normalizeSize = (value?: string) => {
-      if (!value) {
-        return undefined;
-      }
-      const validSizes = ["30cm", "45cm", "80cm", "100cm"] as const;
-      type ValidSize = (typeof validSizes)[number];
-      return validSizes.includes(value as ValidSize)
-        ? (value as ValidSize)
-        : undefined;
-    };
-
     return {
       search: normalizeString(search),
       minPrice: parsePrice(minPrice),
@@ -158,7 +145,6 @@ export function ProductGrid({ filters }: ProductGridProps) {
       sort: normalizeSort(sort),
       tag: normalizeTag(tag),
       color: normalizeString(color),
-      size: normalizeSize(size),
     } as const;
   }, [
     search,
@@ -171,7 +157,6 @@ export function ProductGrid({ filters }: ProductGridProps) {
     sort,
     tag,
     color,
-    size,
   ]);
 
   const {

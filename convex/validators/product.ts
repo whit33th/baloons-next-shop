@@ -8,12 +8,6 @@ export const productDocumentFields = {
   price: v.number(),
   categoryGroup: v.string(),
   category: v.string(),
-  size: v.union(
-    v.literal("30cm"),
-    v.literal("45cm"),
-    v.literal("80cm"),
-    v.literal("100cm"),
-  ),
   imageUrls: v.array(v.string()),
   inStock: v.boolean(),
   soldCount: v.optional(v.number()),

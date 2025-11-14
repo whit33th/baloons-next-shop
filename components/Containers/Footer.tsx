@@ -1,44 +1,203 @@
+import Link from "next/link";
 import { Instagram } from "lucide-react";
 
-export const Footer = () => {
-  return (
-    <footer className="border-border/50 bg-secondary border-t">
-      <div className="container mx-auto px-6 py-4">
-        {/* Single row: left = year text, center = palette dots, right = Instagram */}
-        <div className="grid grid-cols-3 items-center">
-          <p className="text-left text-xs text-white">
-            &copy; {new Date().getFullYear()} Ballon Boutique. All rights
-            reserved.
-          </p>
+import { STORE_INFO, WHATSAPP_NUMBER } from "@/constants/config";
 
-          <div className="flex justify-center gap-3" aria-hidden="true">
-            <span
-              className="h-3 w-3 rounded-full"
-              style={{ background: "var(--color-light)" }}
-            />
-            <span
-              className="h-3 w-3 rounded-full"
-              style={{ background: "var(--color-warm)" }}
-            />
-            <span
-              className="h-3 w-3 rounded-full"
-              style={{ background: "var(--color-terracotta)" }}
-            />
-            <span
-              className="h-3 w-3 rounded-full"
-              style={{ background: "var(--color-deep)" }}
-            />
+type InternalLink = {
+  label: string;
+  href: { pathname: string };
+};
+
+type ExternalLink = {
+  label: string;
+  href: string;
+  external: true;
+};
+
+type FooterSection = {
+  title: string;
+  links: Array<InternalLink | ExternalLink>;
+};
+
+const sections: FooterSection[] = [
+  {
+    title: "Shop",
+    links: [
+      { label: "Home", href: { pathname: "/" as const } },
+      { label: "Catalog", href: { pathname: "/catalog" as const } },
+      { label: "Cart", href: { pathname: "/cart" as const } },
+      { label: "Checkout", href: { pathname: "/checkout" as const } },
+    ],
+  },
+  {
+    title: "Customer Care",
+    links: [
+      {
+        label: "Delivery & Pickup",
+        href: { pathname: "/delivery" as const },
+      },
+      {
+        label: "My Orders",
+        href: { pathname: "/profile" as const },
+      },
+      {
+        label: "WhatsApp",
+        href: `https://wa.me/${WHATSAPP_NUMBER}`,
+        external: true,
+      },
+    ],
+  },
+  {
+    title: "Company",
+    links: [
+      {
+        label: "Imprint",
+        href: { pathname: "/legal/imprint" as const },
+      },
+      {
+        label: "Terms & Conditions",
+        href: { pathname: "/legal/terms" as const },
+      },
+      {
+        label: "Privacy Policy",
+        href: { pathname: "/legal/privacy" as const },
+      },
+      {
+        label: "Cancellation Policy",
+        href: { pathname: "/legal/cancellation" as const },
+      },
+    ],
+  },
+  {
+    title: "Social",
+    links: [
+      {
+        label: "Instagram",
+        href: "https://www.instagram.com/ballonboutique.at",
+        external: true,
+      },
+    ],
+  },
+];
+
+const legalLinks: InternalLink[] = [
+  { label: "Terms & Conditions", href: { pathname: "/legal/terms" as const } },
+  { label: "Privacy Policy", href: { pathname: "/legal/privacy" as const } },
+  {
+    label: "Cancellation Policy",
+    href: { pathname: "/legal/cancellation" as const },
+  },
+  { label: "Imprint", href: { pathname: "/legal/imprint" as const } },
+];
+
+export const Footer = () => {
+  const year = new Date().getFullYear();
+
+  return (
+    <footer className="border-border/40 bg-secondary border-t text-white">
+      <div className="container mx-auto px-6 py-8">
+        <div className="flex flex-col gap-8 lg:flex-row lg:items-start lg:justify-between">
+          <div className="space-y-4">
+            <Link
+              href={{ pathname: "/" }}
+              className="text-xl font-semibold tracking-tight text-white"
+            >
+              {STORE_INFO.name}
+            </Link>
+            <p className="max-w-sm text-sm text-white/75">
+              Bespoke balloon decor delivered across Styria, crafted for moments
+              that linger long after the last guest leaves.
+            </p>
+            <div className="flex flex-wrap items-center gap-4">
+              <div className="flex items-center gap-2" aria-hidden="true">
+                <span
+                  className="h-2.5 w-2.5 rounded-full"
+                  style={{ background: "var(--color-light)" }}
+                />
+                <span
+                  className="h-2.5 w-2.5 rounded-full"
+                  style={{ background: "var(--color-warm)" }}
+                />
+                <span
+                  className="h-2.5 w-2.5 rounded-full"
+                  style={{ background: "var(--color-terracotta)" }}
+                />
+                <span
+                  className="h-2.5 w-2.5 rounded-full"
+                  style={{ background: "var(--color-deep)" }}
+                />
+              </div>
+
+              <a
+                href="https://www.instagram.com/ballonboutique.at"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 text-sm text-white transition-opacity hover:opacity-80"
+                aria-label="Instagram profile"
+              >
+                <Instagram className="h-4 w-4" />
+                <span>@ballonboutique.at</span>
+              </a>
+            </div>
           </div>
 
-          <a
-            href="https://instagram.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="justify-self-end text-white transition-colors hover:opacity-80"
-            aria-label="Instagram"
-          >
-            <Instagram className="h-5 w-5" />
-          </a>
+          <div className="flex flex-col gap-6 text-sm text-white/75 lg:flex-row lg:items-start lg:gap-10">
+            {sections.map((section) => (
+              <div key={section.title} className="min-w-[140px] space-y-3">
+                <p className="text-xs font-semibold tracking-[0.18em] text-white/60 uppercase">
+                  {section.title}
+                </p>
+                <ul className="space-y-1.5">
+                  {section.links.map((link) => {
+                    if ("external" in link) {
+                      return (
+                        <li key={link.label}>
+                          <a
+                            href={link.href}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="transition-opacity hover:opacity-80"
+                          >
+                            {link.label}
+                          </a>
+                        </li>
+                      );
+                    }
+
+                    return (
+                      <li key={link.label}>
+                        <Link
+                          href={link.href}
+                          className="transition-opacity hover:opacity-80"
+                        >
+                          {link.label}
+                        </Link>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="mt-8 border-t border-white/10 pt-4 text-xs text-white/60">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+            <p>
+              &copy; {year} {STORE_INFO.name}. All rights reserved.
+            </p>
+            <nav className="flex flex-wrap gap-x-5 gap-y-2">
+              {legalLinks.map((link) => (
+                <Link
+                  key={link.label}
+                  href={link.href}
+                  className="transition-opacity hover:opacity-80"
+                >
+                  {link.label}
+                </Link>
+              ))}
+            </nav>
+          </div>
         </div>
       </div>
     </footer>
