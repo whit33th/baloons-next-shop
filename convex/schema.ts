@@ -22,7 +22,7 @@ const applicationTables = {
     description: v.string(),
     price: v.number(),
     categoryGroup: v.string(),
-    category: v.string(),
+    categories: v.array(v.string()),
     imageUrls: v.array(v.string()),
     inStock: v.boolean(),
     soldCount: v.optional(v.number()),
@@ -35,22 +35,14 @@ const applicationTables = {
     // Single field indexes for basic queries
     .index("by_price", ["price"])
     .index("by_name", ["name"])
-    .index("by_category", ["category"])
     .index("by_category_group", ["categoryGroup"])
-    .index("by_group_and_category", ["categoryGroup", "category"])
     // Composite indexes for better e-commerce performance
     // Default sorting: show bestsellers first (by soldCount desc, then by _creationTime desc)
     .index("by_popularity", ["soldCount"])
-    // Category + popularity for filtered browsing
-    .index("by_category_and_popularity", ["category", "soldCount"])
+    // Category group + popularity for filtered browsing
     .index("by_group_and_popularity", ["categoryGroup", "soldCount"])
-    // Price sorting within category
-    .index("by_category_and_price", ["category", "price"])
-    .index("by_group_category_and_price", [
-      "categoryGroup",
-      "category",
-      "price",
-    ])
+    // Price sorting within category group
+    .index("by_group_and_price", ["categoryGroup", "price"])
     // Stock + popularity for availability filtering
     .index("by_stock_and_sold", ["inStock", "soldCount"]),
 

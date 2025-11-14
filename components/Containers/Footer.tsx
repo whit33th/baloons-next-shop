@@ -1,4 +1,4 @@
-import { Instagram } from "lucide-react";
+import { Facebook, Instagram } from "lucide-react";
 import Link from "next/link";
 
 import { STORE_INFO, WHATSAPP_NUMBER } from "@/constants/config";
@@ -73,7 +73,12 @@ const sections: FooterSection[] = [
     links: [
       {
         label: "Instagram",
-        href: "https://www.instagram.com/ballonboutique.at",
+        href: "https://www.instagram.com/ballonboutique.at?igsh=YWFhZjl4c2U1a29q",
+        external: true,
+      },
+      {
+        label: "Facebook",
+        href: "https://www.facebook.com/share/1JrBrLkJ1M/",
         external: true,
       },
     ],
@@ -108,8 +113,8 @@ export const Footer = () => {
               Bespoke balloon decor delivered across Styria, crafted for moments
               that linger long after the last guest leaves.
             </p>
-            <div className="flex flex-wrap items-center gap-4">
-              <div className="flex items-center gap-2" aria-hidden="true">
+            <div className="flex flex-wrap items-center gap-2">
+              {/* <div className="flex items-center gap-2" aria-hidden="true">
                 <span
                   className="h-2.5 w-2.5 rounded-full"
                   style={{ background: "var(--color-light)" }}
@@ -126,17 +131,32 @@ export const Footer = () => {
                   className="h-2.5 w-2.5 rounded-full"
                   style={{ background: "var(--color-deep)" }}
                 />
-              </div>
+              </div> */}
 
               <a
                 href="https://www.instagram.com/ballonboutique.at"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-2 text-sm text-white transition-opacity hover:opacity-80"
+                className="flex items-center transition-opacity hover:opacity-80"
                 aria-label="Instagram profile"
               >
-                <Instagram className="h-4 w-4" />
-                <span>@ballonboutique.at</span>
+                <Instagram className="size-5" />
+              </a>
+              <a
+                href="https://www.facebook.com/share/1JrBrLkJ1M/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center transition-opacity hover:opacity-80"
+                aria-label="Instagram profile"
+              >
+                <Facebook className="size-5" />
+              </a>
+              <a
+                href="mailto:ballonboutique.at@gmail.com"
+                className="flex items-center transition-opacity hover:opacity-80"
+                aria-label="Email"
+              >
+                @ballonboutique.at
               </a>
             </div>
           </div>

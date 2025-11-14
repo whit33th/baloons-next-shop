@@ -61,28 +61,6 @@ export function ProductPersonalization({
     <div className="mt-6 space-y-6 border-t pt-6">
       <h3 className="text-lg font-semibold">Personalize Your Balloon</h3>
 
-      {/* Text Input */}
-      <div>
-        <label
-          htmlFor="personalization-text"
-          className="mb-2 block text-sm font-medium"
-        >
-          Custom Text (Optional)
-        </label>
-        <input
-          id="personalization-text"
-          type="text"
-          value={text}
-          onChange={(e) => handleTextChange(e.target.value)}
-          placeholder="e.g., Happy Birthday Anna"
-          maxLength={50}
-          className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-transparent focus:ring-2 focus:ring-pink-500"
-        />
-        <p className="mt-1 text-xs text-gray-500">
-          {text.length}/50 characters
-        </p>
-      </div>
-
       {/* Color Selector */}
       <div>
         <p className="mb-3 block text-sm font-medium">
@@ -111,6 +89,28 @@ export function ProductPersonalization({
             </button>
           ))}
         </div>
+      </div>
+
+      {/* Text Input */}
+      <div>
+        <label
+          htmlFor="personalization-text"
+          className="mb-2 block text-sm font-medium"
+        >
+          Custom Text (Optional)
+        </label>
+        <input
+          id="personalization-text"
+          type="text"
+          value={text}
+          onChange={(e) => handleTextChange(e.target.value)}
+          placeholder="e.g., Happy Birthday Anna"
+          maxLength={50}
+          className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-transparent focus:ring-2 focus:ring-pink-500"
+        />
+        <p className="mt-1 text-xs text-gray-500">
+          {text.length}/50 characters
+        </p>
       </div>
 
       {/* Number Input */}

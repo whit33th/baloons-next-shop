@@ -54,8 +54,9 @@ export function SubcategoryMenu({
               </button>
             </div>
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-              {group.subcategories.map(
-                (subcategory: CategoryGroup["subcategories"][number]) => {
+              {group.subcategories
+                .filter((subcategory) => subcategory.value !== "Any Event")
+                .map((subcategory: CategoryGroup["subcategories"][number]) => {
                   const isActiveSubcategory =
                     activeGroup === group.value &&
                     activeCategory === subcategory.value;
@@ -74,8 +75,7 @@ export function SubcategoryMenu({
                       {subcategory.label}
                     </button>
                   );
-                },
-              )}
+                })}
             </div>
           </motion.div>
         </PopoverContent>

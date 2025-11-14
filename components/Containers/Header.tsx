@@ -182,14 +182,10 @@ export function Header() {
         </Link>
       </div>
 
-      <div className="flex items-center gap-3 justify-self-end px-1 sm:px-3">
+      <div className="flex items-center gap-0.5 justify-self-end px-1 sm:gap-3 sm:px-3">
         {user?.isAdmin ? (
-          <Link
-            href="/admin"
-            className="text-deep hover:text-on-accent/90 flex h-10 items-center gap-2 rounded-full border border-white/20 px-3 text-xs font-semibold tracking-[0.25rem] uppercase transition-colors hover:border-white/40 hover:bg-white/10"
-          >
-            <ShieldCheck className="h-4 w-4" aria-hidden />
-            <span className="hidden sm:inline">Admin</span>
+          <Link href="/admin">
+            <IconButton Icon={ShieldCheck} ariaLabel="Admin" />
           </Link>
         ) : null}
         <AuthAction />
@@ -260,7 +256,7 @@ function AuthAction() {
           >
             <User className="h-5 w-5 text-current" />
           </button>
-          <span className="hidden h-10 w-auto items-center justify-center px-3 sm:flex">
+          <span className="border-deep hidden h-10 w-auto items-center justify-center rounded-lg border-2 px-3 sm:flex">
             Log In
           </span>
         </Link>

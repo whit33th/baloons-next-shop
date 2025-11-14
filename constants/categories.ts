@@ -36,6 +36,8 @@ const BOUQUET_CATEGORY_VALUES = [
   "For Kids Girls",
   "For Her",
   "For Him",
+
+  "Any Event",
 ] as const;
 
 type BouquetCategoryValue = (typeof BOUQUET_CATEGORY_VALUES)[number];

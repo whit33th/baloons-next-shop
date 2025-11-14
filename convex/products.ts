@@ -3,7 +3,7 @@ import { v } from "convex/values";
 import type { Doc } from "./_generated/dataModel";
 import { internalMutation, mutation, query } from "./_generated/server";
 import { requireUser } from "./helpers/auth";
-import { attachImageToProduct } from "./helpers/products";
+import { attachImageToProduct, getProductCategories } from "./helpers/products";
 import { productWithImageValidator } from "./validators/product";
 
 type ProductDoc = Doc<"products">;
@@ -85,6 +85,13 @@ const CATEGORY_GROUP_MAP: Record<
   "mini gift sets": { group: "mini-sets", category: "Mini Sets" },
 };
 
+const GROUP_DEFAULT_CATEGORY: Record<CategoryGroupValue, string> = {
+  balloons: "Any Event",
+  "toy-in-balloon": "Toy in a Balloon",
+  "balloon-bouquets": "Balloon Bouquets",
+  "mini-sets": "Mini Sets",
+};
+
 const resolveCategoryAssignment = (
   rawCategory?: string | null,
 ): { group: CategoryGroupValue; category: string } => {
@@ -125,12 +132,51 @@ const normalizeCategoryGroupInput = (
   return undefined;
 };
 
+const sanitizeCategoriesSelection = (
+  rawCategories: ReadonlyArray<string> | undefined,
+  rawGroup?: string | null,
+): { categoryGroup: CategoryGroupValue; categories: string[] } => {
+  const providedGroup = normalizeCategoryGroupInput(rawGroup);
+  const canonicalCategories: string[] = [];
+  let resolvedGroup = providedGroup;
+
+  for (const candidate of rawCategories ?? []) {
+    if (!candidate) {
+      continue;
+    }
+    const trimmed = candidate.trim();
+    if (!trimmed) {
+      continue;
+    }
+    const assignment = resolveCategoryAssignment(trimmed);
+    if (resolvedGroup && assignment.group !== resolvedGroup) {
+      throw new Error(
+        "All selected categories must belong to the same category group",
+      );
+    }
+    resolvedGroup = resolvedGroup ?? assignment.group;
+    if (!canonicalCategories.includes(assignment.category)) {
+      canonicalCategories.push(assignment.category);
+    }
+  }
+
+  const categoryGroup = resolvedGroup ?? "balloons";
+  if (canonicalCategories.length === 0) {
+    canonicalCategories.push(GROUP_DEFAULT_CATEGORY[categoryGroup]);
+  }
+
+  return {
+    categoryGroup,
+    categories: canonicalCategories,
+  };
+};
+
 const SAMPLE_PRODUCTS: Array<{
   name: string;
   description: string;
   price: number;
   categoryGroup: CategoryGroupValue;
-  category: string;
+  categories: string[];
   inStock: boolean;
   isPersonalizable?: boolean;
   availableColors?: string[];
@@ -141,7 +187,7 @@ const SAMPLE_PRODUCTS: Array<{
       "Soft gradient balloon that shifts from blush to sunrise gold.",
     price: 6,
     categoryGroup: "balloons",
-    category: "For Kids Girls",
+    categories: ["For Kids Girls", "For Her"],
     inStock: true,
     isPersonalizable: true,
     availableColors: randomColors(4),
@@ -151,7 +197,7 @@ const SAMPLE_PRODUCTS: Array<{
     description: "Warm ombre tones that brighten morning celebrations.",
     price: 5.5,
     categoryGroup: "balloons",
-    category: "For Her",
+    categories: ["For Her", "Anniversary"],
     inStock: true,
     isPersonalizable: true,
     availableColors: randomColors(4),
@@ -161,7 +207,7 @@ const SAMPLE_PRODUCTS: Array<{
     description: "Vivid cobalt statement balloon for modern parties.",
     price: 4.5,
     categoryGroup: "balloons",
-    category: "For Kids Boys",
+    categories: ["For Kids Boys", "Any Event"],
     inStock: true,
     isPersonalizable: true,
     availableColors: randomColors(4),
@@ -171,7 +217,7 @@ const SAMPLE_PRODUCTS: Array<{
     description: "Pastel swirl pattern inspired by carnival treats.",
     price: 5,
     categoryGroup: "balloons",
-    category: "For Kids Girls",
+    categories: ["For Kids Girls"],
     inStock: true,
   },
   {
@@ -179,7 +225,7 @@ const SAMPLE_PRODUCTS: Array<{
     description: "Deep navy balloon with metallic specks that shimmer.",
     price: 7,
     categoryGroup: "balloons",
-    category: "For Him",
+    categories: ["For Him"],
     inStock: true,
   },
   {
@@ -187,7 +233,7 @@ const SAMPLE_PRODUCTS: Array<{
     description: "Rich cherry red balloon for bold centerpiece displays.",
     price: 4,
     categoryGroup: "balloons",
-    category: "Anniversary",
+    categories: ["Anniversary"],
     inStock: true,
   },
   {
@@ -195,7 +241,7 @@ const SAMPLE_PRODUCTS: Array<{
     description: "Zesty orange balloon that energizes summer events.",
     price: 3.5,
     categoryGroup: "balloons",
-    category: "Any Event",
+    categories: ["Any Event"],
     inStock: true,
   },
   {
@@ -203,7 +249,7 @@ const SAMPLE_PRODUCTS: Array<{
     description: "Cool teal balloon reminiscent of coastal escapes.",
     price: 4.5,
     categoryGroup: "balloons",
-    category: "Baby Birth",
+    categories: ["Baby Birth"],
     inStock: true,
   },
   {
@@ -211,7 +257,7 @@ const SAMPLE_PRODUCTS: Array<{
     description: "Soft lavender tones perfect for bridal showers.",
     price: 5,
     categoryGroup: "balloons",
-    category: "For Her",
+    categories: ["For Her"],
     inStock: true,
   },
   {
@@ -219,7 +265,7 @@ const SAMPLE_PRODUCTS: Array<{
     description: "Luxe metallic gold balloon for milestone moments.",
     price: 8,
     categoryGroup: "balloons",
-    category: "Anniversary",
+    categories: ["Anniversary", "Love"],
     inStock: true,
     isPersonalizable: true,
     availableColors: randomColors(3),
@@ -229,7 +275,7 @@ const SAMPLE_PRODUCTS: Array<{
     description: "Sleek silver balloon that complements modern decor.",
     price: 7.5,
     categoryGroup: "balloons",
-    category: "Any Event",
+    categories: ["Any Event"],
     inStock: true,
     isPersonalizable: true,
     availableColors: randomColors(3),
@@ -239,7 +285,7 @@ const SAMPLE_PRODUCTS: Array<{
     description: "Jewel-toned balloon with subtle glitter overlay.",
     price: 6.5,
     categoryGroup: "balloon-bouquets",
-    category: "For Her",
+    categories: ["For Her"],
     inStock: true,
     isPersonalizable: true,
     availableColors: randomColors(3),
@@ -249,7 +295,7 @@ const SAMPLE_PRODUCTS: Array<{
     description: "Trending rose gold balloon for chic gatherings.",
     price: 8.5,
     categoryGroup: "balloons",
-    category: "For Her",
+    categories: ["For Her"],
     inStock: true,
     isPersonalizable: true,
     availableColors: randomColors(4),
@@ -259,7 +305,7 @@ const SAMPLE_PRODUCTS: Array<{
     description: "Opalescent finish that changes with every angle.",
     price: 9,
     categoryGroup: "toy-in-balloon",
-    category: "Toy in a Balloon",
+    categories: ["Toy in a Balloon"],
     inStock: true,
   },
   {
@@ -267,7 +313,7 @@ const SAMPLE_PRODUCTS: Array<{
     description: "Frosted satin balloon with pearlescent sheen.",
     price: 5.5,
     categoryGroup: "balloons",
-    category: "For Her",
+    categories: ["For Her"],
     inStock: true,
   },
   {
@@ -275,7 +321,7 @@ const SAMPLE_PRODUCTS: Array<{
     description: "Vibrant neon palette designed for night parties.",
     price: 6,
     categoryGroup: "balloons",
-    category: "For Kids Boys",
+    categories: ["For Kids Boys"],
     inStock: true,
   },
   {
@@ -283,7 +329,7 @@ const SAMPLE_PRODUCTS: Array<{
     description: "Midnight blue balloon dotted with gold stars.",
     price: 7.5,
     categoryGroup: "balloons",
-    category: "For Kids Boys",
+    categories: ["For Kids Boys"],
     inStock: true,
   },
   {
@@ -291,7 +337,7 @@ const SAMPLE_PRODUCTS: Array<{
     description: "Transparent balloon filled with pastel confetti.",
     price: 6.5,
     categoryGroup: "balloons",
-    category: "Baby Birth",
+    categories: ["Baby Birth"],
     inStock: true,
   },
   {
@@ -299,7 +345,7 @@ const SAMPLE_PRODUCTS: Array<{
     description: "Moody teal balloon for enchanted themes.",
     price: 5.5,
     categoryGroup: "balloons",
-    category: "Love",
+    categories: ["Love"],
     inStock: true,
   },
   {
@@ -307,7 +353,7 @@ const SAMPLE_PRODUCTS: Array<{
     description: "Fiery gradient balloon inspired by tropical sunsets.",
     price: 6.5,
     categoryGroup: "balloons",
-    category: "Any Event",
+    categories: ["Any Event"],
     inStock: true,
   },
   {
@@ -315,7 +361,7 @@ const SAMPLE_PRODUCTS: Array<{
     description: "Regal purple balloon suited for elegant soirees.",
     price: 6,
     categoryGroup: "balloons",
-    category: "Anniversary",
+    categories: ["Anniversary"],
     inStock: true,
   },
   {
@@ -323,7 +369,7 @@ const SAMPLE_PRODUCTS: Array<{
     description: "Delicate blush balloon with watercolor finish.",
     price: 5,
     categoryGroup: "balloons",
-    category: "Mom",
+    categories: ["Mom"],
     inStock: true,
   },
   {
@@ -331,7 +377,7 @@ const SAMPLE_PRODUCTS: Array<{
     description: "Cool gradient balloon shifting from ice blue to white.",
     price: 5.5,
     categoryGroup: "balloons",
-    category: "Any Event",
+    categories: ["Any Event"],
     inStock: true,
   },
   {
@@ -339,7 +385,7 @@ const SAMPLE_PRODUCTS: Array<{
     description: "Muted rose balloon for nostalgic celebrations.",
     price: 4.5,
     categoryGroup: "balloons",
-    category: "Love",
+    categories: ["Love"],
     inStock: true,
   },
   {
@@ -347,7 +393,7 @@ const SAMPLE_PRODUCTS: Array<{
     description: "Cosmic balloon with swirling galaxy artwork.",
     price: 7,
     categoryGroup: "balloons",
-    category: "For Kids Girls",
+    categories: ["For Kids Girls"],
     inStock: true,
   },
   {
@@ -355,7 +401,7 @@ const SAMPLE_PRODUCTS: Array<{
     description: "Bright coral and yellow balloon for beach parties.",
     price: 5.5,
     categoryGroup: "balloons",
-    category: "Any Event",
+    categories: ["Any Event", "Surprise Box"],
     inStock: true,
   },
   {
@@ -363,7 +409,7 @@ const SAMPLE_PRODUCTS: Array<{
     description: "Deep wine balloon with luxe matte finish.",
     price: 6.5,
     categoryGroup: "balloons",
-    category: "Love",
+    categories: ["Love"],
     inStock: true,
   },
   {
@@ -371,7 +417,7 @@ const SAMPLE_PRODUCTS: Array<{
     description: "Glass-like balloon ready for custom fillings.",
     price: 4,
     categoryGroup: "balloons",
-    category: "Surprise Box",
+    categories: ["Surprise Box"],
     inStock: true,
   },
   {
@@ -379,7 +425,7 @@ const SAMPLE_PRODUCTS: Array<{
     description: "Warm amber balloon with sparkling highlights.",
     price: 5.5,
     categoryGroup: "balloons",
-    category: "Love",
+    categories: ["Love"],
     inStock: true,
   },
   {
@@ -387,7 +433,7 @@ const SAMPLE_PRODUCTS: Array<{
     description: "Fresh mint green balloon for spring events.",
     price: 4.5,
     categoryGroup: "mini-sets",
-    category: "Mini Sets",
+    categories: ["Mini Sets"],
     inStock: true,
   },
 ];
@@ -488,18 +534,6 @@ export const list = query({
         .query("products")
         .withSearchIndex("search_products", (q) => q.search("name", searchTerm))
         .collect();
-    } else if (categoryGroup && category) {
-      allProducts = await ctx.db
-        .query("products")
-        .withIndex("by_group_and_category", (q) =>
-          q.eq("categoryGroup", categoryGroup).eq("category", category),
-        )
-        .collect();
-    } else if (category) {
-      allProducts = await ctx.db
-        .query("products")
-        .withIndex("by_category", (q) => q.eq("category", category))
-        .collect();
     } else if (categoryGroup) {
       allProducts = await ctx.db
         .query("products")
@@ -513,6 +547,13 @@ export const list = query({
 
     // Step 2: Apply JavaScript filters for non-indexed fields
     const filtered = allProducts.filter((product) => {
+      if (category) {
+        const categories = getProductCategories(product);
+        const hasCategory = categories.some((value) => value === category);
+        if (!hasCategory) {
+          return false;
+        }
+      }
       if (available && !product.inStock) return false;
       if (minPrice !== undefined && product.price < minPrice) return false;
       if (maxPrice !== undefined && product.price > maxPrice) return false;
@@ -573,7 +614,7 @@ export const create = mutation({
     name: v.string(),
     description: v.string(),
     price: v.number(),
-    category: v.string(),
+    categories: v.array(v.string()),
     categoryGroup: v.optional(v.string()),
     imageUrls: v.array(v.string()),
     inStock: v.boolean(),
@@ -588,16 +629,17 @@ export const create = mutation({
       throw new Error("Price must be non-negative");
     }
 
-    const assignment = resolveCategoryAssignment(args.category);
-    const providedGroup = normalizeCategoryGroupInput(args.categoryGroup);
-    const categoryGroup = providedGroup ?? assignment.group;
+    const { categoryGroup, categories } = sanitizeCategoriesSelection(
+      args.categories,
+      args.categoryGroup,
+    );
 
     return ctx.db.insert("products", {
       name: args.name,
       description: args.description,
       price: args.price,
       categoryGroup,
-      category: assignment.category,
+      categories,
       imageUrls: args.imageUrls,
       inStock: args.inStock,
       soldCount: 0,
@@ -613,7 +655,7 @@ export const update = mutation({
     name: v.string(),
     description: v.string(),
     price: v.number(),
-    category: v.string(),
+    categories: v.array(v.string()),
     categoryGroup: v.optional(v.string()),
     imageUrls: v.array(v.string()),
     inStock: v.boolean(),
@@ -633,15 +675,16 @@ export const update = mutation({
       throw new Error("Price must be non-negative");
     }
 
-    const assignment = resolveCategoryAssignment(args.category);
-    const providedGroup = normalizeCategoryGroupInput(args.categoryGroup);
-    const categoryGroup = providedGroup ?? assignment.group;
+    const { categoryGroup, categories } = sanitizeCategoriesSelection(
+      args.categories,
+      args.categoryGroup,
+    );
 
     await ctx.db.patch(args.productId, {
       name: args.name,
       description: args.description,
       price: args.price,
-      category: assignment.category,
+      categories,
       categoryGroup,
       imageUrls: args.imageUrls,
       inStock: args.inStock,
@@ -692,7 +735,7 @@ export const seedSampleProducts = internalMutation({
           description: product.description,
           price: product.price,
           categoryGroup: product.categoryGroup,
-          category: product.category,
+          categories: product.categories,
           inStock: product.inStock,
           isPersonalizable: product.isPersonalizable ?? true,
           availableColors: product.availableColors,

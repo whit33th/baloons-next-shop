@@ -44,11 +44,7 @@ export default function AuthPage() {
             await signIn("password", formData)
               .then(() => {
                 const email = formData.get("email") as string | null;
-                toast.success(
-                  flow === "signIn"
-                    ? `Signed in${email ? ` as ${email}` : ""}`
-                    : `Signup link sent${email ? ` to ${email}` : ""}`,
-                );
+                toast.success(`Signed in${email ? ` as ${email}` : ""}`);
               })
               .catch((error) => {
                 console.error(error);

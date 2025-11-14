@@ -1,135 +1,109 @@
 "use client";
 
+import { STORE_INFO } from "@/constants/config";
+
+const sections = [
+  {
+    heading: "Self-Pickup",
+    items: [
+      `Address: ${STORE_INFO.address.street}, ${STORE_INFO.address.postalCode} ${STORE_INFO.address.city}`,
+      "Opening hours: 7 days a week, 24 hours a day, no breaks or holidays",
+      "Please confirm the date and time of pickup in advance",
+      "Payment: Cash only on-site (when choosing cash payment option)",
+    ],
+  },
+  {
+    heading: "Delivery",
+    items: [
+      "Available to nearby cities from 16:00 to 21:00",
+      "Cost: +€16 to order total",
+      "Delivery time: Between 16:00 and 21:00",
+    ],
+  },
+  {
+    heading: "Important Information",
+    items: [
+      "Reservation and cancellation: Order is confirmed after payment or WhatsApp confirmation. Cancellation possible up to 48 hours before pickup",
+      "Preparation time: 72 hours (3 days)",
+      "Contact: WhatsApp only",
+    ],
+  },
+];
+
 export default function DeliveryPage() {
   return (
-    <div className="min-h-screen bg-linear-to-br from-blue-50 to-purple-50">
-      <main className="container mx-auto px-4 py-12">
-        <div className="mx-auto max-w-4xl">
-          <div className="overflow-hidden rounded-xl bg-white shadow-lg">
-            {/* Header */}
-            <div className="border-b border-gray-200 bg-linear-to-r from-purple-600 to-blue-600 p-8">
-              <h1 className="text-3xl font-bold text-white">
-                Delivery & Pickup
-              </h1>
+    <main className="bg-primary/20 text-deep min-h-screen px-6 py-12">
+      <div className="mx-auto flex w-full max-w-4xl flex-col gap-10 rounded-3xl bg-white/95 p-8 shadow-xl">
+        <header className="space-y-3">
+          <p className="text-xs font-semibold tracking-[0.25em] text-[rgba(var(--deep-rgb),0.6)] uppercase">
+            Delivery & Pickup
+          </p>
+          <h1 className="text-deep text-3xl font-semibold tracking-tight">
+            Delivery and Pickup Options
+          </h1>
+          <p className="text-sm leading-relaxed text-[rgba(var(--deep-rgb),0.75)]">
+            We offer convenient delivery and self-pickup options for your
+            orders. Choose what works best for you.
+          </p>
+        </header>
+
+        <section className="grid gap-8 md:grid-cols-2">
+          {sections.map((section) => (
+            <div key={section.heading}>
+              <h2 className="text-sm font-semibold tracking-[0.18em] text-[rgba(var(--deep-rgb),0.6)] uppercase">
+                {section.heading}
+              </h2>
+              <ul className="mt-3 space-y-1.5 text-sm text-[rgba(var(--deep-rgb),0.85)]">
+                {section.items.map((entry) => (
+                  <li key={entry}>{entry}</li>
+                ))}
+              </ul>
             </div>
+          ))}
+        </section>
 
-            <div className="p-8">
-              {/* Pickup Section */}
-              <div className="mb-8">
-                <h2 className="mb-4 text-2xl font-bold text-gray-800">
-                  🏪 Self-pickup
-                </h2>
-                <div className="rounded-lg bg-purple-50 p-6">
-                  <p className="mb-4 text-gray-700">
-                    Your Ballon Boutique order can be conveniently picked up:
-                  </p>
-                  <div className="space-y-3 text-gray-700">
-                    <div className="flex items-start">
-                      <span className="mr-3 font-semibold">📍 Address:</span>
-                      <span>Sandgasse 3, 8720 Knittelfeld</span>
-                    </div>
-                    <div className="flex items-start">
-                      <span className="mr-3 font-semibold">
-                        🕐 Opening hours:
-                      </span>
-                      <span>
-                        7 days a week, 24 hours a day, no breaks or holidays
-                      </span>
-                    </div>
-                    <div className="flex items-start">
-                      <span className="mr-3 font-semibold">⏰ Important:</span>
-                      <span>
-                        Please confirm the date and time of pickup in advance
-                      </span>
-                    </div>
-                    <div className="flex items-start">
-                      <span className="mr-3 font-semibold">💰 Payment:</span>
-                      <span>
-                        Cash only on-site (when choosing cash payment)
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Delivery Section */}
-              <div className="mb-8">
-                <h2 className="mb-4 text-2xl font-bold text-gray-800">
-                  🚗 Delivery
-                </h2>
-                <div className="rounded-lg bg-green-50 p-6">
-                  <p className="mb-4 text-gray-700">
-                    Delivery to nearby cities is available for an additional fee
-                    from 16:00 to 21:00
-                  </p>
-                  <div className="space-y-3 text-gray-700">
-                    <div className="flex items-start">
-                      <span className="mr-3 font-semibold">💶 Cost:</span>
-                      <span>+€16 to order total</span>
-                    </div>
-                    <div className="flex items-start">
-                      <span className="mr-3 font-semibold">
-                        🕐 Delivery time:
-                      </span>
-                      <span>From 16:00 to 21:00</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Additional Information */}
-              <div className="mb-8">
-                <h2 className="mb-4 text-2xl font-bold text-gray-800">
-                  📋 Additional Information
-                </h2>
-                <div className="rounded-lg border-2 border-purple-200 bg-purple-50 p-6">
-                  <ul className="space-y-3 text-gray-700">
-                    <li className="flex items-start">
-                      <span className="mr-2">✓</span>
-                      <span>
-                        <strong>Reservation and cancellation:</strong> Order is
-                        confirmed after payment or WhatsApp confirmation.
-                        Cancellation possible up to 48 hours before pickup
-                      </span>
-                    </li>
-                    <li className="flex items-start">
-                      <span className="mr-2">⏱️</span>
-                      <span>
-                        <strong>Preparation time:</strong> 72 hours (3 days)
-                      </span>
-                    </li>
-                    <li className="flex items-start">
-                      <span className="mr-2">📱</span>
-                      <span>
-                        <strong>Contact:</strong> WhatsApp only
-                      </span>
-                    </li>
-                  </ul>
-                </div>
-              </div>
-
-              {/* Contact Section */}
-              <div className="text-center">
-                <h2 className="mb-4 text-2xl font-bold text-gray-800">
-                  Contact Us
-                </h2>
-                <p className="mb-4 text-gray-600">
-                  For all inquiries, please contact us via WhatsApp
-                </p>
-                <a
-                  href="https://wa.me/YOUR_WHATSAPP_NUMBER"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center rounded-lg bg-green-600 px-8 py-4 font-semibold text-white transition-colors hover:bg-green-700"
-                >
-                  <span className="mr-2 text-2xl">📱</span>
-                  Contact via WhatsApp
-                </a>
-              </div>
-            </div>
+        <section className="space-y-4 text-sm text-[rgba(var(--deep-rgb),0.8)]">
+          <div>
+            <h2 className="text-sm font-semibold tracking-[0.18em] text-[rgba(var(--deep-rgb),0.6)] uppercase">
+              Order Confirmation
+            </h2>
+            <p className="mt-2">
+              Your order is confirmed after payment or WhatsApp confirmation.
+              Once confirmed, we start preparing your order which typically
+              takes 3 days (72 hours). We will contact you to confirm the exact
+              pickup or delivery time.
+            </p>
           </div>
-        </div>
-      </main>
-    </div>
+          <div>
+            <h2 className="text-sm font-semibold tracking-[0.18em] text-[rgba(var(--deep-rgb),0.6)] uppercase">
+              Payment Methods
+            </h2>
+            <p>
+              For self-pickup with cash payment, you settle the amount on-site.
+              For online payments, your order is secured immediately. Delivery
+              costs are added to your order total.
+            </p>
+          </div>
+          <div>
+            <h2 className="text-sm font-semibold tracking-[0.18em] text-[rgba(var(--deep-rgb),0.6)] uppercase">
+              Contact & Support
+            </h2>
+            <p>
+              For any questions regarding delivery or pickup, please contact us
+              via WhatsApp at{" "}
+              <a
+                href={`https://wa.me/${STORE_INFO.contact.phone}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-secondary underline"
+              >
+                {STORE_INFO.contact.phoneDisplay ?? STORE_INFO.contact.phone}
+              </a>
+              . We are here to help and will respond promptly.
+            </p>
+          </div>
+        </section>
+      </div>
+    </main>
   );
 }

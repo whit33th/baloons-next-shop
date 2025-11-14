@@ -7,6 +7,12 @@ export type PendingImage = {
   preview: string;
 };
 
+export type UploadProgressState = {
+  status: "preparing" | "uploading" | "finalizing" | "success" | "error";
+  percentage: number;
+  message: string;
+};
+
 export type ProductCardData = Doc<"products"> & {
   primaryImageUrl: string | null;
 };

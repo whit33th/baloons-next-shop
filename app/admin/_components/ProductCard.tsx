@@ -10,6 +10,9 @@ interface ProductCardProps {
 }
 
 export function ProductCard({ product, onClick }: ProductCardProps) {
+  const categoryLabel = product.categories?.length
+    ? product.categories.slice(0, 2).join(" · ")
+    : "Без категории";
   return (
     <button
       type="button"
@@ -61,7 +64,7 @@ export function ProductCard({ product, onClick }: ProductCardProps) {
       </p>
 
       <div className="mt-4 flex items-center justify-start text-sm text-slate-500">
-        <span>{product.category}</span>
+        <span>{categoryLabel}</span>
       </div>
 
       {product.availableColors?.length ? (

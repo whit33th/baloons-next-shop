@@ -8,6 +8,24 @@ export type ProductWithImage = Doc<"products"> & {
   primaryImageUrl: string | null;
 };
 
+type LegacyProductCategories = string | string[] | undefined;
+
+export const getProductCategories = (product: Doc<"products">): string[] => {
+  const categories = (product as Doc<"products"> & {
+    categories?: LegacyProductCategories;
+  }).categories;
+
+  if (Array.isArray(categories)) {
+    return categories;
+  }
+
+  if (typeof categories === "string") {
+    return [categories];
+  }
+
+  return [];
+};
+
 const resolveImageUrls = async (
   ctx: ProductCtx,
   ids: Array<Id<"_storage">>,
@@ -38,7 +56,9 @@ export const attachImageToProduct = async (
 
   const primaryImageUrl = imageUrls[0] ?? null;
 
-  return { ...product, imageUrls, primaryImageUrl };
+  const categories = getProductCategories(product);
+
+  return { ...product, categories, imageUrls, primaryImageUrl };
 };
 
 export const loadProductWithImage = async (

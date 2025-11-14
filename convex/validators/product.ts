@@ -7,7 +7,7 @@ export const productDocumentFields = {
   description: v.string(),
   price: v.number(),
   categoryGroup: v.string(),
-  category: v.string(),
+  categories: v.array(v.string()),
   imageUrls: v.array(v.string()),
   inStock: v.boolean(),
   soldCount: v.optional(v.number()),

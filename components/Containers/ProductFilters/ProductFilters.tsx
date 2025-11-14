@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo } from "react";
 import {
   CATEGORY_TO_GROUP,
   PRODUCT_CATEGORY_GROUPS,
@@ -42,9 +42,6 @@ const normalizeGroupValue = (
 export function ProductFilters() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [openPopover, setOpenPopover] = useState<string | null>(null);
-  const isDesktop = useIsDesktop();
-
   const rawGroupParam = searchParams.get("categoryGroup");
   const rawCategoryParam = searchParams.get("category");
 
@@ -125,7 +122,7 @@ export function ProductFilters() {
   );
 
   const handleShowAllInGroup = useCallback(
-    (groupValue?: CategoryGroupValue, options?: { keepPopover?: boolean }) => {
+    (groupValue?: CategoryGroupValue) => {
       const targetGroup = groupValue ?? activeGroup;
       if (!targetGroup) {
         return;
@@ -144,10 +141,6 @@ export function ProductFilters() {
         params.set("categoryGroup", targetGroup);
       }
 
-      const shouldClosePopover = !options?.keepPopover;
-      if (shouldClosePopover) {
-        setOpenPopover(null);
-      }
       handleNavigate(params);
     },
     [activeGroup, activeCategory, handleNavigate, searchParams],
@@ -173,7 +166,6 @@ export function ProductFilters() {
         params.set("categoryGroup", targetGroup);
       }
 
-      setOpenPopover(null);
       handleNavigate(params);
     },
     [activeCategory, activeGroup, handleNavigate, searchParams],
@@ -184,19 +176,14 @@ export function ProductFilters() {
       <div className="grid auto-rows-fr grid-cols-2 gap-2 sm:grid-cols-4">
         {PRODUCT_CATEGORY_GROUPS.map((group) => {
           const isActiveGroup = activeGroup === group.value;
-          const hasSubcategories = group.subcategories.length > 0;
-          const isOpen = openPopover === group.value && hasSubcategories;
 
           return (
             <CategoryGroupCard
               key={group.value}
               group={group}
               isActive={isActiveGroup}
-              isOpen={isOpen}
               activeCategory={activeCategory}
               activeGroup={activeGroup}
-              isDesktop={isDesktop}
-              setOpenPopover={setOpenPopover}
               onGroupSelect={handleGroupSelect}
               onShowAll={handleShowAllInGroup}
               onSubcategorySelect={handleSubcategorySelect}
@@ -236,32 +223,4 @@ export function ProductFilters() {
       </div>
     </div>
   );
-}
-
-function useIsDesktop() {
-  const [isDesktop, setIsDesktop] = useState<boolean>(() => {
-    if (typeof window === "undefined") {
-      return false;
-    }
-    return window.matchMedia("(min-width: 640px)").matches;
-  });
-
-  useEffect(() => {
-    if (typeof window === "undefined") {
-      return;
-    }
-    const mediaQuery = window.matchMedia("(min-width: 640px)");
-    const handleChange = () => {
-      setIsDesktop(mediaQuery.matches);
-    };
-
-    handleChange();
-    mediaQuery.addEventListener("change", handleChange);
-
-    return () => {
-      mediaQuery.removeEventListener("change", handleChange);
-    };
-  }, []);
-
-  return isDesktop;
 }

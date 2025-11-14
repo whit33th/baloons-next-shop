@@ -39,7 +39,7 @@ export const ProductInfo = memo(function ProductInfo({
       <div>
         <p className="text-secondary flex items-center gap-2 text-xs font-semibold tracking-widest uppercase">
           <Sparkles className="h-4 w-4" />
-          Premium Balloon Collection
+          For special occasions
         </p>
         <h1 className="text-deep mt-3 text-4xl leading-tight font-bold lg:text-5xl">
           {name}
@@ -55,7 +55,7 @@ export const ProductInfo = memo(function ProductInfo({
             <span className="text-deep/50 mb-1 block text-xs tracking-wider uppercase">
               Price
             </span>
-            <span className="text-deep text-5xl font-bold">
+            <span className="text-deep text-2xl font-bold sm:text-3xl lg:text-4xl 2xl:text-5xl">
               {price.toFixed(2)} €
             </span>
           </div>

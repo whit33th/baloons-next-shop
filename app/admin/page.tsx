@@ -1,7 +1,6 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { upload } from "@imagekit/next";
 import { useMutation } from "convex/react";
 import { useQuery } from "convex-helpers/react/cache";
 import { useRouter } from "next/navigation";
@@ -19,6 +18,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { CategoryGroupValue } from "@/constants/categories";
 import { PRODUCT_CATEGORY_GROUPS } from "@/constants/categories";
+import { uploadFileInChunks } from "@/lib/chunkedUploadClient";
 import { api } from "../../convex/_generated/api";
 import type { Doc } from "../../convex/_generated/dataModel";
 import {
@@ -34,24 +34,36 @@ import {
   type ProductFormValues,
   ProductMetricsCard,
   productFormSchema,
+  type UploadProgressState,
 } from "./_components";
 
 const DEFAULT_CATEGORY_GROUP = PRODUCT_CATEGORY_GROUPS[0];
-const DEFAULT_CATEGORY =
-  DEFAULT_CATEGORY_GROUP.subcategories[0]?.value ??
-  DEFAULT_CATEGORY_GROUP.categoryValue ??
-  "";
+const getFallbackCategories = (groupValue: CategoryGroupValue): string[] => {
+  const group = PRODUCT_CATEGORY_GROUPS.find(
+    (candidate) => candidate.value === groupValue,
+  );
+  if (!group) {
+    return [];
+  }
+  if (group.subcategories.length === 0) {
+    return group.categoryValue ? [group.categoryValue] : [];
+  }
+  const first = group.subcategories[0];
+  return first?.value ? [first.value] : [];
+};
 
-const productDefaultValues: ProductFormValues = {
+const DEFAULT_CATEGORIES = getFallbackCategories(DEFAULT_CATEGORY_GROUP.value);
+
+const buildProductDefaultValues = (): ProductFormValues => ({
   name: "",
   description: "",
   price: "",
   categoryGroup: DEFAULT_CATEGORY_GROUP.value,
-  category: DEFAULT_CATEGORY,
+  categories: [...DEFAULT_CATEGORIES],
   inStock: true,
   isPersonalizable: true,
   availableColors: [],
-};
+});
 
 export default function AdminPage() {
   const router = useRouter();
@@ -69,6 +81,8 @@ export default function AdminPage() {
   const [editingProductId, setEditingProductId] = useState<
     Doc<"products">["_id"] | null
   >(null);
+  const [uploadProgress, setUploadProgress] =
+    useState<UploadProgressState | null>(null);
 
   const previewUrlsRef = useRef<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -88,7 +102,7 @@ export default function AdminPage() {
 
   const form = useForm<ProductFormValues>({
     resolver: zodResolver(productFormSchema),
-    defaultValues: productDefaultValues,
+    defaultValues: buildProductDefaultValues(),
   });
 
   const categoryGroup = form.watch("categoryGroup");
@@ -124,21 +138,43 @@ export default function AdminPage() {
       return;
     }
 
-    const fallback = group.subcategories[0]?.value ?? group.categoryValue ?? "";
-    if (!fallback) {
+    const currentCategories = form.getValues("categories") ?? [];
+    if (group.subcategories.length === 0) {
+      const fallback = group.categoryValue ? [group.categoryValue] : [];
+      if (
+        fallback.length > 0 &&
+        (currentCategories.length !== fallback.length ||
+          currentCategories[0] !== fallback[0])
+      ) {
+        form.setValue("categories", fallback, { shouldDirty: true });
+      }
       return;
     }
 
-    const current = form.getValues("category");
-    const isValid =
-      group.subcategories.length === 0
-        ? current === fallback
-        : group.subcategories.some(
-            (subcategory) => subcategory.value === current,
-          );
+    const allowed = new Set(
+      group.subcategories.map((subcategory) => subcategory.value),
+    );
+    const sanitized = currentCategories.filter((category) =>
+      allowed.has(category),
+    );
+    const nextCategories = sanitized.length
+      ? sanitized
+      : group.subcategories[0]
+        ? [group.subcategories[0].value]
+        : [];
 
-    if (!isValid) {
-      form.setValue("category", fallback, { shouldDirty: true });
+    if (nextCategories.length === 0) {
+      return;
+    }
+
+    const changed =
+      nextCategories.length !== currentCategories.length ||
+      nextCategories.some(
+        (category, index) => currentCategories[index] !== category,
+      );
+
+    if (changed) {
+      form.setValue("categories", nextCategories, { shouldDirty: true });
     }
   }, [categoryGroup, form]);
 
@@ -241,7 +277,7 @@ export default function AdminPage() {
   };
 
   const handleCollapseForm = () => {
-    form.reset(productDefaultValues);
+    form.reset(buildProductDefaultValues());
     resetImages();
     setEditingProductId(null);
     setFormOpen(false);
@@ -250,7 +286,7 @@ export default function AdminPage() {
   const startCreateFlow = () => {
     setActiveTab("products");
     setEditingProductId(null);
-    form.reset(productDefaultValues);
+    form.reset(buildProductDefaultValues());
     resetImages();
     setFormOpen(true);
   };
@@ -265,7 +301,9 @@ export default function AdminPage() {
       description: product.description,
       price: String(product.price),
       categoryGroup: product.categoryGroup,
-      category: product.category,
+      categories: product.categories?.length
+        ? [...product.categories]
+        : getFallbackCategories(product.categoryGroup as CategoryGroupValue),
       inStock: product.inStock,
       isPersonalizable: product.isPersonalizable ?? false,
       availableColors: product.availableColors ?? [],
@@ -282,6 +320,7 @@ export default function AdminPage() {
     if (!options?.preserveExisting) {
       setExistingImageUrls([]);
     }
+    setUploadProgress(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
@@ -289,55 +328,96 @@ export default function AdminPage() {
 
   const handleValidSubmit = async (values: ProductFormValues) => {
     setIsSubmitting(true);
+    const shouldTrackUpload = pendingImages.length > 0;
     try {
       const uploadedImageUrls: string[] = [];
+      const totalBytes = pendingImages.reduce(
+        (acc, pending) => acc + pending.file.size,
+        0,
+      );
+      const folder =
+        process.env.NEXT_PUBLIC_IMAGEKIT_PRODUCTS_FOLDER ?? "/products";
+      let completedBytes = 0;
+
+      if (shouldTrackUpload) {
+        setUploadProgress({
+          status: "preparing",
+          percentage: 0,
+          message: "Подготавливаем загрузку...",
+        });
+      }
 
       for (const pending of pendingImages) {
-        const authResponse = await fetch("/api/imagekit-auth");
-        const authPayload = await authResponse.json();
-
-        if (!authResponse.ok) {
-          throw new Error(
-            typeof authPayload?.error === "string"
-              ? authPayload.error
-              : "Не удалось получить авторизацию для загрузки",
-          );
-        }
-
-        const uploadResponse = await upload({
-          file: pending.file,
-          fileName: pending.file.name,
-          folder:
-            process.env.NEXT_PUBLIC_IMAGEKIT_PRODUCTS_FOLDER ?? "/products",
-          useUniqueFileName: true,
-          publicKey: authPayload.publicKey,
-          signature: authPayload.signature,
-          token: authPayload.token,
-          expire: authPayload.expire,
+        const result = await uploadFileInChunks(pending.file, {
+          folder,
+          onProgress: (fileProgress) => {
+            if (!shouldTrackUpload) {
+              return;
+            }
+            const combinedUploaded =
+              completedBytes +
+              Math.min(pending.file.size, fileProgress.uploadedBytes);
+            const basePercentage =
+              totalBytes > 0
+                ? Math.min(
+                    fileProgress.phase === "finalizing" ? 100 : 99,
+                    Math.round((combinedUploaded / totalBytes) * 100),
+                  )
+                : 100;
+            const status: UploadProgressState["status"] =
+              fileProgress.phase === "finalizing" ? "finalizing" : "uploading";
+            setUploadProgress({
+              status,
+              percentage: basePercentage,
+              message:
+                status === "finalizing"
+                  ? `Финализируем ${pending.file.name}`
+                  : `Загружаем ${pending.file.name}`,
+            });
+          },
         });
 
-        if (!uploadResponse?.url) {
-          throw new Error("ImageKit не вернул ссылку на изображение");
+        completedBytes += pending.file.size;
+
+        if (shouldTrackUpload) {
+          const completedPercentage =
+            totalBytes > 0
+              ? Math.min(99, Math.round((completedBytes / totalBytes) * 100))
+              : 100;
+          setUploadProgress({
+            status: "uploading",
+            percentage: completedPercentage,
+            message: `Файл ${pending.file.name} загружен`,
+          });
         }
 
-        uploadedImageUrls.push(uploadResponse.url);
+        uploadedImageUrls.push(result.url);
+      }
+
+      if (shouldTrackUpload) {
+        setUploadProgress({
+          status: "success",
+          percentage: 100,
+          message: "Все изображения загружены",
+        });
       }
 
       const numericPrice = Number(values.price.replace(",", "."));
-      const groupFallback = PRODUCT_CATEGORY_GROUPS.find(
-        (entry) => entry.value === values.categoryGroup,
+      const sanitizedCategories = values.categories
+        .map((category) => category.trim())
+        .filter((category) => category.length > 0);
+      const fallbackCategories = getFallbackCategories(
+        values.categoryGroup as CategoryGroupValue,
       );
-      const normalizedCategory = values.category?.trim()
-        ? values.category.trim()
-        : (groupFallback?.subcategories[0]?.value ??
-          groupFallback?.categoryValue ??
-          "");
+      const normalizedCategories = sanitizedCategories.length
+        ? sanitizedCategories
+        : fallbackCategories;
       const payload = {
         name: values.name.trim(),
         description: values.description.trim(),
         price: numericPrice,
         categoryGroup: values.categoryGroup,
-        category: normalizedCategory,
+        categories: normalizedCategories,
         imageUrls: [...existingImageUrls, ...uploadedImageUrls],
         inStock: values.inStock,
         isPersonalizable: values.isPersonalizable,
@@ -357,11 +437,21 @@ export default function AdminPage() {
         toast.success("Товар сохранён");
       }
 
-      form.reset(productDefaultValues);
+      form.reset(buildProductDefaultValues());
       resetImages();
       setEditingProductId(null);
       setFormOpen(false);
     } catch (error) {
+      if (shouldTrackUpload) {
+        setUploadProgress((prev) => ({
+          status: "error",
+          percentage: prev?.percentage ?? 0,
+          message:
+            error instanceof Error
+              ? error.message
+              : "Не удалось загрузить изображения",
+        }));
+      }
       console.error(error);
       toast.error(
         error instanceof Error
@@ -409,15 +499,13 @@ export default function AdminPage() {
       description: "Описание",
       price: "Цена",
       categoryGroup: "Группа",
-      category: "Категория",
+      categories: "Категории",
       availableColors: "Цвета",
       inStock: "Статус наличия",
       isPersonalizable: "Персонализация",
     };
     return labels[fieldName] || fieldName;
   };
-
-  const onSubmit = form.handleSubmit(handleValidSubmit, handleInvalidSubmit);
 
   // Avoid flashing admin UI while deciding access
   if (isCheckingAccess) {
@@ -470,9 +558,10 @@ export default function AdminPage() {
                       existingImageUrls={existingImageUrls}
                       pendingImages={pendingImages}
                       fileInputRef={fileInputRef}
-                      onSubmit={onSubmit}
+                      onSubmit={handleValidSubmit}
+                      onError={handleInvalidSubmit}
                       onCancel={() => {
-                        form.reset(productDefaultValues);
+                        form.reset(buildProductDefaultValues());
                         resetImages();
                         setFormOpen(false);
                       }}
@@ -481,6 +570,7 @@ export default function AdminPage() {
                       onRemoveExistingImage={handleRemoveExistingImage}
                       onClearImages={() => resetImages()}
                       onCollapse={handleCollapseForm}
+                      uploadProgress={uploadProgress}
                     />
                   </div>
                 ) : (

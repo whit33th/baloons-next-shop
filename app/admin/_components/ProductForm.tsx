@@ -1,5 +1,11 @@
-import { type UseFormReturn, useWatch } from "react-hook-form";
+import { AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
+import {
+  type FieldErrors,
+  type UseFormReturn,
+  useWatch,
+} from "react-hook-form";
 import { z } from "zod";
+
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -23,7 +29,7 @@ import { PRODUCT_CATEGORY_GROUPS } from "@/constants/categories";
 import { BALLOON_COLORS } from "@/constants/colors";
 import { cn } from "@/lib/utils";
 import { ImageUpload } from "./ImageUpload";
-import type { PendingImage } from "./types";
+import type { PendingImage, UploadProgressState } from "./types";
 
 export const productFormSchema = z
   .object({
@@ -37,24 +43,18 @@ export const productFormSchema = z
         return !Number.isNaN(numeric) && numeric >= 0;
       }, "Некорректная цена"),
     categoryGroup: z.string().min(1, "Выберите группу"),
-    category: z.string().optional(),
+    categories: z.array(z.string()).min(1, "Добавьте хотя бы одну категорию"),
     inStock: z.boolean(),
     isPersonalizable: z.boolean().default(true),
     availableColors: z.array(z.string()).default([]),
   })
   .superRefine((data, ctx) => {
-    const requiresCategory =
-      data.categoryGroup === "balloons" ||
-      data.categoryGroup === "balloon-bouquets";
-
-    if (requiresCategory) {
-      if (!data.category || data.category.trim().length === 0) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          path: ["category"],
-          message: "Выберите категорию",
-        });
-      }
+    if (data.categories.length === 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["categories"],
+        message: "Добавьте хотя бы одну категорию",
+      });
     }
   });
 
@@ -67,7 +67,9 @@ interface ProductFormProps {
   existingImageUrls: string[];
   pendingImages: PendingImage[];
   fileInputRef: React.RefObject<HTMLInputElement | null>;
-  onSubmit: (e?: React.BaseSyntheticEvent) => Promise<void>;
+  uploadProgress?: UploadProgressState | null;
+  onSubmit: (values: ProductFormValues) => Promise<void>;
+  onError?: (errors: FieldErrors<ProductFormValues>) => void;
   onCancel: () => void;
   onSelectImages: (event: React.ChangeEvent<HTMLInputElement>) => void;
   onRemoveImage: (preview: string) => void;
@@ -83,7 +85,9 @@ export function ProductForm({
   existingImageUrls,
   pendingImages,
   fileInputRef,
+  uploadProgress,
   onSubmit,
+  onError,
   onCancel,
   onSelectImages,
   onRemoveImage,
@@ -100,7 +104,20 @@ export function ProductForm({
     (item) => item.value === (categoryGroup as CategoryGroupValue),
   );
   const categoryOptions = currentGroup?.subcategories ?? [];
-  const showCategorySelect = categoryOptions.length > 0;
+  const selectedCategories =
+    useWatch({
+      control: form.control,
+      name: "categories",
+    }) || [];
+
+  const toggleCategory = (value: string) => {
+    const next = selectedCategories.includes(value)
+      ? selectedCategories.filter((category) => category !== value)
+      : [...selectedCategories, value];
+    form.setValue("categories", next, { shouldDirty: true });
+  };
+
+  const selectedCategoryCount = selectedCategories.length;
 
   return (
     <div className="rounded-2xl border border-slate-200 bg-white/80 p-6 shadow-sm backdrop-blur">
@@ -126,7 +143,10 @@ export function ProductForm({
       </div>
 
       <Form {...form}>
-        <form onSubmit={onSubmit} className="mt-6 grid gap-6">
+        <form
+          onSubmit={form.handleSubmit(onSubmit, onError)}
+          className="mt-6 grid gap-6"
+        >
           <ImageUpload
             existingImageUrls={existingImageUrls}
             pendingImages={pendingImages}
@@ -206,33 +226,53 @@ export function ProductForm({
               )}
             />
 
-            {showCategorySelect ? (
+            {categoryOptions.length ? (
               <FormField
                 control={form.control}
-                name="category"
-                render={({ field, fieldState }) => (
+                name="categories"
+                render={({ fieldState: _fieldState }) => (
                   <FormItem className="md:col-span-2">
-                    <FormLabel>Категория</FormLabel>
-                    <Select value={field.value} onValueChange={field.onChange}>
-                      <FormControl>
-                        <SelectTrigger
-                          className="h-11 w-full"
-                          aria-invalid={fieldState.invalid}
-                        >
-                          <SelectValue placeholder="Категория" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {categoryOptions.map((subcategory) => (
-                          <SelectItem
-                            key={subcategory.value}
-                            value={subcategory.value}
-                          >
-                            {subcategory.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <div className="flex items-center justify-between gap-2">
+                      <FormLabel>Категории</FormLabel>
+                      {selectedCategoryCount > 0 ? (
+                        <span className="text-xs text-slate-500">
+                          Выбрано: {selectedCategoryCount}
+                        </span>
+                      ) : null}
+                    </div>
+                    <FormControl>
+                      <div className="flex flex-wrap gap-2">
+                        {categoryOptions.map((subcategory) => {
+                          const active = selectedCategories.includes(
+                            subcategory.value,
+                          );
+
+                          const isDisabled =
+                            (!active &&
+                              selectedCategories.includes("Any Event")) ||
+                            (subcategory.value === "Any Event" &&
+                              selectedCategoryCount >= 1 &&
+                              !active);
+                          return (
+                            <button
+                              key={subcategory.value}
+                              type="button"
+                              onClick={() => toggleCategory(subcategory.value)}
+                              disabled={isDisabled}
+                              className={cn(
+                                "rounded-full border px-3 py-1 text-sm transition",
+                                active
+                                  ? "border-accent bg-accent text-white"
+                                  : "border-slate-200 bg-white text-slate-700",
+                                isDisabled && "opacity-40",
+                              )}
+                            >
+                              {subcategory.label}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -374,6 +414,52 @@ export function ProductForm({
               );
             }}
           />
+
+          {uploadProgress ? (
+            <div
+              className={cn(
+                "rounded-2xl border p-4 text-sm",
+                uploadProgress.status === "error"
+                  ? "border-red-200 bg-red-50"
+                  : uploadProgress.status === "success"
+                    ? "border-emerald-200 bg-emerald-50"
+                    : "border-slate-200 bg-slate-50",
+              )}
+            >
+              <div className="flex items-center gap-3">
+                {uploadProgress.status === "success" ? (
+                  <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+                ) : uploadProgress.status === "error" ? (
+                  <AlertCircle className="h-5 w-5 text-red-500" />
+                ) : (
+                  <Loader2 className="h-5 w-5 animate-spin text-slate-500" />
+                )}
+                <div>
+                  <p className="text-sm font-medium text-slate-900">
+                    {uploadProgress.message}
+                  </p>
+                  <p className="text-xs text-slate-500">
+                    {uploadProgress.percentage}%
+                  </p>
+                </div>
+              </div>
+              <div className="mt-4 h-1.5 w-full overflow-hidden rounded-full bg-slate-200">
+                <div
+                  className={cn(
+                    "h-full rounded-full transition-all",
+                    uploadProgress.status === "error"
+                      ? "bg-red-500"
+                      : uploadProgress.status === "success"
+                        ? "bg-emerald-500"
+                        : "bg-slate-900",
+                  )}
+                  style={{
+                    width: `${Math.min(100, uploadProgress.percentage)}%`,
+                  }}
+                />
+              </div>
+            </div>
+          ) : null}
 
           <div className="flex items-center justify-end gap-3">
             <Button type="button" variant="ghost" onClick={onCancel}>

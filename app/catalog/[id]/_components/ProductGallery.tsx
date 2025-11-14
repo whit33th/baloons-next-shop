@@ -50,6 +50,7 @@ export const ProductGallery = memo(function ProductGallery({
             (group) => `product-image-${group}-${transitionId}`,
           )
         : [`product-image-${transitionId}`];
+
   const slides = useMemo(
     () =>
       images.map((src, index) => ({
@@ -119,7 +120,7 @@ export const ProductGallery = memo(function ProductGallery({
               type="button"
               style={{ opacity: 100 }}
               tabIndex={0}
-              className="relative aspect-3/4 h-full max-h-[calc(100vh-57px-55px)] w-full overflow-hidden hover:opacity-100"
+              className="relative aspect-3/4 h-full max-h-[calc(100vh-57px-57px-100px)] w-full flex-1 overflow-hidden hover:opacity-100"
               onKeyDown={(event) => {
                 if (!canNavigate) return;
                 if (event.key === "ArrowRight" || event.key === "ArrowDown") {
@@ -203,16 +204,16 @@ export const ProductGallery = memo(function ProductGallery({
       : (carousel as ReactNode);
 
   return (
-    <div className="border-border relative flex max-h-[calc(100vh-57px-55px)] flex-1 flex-col border-b md:flex-row md:items-center md:justify-center">
+    <div className="border-border relative flex max-h-[calc(100vh-57px-55px)] flex-1 flex-col border-b md:items-center md:justify-center">
       {transitionedCarousel}
 
-      <div className="border-border flex snap-x gap-3 overflow-x-auto border-t p-4 md:absolute md:bottom-2 md:left-1/2 md:-translate-x-1/2 md:border-t-0">
+      <div className="border-border flex w-full justify-center gap-3 overflow-x-auto border-t p-4">
         {slides.map((slide) => (
           <button
             key={slide.key}
             type="button"
             onClick={() => onImageChange(slide.index)}
-            className={`group relative aspect-3/4 h-20 w-auto shrink-0 overflow-hidden rounded transition-[transform,box-shadow,ring] duration-200 md:h-24 2xl:h-28 ${
+            className={`group relative aspect-3/4 h-16 w-auto shrink-0 overflow-hidden rounded transition-[transform,box-shadow,ring] duration-200 ${
               activeImage === slide.index
                 ? "ring-secondary scale-105 shadow-lg ring-2"
                 : "ring-border hover:ring-secondary/50 ring-1 hover:shadow-md"
