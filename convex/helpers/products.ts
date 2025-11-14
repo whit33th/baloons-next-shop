@@ -11,9 +11,11 @@ export type ProductWithImage = Doc<"products"> & {
 type LegacyProductCategories = string | string[] | undefined;
 
 export const getProductCategories = (product: Doc<"products">): string[] => {
-  const categories = (product as Doc<"products"> & {
-    categories?: LegacyProductCategories;
-  }).categories;
+  const categories = (
+    product as Doc<"products"> & {
+      categories?: LegacyProductCategories;
+    }
+  ).categories;
 
   if (Array.isArray(categories)) {
     return categories;
