@@ -4,7 +4,7 @@ import { type Preloaded, useMutation, usePreloadedQuery } from "convex/react";
 import { useQuery } from "convex-helpers/react/cache";
 import { motion } from "motion/react";
 import Link from "next/link";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { api } from "@/convex/_generated/api";
 import { snapshotFromProduct, useGuestCart } from "@/lib/guestCart";
@@ -34,6 +34,7 @@ export default function ProductDetailClient({ preloaded }: Props) {
     color?: string;
     number?: string;
   }>({});
+  const numberInputRef = useRef<HTMLInputElement>(null);
 
   const galleryImages = useMemo(() => {
     if (!product) {
@@ -71,13 +72,30 @@ export default function ProductDetailClient({ preloaded }: Props) {
 
       const safeQuantity = Math.max(1, Math.floor(desired));
 
+      // Validate required fields
+      const requiresNumber =
+        product.isPersonalizable?.number && !personalization.number?.trim();
+      if (requiresNumber) {
+        toast.error("Пожалуйста, введите цифру для персонализации");
+        // Scroll to number input smoothly
+        numberInputRef.current?.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+        });
+        // Focus the input after a short delay to ensure scroll completes
+        setTimeout(() => {
+          numberInputRef.current?.focus();
+        }, 300);
+        return;
+      }
+
       // Only include personalization if product supports it and at least one field is filled
       const hasPersonalization =
         personalization.text || personalization.color || personalization.number;
+      const isPersonalizable =
+        product.isPersonalizable?.name || product.isPersonalizable?.number;
       const personalizedData =
-        product.isPersonalizable && hasPersonalization
-          ? personalization
-          : undefined;
+        isPersonalizable && hasPersonalization ? personalization : undefined;
 
       if (!user) {
         addGuestItem(
@@ -187,9 +205,13 @@ export default function ProductDetailClient({ preloaded }: Props) {
               onQuantityChange={handleQuantityChange}
               onAddToCart={handleAddToCart}
             />
-            {product.isPersonalizable && product.availableColors && (
+            {(product.isPersonalizable?.name ||
+              product.isPersonalizable?.number) && (
               <ProductPersonalization
-                availableColors={product.availableColors}
+                ref={numberInputRef}
+                availableColors={product.availableColors ?? []}
+                isNameEnabled={product.isPersonalizable?.name ?? false}
+                isNumberEnabled={product.isPersonalizable?.number ?? false}
                 onChange={setPersonalization}
               />
             )}

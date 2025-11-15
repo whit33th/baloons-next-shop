@@ -26,7 +26,15 @@ const applicationTables = {
     imageUrls: v.array(v.string()),
     inStock: v.boolean(),
     soldCount: v.optional(v.number()),
-    isPersonalizable: v.boolean(),
+    isPersonalizable: v.optional(
+      v.union(
+        v.boolean(),
+        v.object({
+          name: v.boolean(),
+          number: v.boolean(),
+        }),
+      ),
+    ),
     availableColors: v.optional(v.array(v.string())),
   })
     .searchIndex("search_products", {

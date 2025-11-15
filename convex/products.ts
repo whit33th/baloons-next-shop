@@ -188,7 +188,7 @@ const SAMPLE_PRODUCTS: Array<{
   categoryGroup: CategoryGroupValue;
   categories: string[];
   inStock: boolean;
-  isPersonalizable?: boolean;
+  isPersonalizable?: { name: boolean; number: boolean };
   availableColors?: string[];
 }> = [
   {
@@ -199,7 +199,7 @@ const SAMPLE_PRODUCTS: Array<{
     categoryGroup: "balloons",
     categories: ["For Kids Girls", "For Her"],
     inStock: true,
-    isPersonalizable: true,
+    isPersonalizable: { name: true, number: true },
     availableColors: randomColors(4),
   },
   {
@@ -209,7 +209,7 @@ const SAMPLE_PRODUCTS: Array<{
     categoryGroup: "balloons",
     categories: ["For Her", "Anniversary"],
     inStock: true,
-    isPersonalizable: true,
+    isPersonalizable: { name: true, number: true },
     availableColors: randomColors(4),
   },
   {
@@ -219,7 +219,7 @@ const SAMPLE_PRODUCTS: Array<{
     categoryGroup: "balloons",
     categories: ["For Kids Boys", "Any Event"],
     inStock: true,
-    isPersonalizable: true,
+    isPersonalizable: { name: true, number: true },
     availableColors: randomColors(4),
   },
   {
@@ -277,7 +277,7 @@ const SAMPLE_PRODUCTS: Array<{
     categoryGroup: "balloons",
     categories: ["Anniversary", "Love"],
     inStock: true,
-    isPersonalizable: true,
+    isPersonalizable: { name: true, number: true },
     availableColors: randomColors(3),
   },
   {
@@ -287,7 +287,7 @@ const SAMPLE_PRODUCTS: Array<{
     categoryGroup: "balloons",
     categories: ["Any Event"],
     inStock: true,
-    isPersonalizable: true,
+    isPersonalizable: { name: true, number: true },
     availableColors: randomColors(3),
   },
   {
@@ -297,7 +297,7 @@ const SAMPLE_PRODUCTS: Array<{
     categoryGroup: "balloon-bouquets",
     categories: ["For Her"],
     inStock: true,
-    isPersonalizable: true,
+    isPersonalizable: { name: true, number: true },
     availableColors: randomColors(3),
   },
   {
@@ -307,7 +307,7 @@ const SAMPLE_PRODUCTS: Array<{
     categoryGroup: "balloons",
     categories: ["For Her"],
     inStock: true,
-    isPersonalizable: true,
+    isPersonalizable: { name: true, number: true },
     availableColors: randomColors(4),
   },
   {
@@ -628,7 +628,12 @@ export const create = mutation({
     categoryGroup: v.optional(v.string()),
     imageUrls: v.array(v.string()),
     inStock: v.boolean(),
-    isPersonalizable: v.optional(v.boolean()),
+    isPersonalizable: v.optional(
+      v.object({
+        name: v.boolean(),
+        number: v.boolean(),
+      }),
+    ),
     availableColors: v.optional(v.array(v.string())),
   },
   returns: v.id("products"),
@@ -653,7 +658,7 @@ export const create = mutation({
       imageUrls: args.imageUrls,
       inStock: args.inStock,
       soldCount: 0,
-      isPersonalizable: args.isPersonalizable ?? true,
+      isPersonalizable: args.isPersonalizable ?? { name: false, number: false },
       availableColors: args.availableColors,
     });
   },
@@ -669,7 +674,12 @@ export const update = mutation({
     categoryGroup: v.optional(v.string()),
     imageUrls: v.array(v.string()),
     inStock: v.boolean(),
-    isPersonalizable: v.optional(v.boolean()),
+    isPersonalizable: v.optional(
+      v.object({
+        name: v.boolean(),
+        number: v.boolean(),
+      }),
+    ),
     availableColors: v.optional(v.array(v.string())),
   },
   returns: v.null(),
@@ -698,7 +708,7 @@ export const update = mutation({
       categoryGroup,
       imageUrls: args.imageUrls,
       inStock: args.inStock,
-      isPersonalizable: args.isPersonalizable ?? true,
+      isPersonalizable: args.isPersonalizable ?? { name: false, number: false },
       availableColors: args.availableColors,
     });
 
@@ -747,7 +757,7 @@ export const seedSampleProducts = internalMutation({
           categoryGroup: product.categoryGroup,
           categories: product.categories,
           inStock: product.inStock,
-          isPersonalizable: product.isPersonalizable ?? true,
+          isPersonalizable: product.isPersonalizable ?? { name: false, number: false },
           availableColors: product.availableColors,
         });
         updated += 1;

@@ -61,7 +61,7 @@ const buildProductDefaultValues = (): ProductFormValues => ({
   categoryGroup: DEFAULT_CATEGORY_GROUP.value,
   categories: [...DEFAULT_CATEGORIES],
   inStock: true,
-  isPersonalizable: true,
+  isPersonalizable: { name: false, number: false },
   availableColors: [],
 });
 
@@ -195,7 +195,8 @@ export default function AdminPage() {
 
     const available = products.filter((product) => product.inStock).length;
     const personalizable = products.filter(
-      (product) => product.isPersonalizable,
+      (product) =>
+        product.isPersonalizable?.name || product.isPersonalizable?.number,
     ).length;
     const priceSum = products.reduce((acc, product) => acc + product.price, 0);
 
@@ -305,7 +306,7 @@ export default function AdminPage() {
         ? [...product.categories]
         : getFallbackCategories(product.categoryGroup as CategoryGroupValue),
       inStock: product.inStock,
-      isPersonalizable: product.isPersonalizable ?? false,
+      isPersonalizable: product.isPersonalizable ?? { name: false, number: false },
       availableColors: product.availableColors ?? [],
     });
     setExistingImageUrls(product.imageUrls ?? []);
@@ -502,7 +503,8 @@ export default function AdminPage() {
       categories: "Категории",
       availableColors: "Цвета",
       inStock: "Статус наличия",
-      isPersonalizable: "Персонализация",
+      "isPersonalizable.name": "Персонализация имени",
+      "isPersonalizable.number": "Персонализация цифры",
     };
     return labels[fieldName] || fieldName;
   };

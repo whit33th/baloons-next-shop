@@ -45,7 +45,12 @@ export const productFormSchema = z
     categoryGroup: z.string().min(1, "Выберите группу"),
     categories: z.array(z.string()).min(1, "Добавьте хотя бы одну категорию"),
     inStock: z.boolean(),
-    isPersonalizable: z.boolean().default(true),
+    isPersonalizable: z
+      .object({
+        name: z.boolean(),
+        number: z.boolean(),
+      })
+      .default({ name: false, number: false }),
     availableColors: z.array(z.string()).default([]),
   })
   .superRefine((data, ctx) => {
@@ -327,34 +332,98 @@ export function ProductForm({
                 </FormItem>
               )}
             />
+          </div>
 
-            <FormField
-              control={form.control}
-              name="isPersonalizable"
-              render={({ field, fieldState }) => (
-                <FormItem>
-                  <FormLabel>Персонализация</FormLabel>
-                  <Select
-                    value={field.value ? "yes" : "no"}
-                    onValueChange={(value) => field.onChange(value === "yes")}
-                  >
-                    <FormControl>
-                      <SelectTrigger
-                        className="h-11 w-full"
-                        aria-invalid={fieldState.invalid}
-                      >
-                        <SelectValue placeholder="Персонализация" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="yes">Возможна</SelectItem>
-                      <SelectItem value="no">Не требуется</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+          <div className="space-y-4">
+            <h3 className="text-base font-semibold text-slate-900">
+              Настройки персонализации
+            </h3>
+            <div className="grid gap-4 md:grid-cols-2">
+              <FormField
+                control={form.control}
+                name="isPersonalizable.name"
+                render={({ field, fieldState }) => {
+                  const checkboxId = `personalization-name-${field.name}`;
+                  return (
+                    <FormItem>
+                      <FormControl>
+                        <label
+                          htmlFor={checkboxId}
+                          className={`hover:bg-accent/10 flex cursor-pointer flex-row items-center justify-between rounded-lg border p-4 transition ${
+                            field.value
+                              ? "border-accent/60 hover:border-accent/70"
+                              : "border-slate-200 bg-white/50 hover:border-slate-300"
+                          }`}
+                        >
+                          <div className="space-y-0.5">
+                            <FormLabel
+                              htmlFor={checkboxId}
+                              className="cursor-pointer text-sm font-medium text-slate-900"
+                            >
+                              Персонализация имени
+                            </FormLabel>
+                            <div className="text-xs text-slate-500">
+                              Разрешить ввод имени (опционально)
+                            </div>
+                          </div>
+                          <input
+                            id={checkboxId}
+                            type="checkbox"
+                            checked={field.value}
+                            onChange={(e) => field.onChange(e.target.checked)}
+                            className="text-accent focus:ring-accent/50 h-4 w-4 cursor-pointer rounded border-slate-300 transition-colors focus:ring-2 focus:ring-offset-0"
+                            aria-invalid={fieldState.invalid}
+                          />
+                        </label>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  );
+                }}
+              />
+              <FormField
+                control={form.control}
+                name="isPersonalizable.number"
+                render={({ field, fieldState }) => {
+                  const checkboxId = `personalization-number-${field.name}`;
+                  return (
+                    <FormItem>
+                      <FormControl>
+                        <label
+                          htmlFor={checkboxId}
+                          className={`flex cursor-pointer flex-row items-center justify-between rounded-lg border p-4 transition ${
+                            field.value
+                              ? "border-accent/60 bg-accent/5 hover:border-accent/80 hover:bg-accent/10"
+                              : "border-slate-200 bg-white/50 hover:border-slate-300 hover:bg-white/80"
+                          }`}
+                        >
+                          <div className="space-y-0.5">
+                            <FormLabel
+                              htmlFor={checkboxId}
+                              className="cursor-pointer text-sm font-medium text-slate-900"
+                            >
+                              Персонализация цифры
+                            </FormLabel>
+                            <div className="text-xs text-slate-500">
+                              Разрешить ввод цифры (обязательно)
+                            </div>
+                          </div>
+                          <input
+                            id={checkboxId}
+                            type="checkbox"
+                            checked={field.value}
+                            onChange={(e) => field.onChange(e.target.checked)}
+                            className="text-accent focus:ring-accent/50 h-4 w-4 cursor-pointer rounded border-slate-300 transition-colors focus:ring-2 focus:ring-offset-0"
+                            aria-invalid={fieldState.invalid}
+                          />
+                        </label>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  );
+                }}
+              />
+            </div>
           </div>
 
           <FormField
