@@ -27,13 +27,10 @@ const applicationTables = {
     inStock: v.boolean(),
     soldCount: v.optional(v.number()),
     isPersonalizable: v.optional(
-      v.union(
-        v.boolean(),
-        v.object({
-          name: v.boolean(),
-          number: v.boolean(),
-        }),
-      ),
+      v.object({
+        name: v.boolean(),
+        number: v.boolean(),
+      }),
     ),
     availableColors: v.optional(v.array(v.string())),
   })

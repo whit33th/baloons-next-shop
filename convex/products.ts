@@ -757,7 +757,10 @@ export const seedSampleProducts = internalMutation({
           categoryGroup: product.categoryGroup,
           categories: product.categories,
           inStock: product.inStock,
-          isPersonalizable: product.isPersonalizable ?? { name: false, number: false },
+          isPersonalizable: product.isPersonalizable ?? {
+            name: false,
+            number: false,
+          },
           availableColors: product.availableColors,
         });
         updated += 1;
@@ -768,7 +771,10 @@ export const seedSampleProducts = internalMutation({
         ...product,
         imageUrls: [],
         soldCount: 0,
-        isPersonalizable: product.isPersonalizable ?? true,
+        isPersonalizable: product.isPersonalizable ?? {
+          name: false,
+          number: false,
+        },
       });
       inserted += 1;
     }
