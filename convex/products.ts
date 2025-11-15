@@ -8,6 +8,53 @@ import { productWithImageValidator } from "./validators/product";
 
 type ProductDoc = Doc<"products">;
 
+const ORDER_OPTIONS = [
+  "createdAt-desc",
+  "createdAt-asc",
+  "orderCount-desc",
+  "orderCount-asc",
+  "price-desc",
+  "price-asc",
+] as const;
+
+type OrderOption = (typeof ORDER_OPTIONS)[number];
+
+const DEFAULT_ORDER: OrderOption = "createdAt-desc";
+
+const resolveOrderDirection = (order: OrderOption): "asc" | "desc" =>
+  order.endsWith("desc") ? "desc" : "asc";
+
+const isPopularityOrder = (order: OrderOption): boolean =>
+  order.startsWith("orderCount");
+
+const isPriceOrder = (order: OrderOption): boolean => order.startsWith("price");
+
+const compareByOrder = (
+  order: OrderOption,
+  a: ProductDoc,
+  b: ProductDoc,
+): number => {
+  const direction = order.endsWith("desc") ? -1 : 1;
+
+  if (isPopularityOrder(order)) {
+    const diff = ((a.soldCount ?? 0) - (b.soldCount ?? 0)) * direction;
+    if (diff !== 0) {
+      return diff;
+    }
+    return b._creationTime - a._creationTime;
+  }
+
+  if (isPriceOrder(order)) {
+    const diff = (a.price - b.price) * direction;
+    if (diff !== 0) {
+      return diff;
+    }
+    return b._creationTime - a._creationTime;
+  }
+
+  return (a._creationTime - b._creationTime) * direction;
+};
+
 const productPageValidator = v.object({
   page: v.array(productWithImageValidator),
   isDone: v.boolean(),
@@ -490,6 +537,16 @@ export const list = query({
     category: v.optional(v.string()),
     categoryGroup: v.optional(v.string()),
     color: v.optional(v.string()),
+    order: v.optional(
+      v.union(
+        v.literal("createdAt-desc"),
+        v.literal("createdAt-asc"),
+        v.literal("orderCount-desc"),
+        v.literal("orderCount-asc"),
+        v.literal("price-desc"),
+        v.literal("price-asc"),
+      ),
+    ),
     sort: v.optional(
       v.union(
         v.literal("price-low"),
@@ -523,7 +580,7 @@ export const list = query({
       ? resolveCategoryAssignment(categoryInput)
       : undefined;
     const category = categoryNorm?.category ?? categoryInput;
-    const categoryGroup =
+    const categoryGroupInput =
       normalizeString(args.categoryGroup) ?? categoryNorm?.group;
     const color = normalizeString(args.color);
     const available = args.available;
@@ -535,6 +592,10 @@ export const list = query({
       typeof args.maxPrice === "number" && Number.isFinite(args.maxPrice)
         ? args.maxPrice
         : undefined;
+    const order: OrderOption = args.order ?? DEFAULT_ORDER;
+    const orderDirection = resolveOrderDirection(order);
+    const popularityOrder = isPopularityOrder(order);
+    const priceOrder = isPriceOrder(order);
 
     // Step 1: Build query using indexes for categorical filters
     let allProducts: ProductDoc[];
@@ -544,15 +605,51 @@ export const list = query({
         .query("products")
         .withSearchIndex("search_products", (q) => q.search("name", searchTerm))
         .collect();
-    } else if (categoryGroup) {
-      allProducts = await ctx.db
-        .query("products")
-        .withIndex("by_category_group", (q) =>
-          q.eq("categoryGroup", categoryGroup),
-        )
-        .collect();
+    } else if (categoryGroupInput) {
+      if (popularityOrder) {
+        allProducts = await ctx.db
+          .query("products")
+          .withIndex("by_group_and_popularity", (q) =>
+            q.eq("categoryGroup", categoryGroupInput),
+          )
+          .order(orderDirection)
+          .collect();
+      } else if (priceOrder) {
+        allProducts = await ctx.db
+          .query("products")
+          .withIndex("by_group_and_price", (q) =>
+            q.eq("categoryGroup", categoryGroupInput),
+          )
+          .order(orderDirection)
+          .collect();
+      } else {
+        allProducts = await ctx.db
+          .query("products")
+          .withIndex("by_category_group", (q) =>
+            q.eq("categoryGroup", categoryGroupInput),
+          )
+          .order(orderDirection)
+          .collect();
+      }
     } else {
-      allProducts = await ctx.db.query("products").collect();
+      if (popularityOrder) {
+        allProducts = await ctx.db
+          .query("products")
+          .withIndex("by_popularity")
+          .order(orderDirection)
+          .collect();
+      } else if (priceOrder) {
+        allProducts = await ctx.db
+          .query("products")
+          .withIndex("by_price")
+          .order(orderDirection)
+          .collect();
+      } else {
+        allProducts = await ctx.db
+          .query("products")
+          .order(orderDirection)
+          .collect();
+      }
     }
 
     // Step 2: Apply JavaScript filters for non-indexed fields
@@ -576,11 +673,17 @@ export const list = query({
       return true;
     });
 
-    // Step 3: Apply sorting (only name-asc and name-desc)
+    // Step 3: Apply sorting
     if (args.sort === "name-asc") {
       filtered.sort((a, b) => a.name.localeCompare(b.name));
     } else if (args.sort === "name-desc") {
       filtered.sort((a, b) => b.name.localeCompare(a.name));
+    } else if (args.sort === "price-low") {
+      filtered.sort((a, b) => a.price - b.price);
+    } else if (args.sort === "price-high") {
+      filtered.sort((a, b) => b.price - a.price);
+    } else {
+      filtered.sort((a, b) => compareByOrder(order, a, b));
     }
 
     // Step 4: Paginate on server

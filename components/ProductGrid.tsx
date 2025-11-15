@@ -18,6 +18,7 @@ type ProductGridFilters = {
   category?: string;
   categoryGroup?: string;
   sort?: string;
+  order?: string;
   tag?: string;
   color?: string;
 };
@@ -45,6 +46,20 @@ type SortOption = (typeof SORT_OPTIONS)[number];
 
 const SORT_OPTION_SET = new Set<SortOption>(SORT_OPTIONS);
 
+const ORDER_OPTIONS = [
+  "createdAt-desc",
+  "createdAt-asc",
+  "orderCount-desc",
+  "orderCount-asc",
+  "price-desc",
+  "price-asc",
+] as const;
+
+type OrderOption = (typeof ORDER_OPTIONS)[number];
+
+const ORDER_OPTION_SET = new Set<OrderOption>(ORDER_OPTIONS);
+const DEFAULT_ORDER: OrderOption = "orderCount-desc";
+
 const TAG_OPTIONS = ["new", "bestseller"] as const;
 type TagOption = (typeof TAG_OPTIONS)[number];
 const TAG_OPTION_SET = new Set<TagOption>(TAG_OPTIONS);
@@ -59,6 +74,7 @@ export function ProductGrid({ filters }: ProductGridProps) {
     category,
     categoryGroup,
     sort,
+    order,
     tag,
     color,
   } = filters;
@@ -134,6 +150,17 @@ export function ProductGrid({ filters }: ProductGridProps) {
         : undefined;
     };
 
+    const normalizeOrder = (value?: string) => {
+      if (!value) {
+        return undefined;
+      }
+      return ORDER_OPTION_SET.has(value as OrderOption)
+        ? (value as OrderOption)
+        : undefined;
+    };
+
+    const resolvedOrder = normalizeOrder(order) ?? DEFAULT_ORDER;
+
     return {
       search: normalizeString(search),
       minPrice: parsePrice(minPrice),
@@ -145,6 +172,7 @@ export function ProductGrid({ filters }: ProductGridProps) {
       sort: normalizeSort(sort),
       tag: normalizeTag(tag),
       color: normalizeString(color),
+      order: resolvedOrder,
     } as const;
   }, [
     search,
@@ -155,6 +183,7 @@ export function ProductGrid({ filters }: ProductGridProps) {
     category,
     categoryGroup,
     sort,
+    order,
     tag,
     color,
   ]);

@@ -5,6 +5,7 @@ import { HomePageClient } from "./HomePageClient";
 export default async function HomePage() {
   // Prefetch bestsellers data on the server
   const preloadedBestsellers = await preloadQuery(api.products.list, {
+    order: "orderCount-desc",
     paginationOpts: {
       cursor: null,
       numItems: 8,

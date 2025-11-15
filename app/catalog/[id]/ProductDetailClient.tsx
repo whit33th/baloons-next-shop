@@ -76,7 +76,7 @@ export default function ProductDetailClient({ preloaded }: Props) {
       const requiresNumber =
         product.isPersonalizable?.number && !personalization.number?.trim();
       if (requiresNumber) {
-        toast.error("Пожалуйста, введите цифру для персонализации");
+        toast.error("Please enter a number");
         // Scroll to number input smoothly
         numberInputRef.current?.scrollIntoView({
           behavior: "smooth",

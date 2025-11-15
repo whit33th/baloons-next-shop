@@ -349,10 +349,10 @@ export function ProductForm({
                       <FormControl>
                         <label
                           htmlFor={checkboxId}
-                          className={`hover:bg-accent/10 flex cursor-pointer flex-row items-center justify-between rounded-lg border p-4 transition ${
+                          className={`flex cursor-pointer flex-row items-center justify-between rounded-lg border p-4 transition ${
                             field.value
-                              ? "border-accent/60 hover:border-accent/70"
-                              : "border-slate-200 bg-white/50 hover:border-slate-300"
+                              ? "border-accent/60 bg-accent/5 hover:border-accent/80 hover:bg-accent/10"
+                              : "border-slate-200 bg-white/50 hover:border-slate-300 hover:bg-white/80"
                           }`}
                         >
                           <div className="space-y-0.5">
@@ -360,7 +360,7 @@ export function ProductForm({
                               htmlFor={checkboxId}
                               className="cursor-pointer text-sm font-medium text-slate-900"
                             >
-                              Персонализация имени
+                              Имя
                             </FormLabel>
                             <div className="text-xs text-slate-500">
                               Разрешить ввод имени (опционально)
@@ -402,7 +402,7 @@ export function ProductForm({
                               htmlFor={checkboxId}
                               className="cursor-pointer text-sm font-medium text-slate-900"
                             >
-                              Персонализация цифры
+                              Цифра
                             </FormLabel>
                             <div className="text-xs text-slate-500">
                               Разрешить ввод цифры (обязательно)

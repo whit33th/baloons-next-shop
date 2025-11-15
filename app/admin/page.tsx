@@ -92,6 +92,7 @@ export default function AdminPage() {
   const updateProduct = useMutation(api.products.update);
 
   const productsResult = useQuery(api.products.list, {
+    order: "createdAt-desc",
     paginationOpts: { numItems: 100, cursor: null },
   });
 
@@ -110,6 +111,7 @@ export default function AdminPage() {
 
   const isCheckingAccess = user === undefined;
   const isAdmin = user?.isAdmin === true;
+  const scrollAnchor = formOpen ? (editingProductId ?? "__create__") : null;
 
   // Client-side admin guard: redirect non-admins to home
   useEffect(() => {
@@ -122,13 +124,14 @@ export default function AdminPage() {
   }, [isAdmin, isCheckingAccess, router]);
 
   useEffect(() => {
-    if (formOpen && formPanelRef.current) {
-      formPanelRef.current.scrollIntoView({
-        behavior: "smooth",
-        block: "start",
-      });
+    if (!scrollAnchor || !formPanelRef.current) {
+      return;
     }
-  }, [formOpen]);
+    formPanelRef.current.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
+  }, [scrollAnchor]);
 
   useEffect(() => {
     const group = PRODUCT_CATEGORY_GROUPS.find(
@@ -306,7 +309,10 @@ export default function AdminPage() {
         ? [...product.categories]
         : getFallbackCategories(product.categoryGroup as CategoryGroupValue),
       inStock: product.inStock,
-      isPersonalizable: product.isPersonalizable ?? { name: false, number: false },
+      isPersonalizable: product.isPersonalizable ?? {
+        name: false,
+        number: false,
+      },
       availableColors: product.availableColors ?? [],
     });
     setExistingImageUrls(product.imageUrls ?? []);

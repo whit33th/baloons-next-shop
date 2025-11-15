@@ -16,6 +16,7 @@ export default function CatalogClient() {
     category: searchParams.get("category") || "",
     categoryGroup: searchParams.get("categoryGroup") || "",
     sort: searchParams.get("sort") || "",
+    order: searchParams.get("order") || "",
     tag: searchParams.get("tag") || "",
     color: searchParams.get("color") || "",
   };
