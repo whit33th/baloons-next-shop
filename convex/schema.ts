@@ -5,6 +5,7 @@ import { v } from "convex/values";
 const usersTable = defineTable({
   name: v.optional(v.string()),
   image: v.optional(v.string()),
+  imageFileId: v.optional(v.string()),
   email: v.optional(v.string()),
   emailVerificationTime: v.optional(v.number()),
   phone: v.optional(v.string()),

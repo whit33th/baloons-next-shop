@@ -69,6 +69,7 @@ interface ProductFormProps {
   form: UseFormReturn<ProductFormValues>;
   isEditing: boolean;
   isSubmitting: boolean;
+  isDeleting?: boolean;
   existingImageUrls: string[];
   pendingImages: PendingImage[];
   fileInputRef: React.RefObject<HTMLInputElement | null>;
@@ -76,6 +77,7 @@ interface ProductFormProps {
   onSubmit: (values: ProductFormValues) => Promise<void>;
   onError?: (errors: FieldErrors<ProductFormValues>) => void;
   onCancel: () => void;
+  onDelete?: () => void | Promise<void>;
   onSelectImages: (event: React.ChangeEvent<HTMLInputElement>) => void;
   onRemoveImage: (preview: string) => void;
   onRemoveExistingImage: (url: string) => void;
@@ -87,6 +89,7 @@ export function ProductForm({
   form,
   isEditing,
   isSubmitting,
+  isDeleting,
   existingImageUrls,
   pendingImages,
   fileInputRef,
@@ -94,6 +97,7 @@ export function ProductForm({
   onSubmit,
   onError,
   onCancel,
+  onDelete,
   onSelectImages,
   onRemoveImage,
   onRemoveExistingImage,
@@ -530,13 +534,36 @@ export function ProductForm({
             </div>
           ) : null}
 
-          <div className="flex items-center justify-end gap-3">
-            <Button type="button" variant="ghost" onClick={onCancel}>
-              Отмена
-            </Button>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? "Сохраняем..." : "Сохранить товар"}
-            </Button>
+          <div
+            className={cn(
+              "flex flex-wrap items-center gap-3",
+              isEditing && onDelete ? "justify-between" : "justify-end",
+            )}
+          >
+            {isEditing && onDelete ? (
+              <Button
+                type="button"
+                variant="destructive"
+                onClick={() => {
+                  if (!window.confirm("Удалить этот товар? Это действие нельзя отменить.")) {
+                    return;
+                  }
+                  void onDelete();
+                }}
+                disabled={isDeleting}
+              >
+                {isDeleting ? "Удаляем..." : "Удалить товар"}
+              </Button>
+            ) : null}
+
+            <div className="flex items-center gap-3">
+              <Button type="button" variant="ghost" onClick={onCancel}>
+                Отмена
+              </Button>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? "Сохраняем..." : "Сохранить товар"}
+              </Button>
+            </div>
           </div>
         </form>
       </Form>

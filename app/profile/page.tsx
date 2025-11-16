@@ -4,8 +4,9 @@ import { useMutation } from "convex/react";
 import { useQuery } from "convex-helpers/react/cache";
 
 import { motion } from "motion/react";
+import Image from "next/image";
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { SignOutButton } from "@/components/SignOutButton";
 import { api } from "@/convex/_generated/api";
@@ -16,6 +17,7 @@ import {
   parseAddress,
   type AddressFields,
 } from "@/lib/address";
+import { uploadFileInChunks } from "@/lib/chunkedUploadClient";
 
 type TabId = "profile" | "orders" | "settings";
 
@@ -24,6 +26,10 @@ const tabs: Array<{ id: TabId; label: string; hint: string }> = [
   { id: "orders", label: "Orders", hint: "Purchase history" },
   { id: "settings", label: "Settings", hint: "Preferences" },
 ];
+
+const MAX_AVATAR_BYTES = 2 * 1024 * 1024; // 2 MB
+const AVATAR_UPLOAD_FOLDER =
+  process.env.NEXT_PUBLIC_IMAGEKIT_AVATAR_FOLDER ?? "/avatars";
 
 const tabButtonId = (tabId: TabId) => `profile-tab-${tabId}`;
 const tabPanelId = (tabId: TabId) => `profile-panel-${tabId}`;
@@ -38,15 +44,18 @@ export default function ProfilePage() {
   const user = useQuery(api.auth.loggedInUser);
   const orders = useQuery(api.orders.list);
   const updateProfile = useMutation(api.users.updateProfile);
+  const updateAvatar = useMutation(api.users.updateAvatar);
 
   const [activeTab, setActiveTab] = useState<TabId>("profile");
   const [isEditing, setIsEditing] = useState(false);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [formData, setFormData] = useState<ProfileFormData>(() => ({
     name: "",
     email: "",
     phone: "",
     ...createEmptyAddressFields(),
   }));
+  const avatarInputRef = useRef<HTMLInputElement | null>(null);
 
   const resetFormFromUser = useCallback(() => {
     if (!user) {
@@ -74,6 +83,60 @@ export default function ProfilePage() {
       resetFormFromUser();
     }
   }, [isEditing, resetFormFromUser]);
+
+  const deleteRemoteAvatar = useCallback(async (fileId: string) => {
+    try {
+      await fetch("/api/imagekit-delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ fileId }),
+      });
+    } catch (error) {
+      console.error("Failed to delete previous avatar", error);
+    }
+  }, []);
+
+  const handleAvatarFileChange = useCallback(
+    async (event: React.ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0];
+      if (!file) {
+        return;
+      }
+
+      if (file.size > MAX_AVATAR_BYTES) {
+        toast.error("Please choose an image smaller than 2 MB.");
+        event.target.value = "";
+        return;
+      }
+
+      setIsUploadingAvatar(true);
+      try {
+        const uploadResult = await uploadFileInChunks(file, {
+          folder: AVATAR_UPLOAD_FOLDER,
+        });
+
+        const response = await updateAvatar({
+          imageUrl: uploadResult.url,
+          imageFileId: uploadResult.fileId,
+        });
+
+        toast.success("Avatar updated!");
+        if (response.previousFileId) {
+          void deleteRemoteAvatar(response.previousFileId);
+        }
+      } catch (error) {
+        toast.error(
+          error instanceof Error
+            ? error.message
+            : "Failed to upload a new avatar",
+        );
+      } finally {
+        setIsUploadingAvatar(false);
+        event.target.value = "";
+      }
+    },
+    [updateAvatar, deleteRemoteAvatar],
+  );
 
   const handleUpdateProfile = async (
     event: React.FormEvent<HTMLFormElement>,
@@ -166,14 +229,48 @@ export default function ProfilePage() {
         >
           <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top,rgba(255,205,220,0.35),transparent_60%)]" />
           <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
-            <div className="space-y-2">
-              <p className="text-xs tracking-[0.2rem] text-black/50 uppercase">
-                Welcome back
-              </p>
-              <h1 className="text-4xl font-semibold text-black">
-                {user.name ?? "Balloon Lover"}
-              </h1>
-              <p className="text-sm text-black/60">{user.email}</p>
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+              <div className="relative h-24 w-24 shrink-0">
+                {user.image ? (
+                  <Image
+                    src={user.image}
+                    alt={`Avatar of ${user.name ?? "customer"}`}
+                    fill
+                    sizes="96px"
+                    className="rounded-full object-cover ring-4 ring-white/70"
+                    priority
+                  />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center rounded-full bg-black/5 text-4xl">
+                    🎈
+                  </div>
+                )}
+                <label
+                  className={`absolute -bottom-1 -right-1 inline-flex cursor-pointer items-center gap-1 rounded-full border border-black/10 bg-white/90 px-3 py-1 text-[11px] font-semibold uppercase tracking-widest text-black shadow transition ${isUploadingAvatar ? "pointer-events-none opacity-60" : "hover:bg-white"}`}
+                >
+                  <input
+                    ref={avatarInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleAvatarFileChange}
+                    disabled={isUploadingAvatar}
+                  />
+                  {isUploadingAvatar ? "Uploading..." : "Change"}
+                </label>
+              </div>
+              <div className="space-y-2">
+                <p className="text-xs tracking-[0.2rem] text-black/50 uppercase">
+                  Welcome back
+                </p>
+                <h1 className="text-4xl font-semibold text-black">
+                  {user.name ?? "Balloon Lover"}
+                </h1>
+                <p className="text-sm text-black/60">{user.email}</p>
+                <p className="text-xs text-black/45">
+                  Max 2 MB · JPG or PNG recommended
+                </p>
+              </div>
             </div>
             <div className="flex flex-wrap items-center gap-3">
               <div className="rounded-full bg-black/5 px-4 py-2 text-xs font-medium tracking-widest text-black/60 uppercase">

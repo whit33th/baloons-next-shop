@@ -819,6 +819,31 @@ export const update = mutation({
   },
 });
 
+export const remove = mutation({
+  args: {
+    productId: v.id("products"),
+  },
+  returns: v.object({
+    deletedId: v.id("products"),
+    deletedImageUrls: v.array(v.string()),
+  }),
+  handler: async (ctx, args) => {
+    await requireUser(ctx);
+
+    const existing = await ctx.db.get(args.productId);
+    if (!existing) {
+      throw new Error("Product not found");
+    }
+
+    await ctx.db.delete(args.productId);
+
+    return {
+      deletedId: args.productId,
+      deletedImageUrls: existing.imageUrls ?? [],
+    };
+  },
+});
+
 export const clearAllProducts = internalMutation({
   args: {},
   returns: v.object({

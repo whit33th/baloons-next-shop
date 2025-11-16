@@ -80,6 +80,7 @@ export default function AdminPage() {
   const [sortOrder, setSortOrder] = useState<"newest" | "oldest">("newest");
   const [pendingImages, setPendingImages] = useState<PendingImage[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [existingImageUrls, setExistingImageUrls] = useState<string[]>([]);
   const [editingProductId, setEditingProductId] = useState<
     Doc<"products">["_id"] | null
@@ -98,6 +99,7 @@ export default function AdminPage() {
 
   const createProduct = useMutation(api.products.create);
   const updateProduct = useMutation(api.products.update);
+  const deleteProduct = useMutation(api.products.remove);
   const listStripePayments = useAction(api.payments.listStripePayments);
 
   const productsResult = useQuery(api.products.list, {
@@ -376,6 +378,30 @@ export default function AdminPage() {
     }
   };
 
+  const handleDeleteProduct = async () => {
+    if (!editingProductId) {
+      return;
+    }
+
+    setIsDeleting(true);
+    try {
+      await deleteProduct({ productId: editingProductId });
+      toast.success("Товар удалён");
+      form.reset(buildProductDefaultValues());
+      resetImages();
+      setEditingProductId(null);
+      setFormOpen(false);
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Не удалось удалить товар. Попробуйте снова.",
+      );
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   const handleValidSubmit = async (values: ProductFormValues) => {
     setIsSubmitting(true);
     const shouldTrackUpload = pendingImages.length > 0;
@@ -609,6 +635,7 @@ export default function AdminPage() {
                       form={form}
                       isEditing={isEditing}
                       isSubmitting={isSubmitting}
+                      isDeleting={isDeleting}
                       existingImageUrls={existingImageUrls}
                       pendingImages={pendingImages}
                       fileInputRef={fileInputRef}
@@ -619,6 +646,7 @@ export default function AdminPage() {
                         resetImages();
                         setFormOpen(false);
                       }}
+                      onDelete={isEditing ? handleDeleteProduct : undefined}
                       onSelectImages={handleSelectImages}
                       onRemoveImage={handleRemoveImage}
                       onRemoveExistingImage={handleRemoveExistingImage}

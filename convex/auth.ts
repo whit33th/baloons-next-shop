@@ -18,6 +18,7 @@ export const loggedInUser = query({
       phone: v.optional(v.string()),
       address: v.optional(v.string()),
       isAdmin: v.optional(v.boolean()),
+      image: v.optional(v.string()),
     }),
     v.null(),
   ),
@@ -35,6 +36,7 @@ export const loggedInUser = query({
       phone: user?.phone ?? undefined,
       address: user?.address ?? undefined,
       isAdmin: user?.isAdmin ?? undefined,
+      image: user?.image ?? undefined,
     };
   },
 });

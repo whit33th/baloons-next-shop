@@ -36,6 +36,10 @@ import {
   STORE_INFO,
   WHATSAPP_MESSAGES,
 } from "@/constants/config";
+import {
+  matchDeliveryCity,
+  type DeliveryCityPricing,
+} from "@/constants/price";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import type { ProductWithImage } from "@/convex/helpers/products";
@@ -569,6 +573,7 @@ type SummaryProps = {
   deliveryType: DeliveryType;
   cartOnlyTotal: number;
   total: number;
+  matchedDeliveryCity?: DeliveryCityPricing;
 };
 
 function OrderSummary({
@@ -577,6 +582,7 @@ function OrderSummary({
   deliveryType,
   cartOnlyTotal,
   total,
+  matchedDeliveryCity,
 }: SummaryProps) {
   const getItemDetails = (item: ServerCartItem | GuestCartItem) => {
     if (isServerCartItem(item)) {
@@ -650,7 +656,10 @@ function OrderSummary({
           </div>
           {deliveryType === "delivery" && (
             <div className="flex items-center justify-between">
-              <span>Delivery</span>
+              <span>
+                Delivery
+                {matchedDeliveryCity ? ` (${matchedDeliveryCity.label})` : ""}
+              </span>
               <span className="font-semibold">
                 {formatCurrency(deliveryCost)}
               </span>
@@ -720,6 +729,10 @@ export default function CheckoutPage() {
   const [paymentSessionError, setPaymentSessionError] = useState<string | null>(
     null,
   );
+  const matchedDeliveryCity = useMemo(
+    () => matchDeliveryCity(formData.city),
+    [formData.city],
+  );
 
   useEffect(() => {
     if (!user) {
@@ -742,7 +755,9 @@ export default function CheckoutPage() {
   }, [user]);
 
   const deliveryCost =
-    deliveryType === "delivery" ? STORE_INFO.delivery.cost : 0;
+    deliveryType === "delivery"
+      ? matchedDeliveryCity?.price ?? STORE_INFO.delivery.cost
+      : 0;
   const total = cartOnlyTotal + deliveryCost;
 
   const shippingAddress = useMemo(
@@ -1108,6 +1123,7 @@ export default function CheckoutPage() {
                   isValidEmail={isValidEmail}
                   deliveryType={deliveryType}
                   deliveryCost={deliveryCost}
+                  matchedDeliveryCity={matchedDeliveryCity}
                   pickupDateTime={pickupDateTime}
                   setPickupDateTime={setPickupDateTime}
                   handleDeliveryTypeChange={handleDeliveryTypeChange}
@@ -1152,6 +1168,7 @@ export default function CheckoutPage() {
               deliveryType={deliveryType}
               cartOnlyTotal={cartOnlyTotal}
               total={total}
+              matchedDeliveryCity={matchedDeliveryCity}
             />
           </div>
         </div>
@@ -1166,6 +1183,7 @@ type StepOneProps = {
   isValidEmail: (email: string) => boolean;
   deliveryType: DeliveryType;
   deliveryCost: number;
+  matchedDeliveryCity?: DeliveryCityPricing;
   pickupDateTime: string;
   setPickupDateTime: (value: string) => void;
   handleDeliveryTypeChange: (type: DeliveryType) => void;
@@ -1180,6 +1198,7 @@ function StepOne({
   isValidEmail,
   deliveryType,
   deliveryCost,
+  matchedDeliveryCity,
   pickupDateTime,
   setPickupDateTime,
   handleDeliveryTypeChange,
@@ -1307,6 +1326,13 @@ function StepOne({
               placeholder={STORE_INFO.address.city}
               autoComplete="address-level2"
             />
+            {deliveryType === "delivery" && (
+              <span className="text-xs text-gray-500">
+                {matchedDeliveryCity
+                  ? `Delivery in ${matchedDeliveryCity.label} costs ${formatCurrency(matchedDeliveryCity.price)}.`
+                  : `Enter a supported city to see the exact delivery price. Default fee ${formatCurrency(STORE_INFO.delivery.cost)} applies otherwise.`}
+              </span>
+            )}
           </label>
           <label className="flex flex-col gap-2">
             <span className="text-sm font-medium text-gray-700">
@@ -1363,7 +1389,7 @@ function StepOne({
           <OptionCard
             icon={<Truck className="text-secondary h-5 w-5" />}
             title={`Courier delivery (${STORE_INFO.delivery.hours})`}
-            description={`+${formatCurrency(deliveryCost)} within ${STORE_INFO.address.city}`}
+            description={`+${formatCurrency(deliveryCost)} within ${matchedDeliveryCity?.label ?? STORE_INFO.address.city}`}
             selected={deliveryType === "delivery"}
             onSelect={() => handleDeliveryTypeChange("delivery")}
           />

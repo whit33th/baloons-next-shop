@@ -8,6 +8,13 @@ const profileResponseValidator = v.object({
   email: v.optional(v.string()),
   phone: v.optional(v.string()),
   address: v.optional(v.string()),
+  image: v.optional(v.string()),
+  imageFileId: v.optional(v.string()),
+});
+
+const updateAvatarResponseValidator = v.object({
+  user: profileResponseValidator,
+  previousFileId: v.optional(v.string()),
 });
 
 type ProfilePatch = {
@@ -15,6 +22,8 @@ type ProfilePatch = {
   email?: string;
   phone?: string;
   address?: string;
+  image?: string;
+  imageFileId?: string;
 };
 
 export const updateProfile = mutation({
@@ -54,6 +63,42 @@ export const updateProfile = mutation({
       email: updatedUser.email ?? undefined,
       phone: updatedUser.phone ?? undefined,
       address: updatedUser.address ?? undefined,
+      image: updatedUser.image ?? undefined,
+      imageFileId: updatedUser.imageFileId ?? undefined,
+    };
+  },
+});
+
+export const updateAvatar = mutation({
+  args: {
+    imageUrl: v.string(),
+    imageFileId: v.string(),
+  },
+  returns: updateAvatarResponseValidator,
+  handler: async (ctx, args) => {
+    const { userId } = await requireUser(ctx);
+    const user = await ctx.db.get(userId);
+    const previousFileId =
+      typeof user?.imageFileId === "string" ? user.imageFileId : undefined;
+
+    await ctx.db.patch(userId, {
+      image: args.imageUrl,
+      imageFileId: args.imageFileId,
+    });
+
+    const updatedUser = (await ctx.db.get(userId)) ?? user;
+
+    return {
+      user: {
+        _id: userId,
+        name: updatedUser?.name ?? undefined,
+        email: updatedUser?.email ?? undefined,
+        phone: updatedUser?.phone ?? undefined,
+        address: updatedUser?.address ?? undefined,
+        image: updatedUser?.image ?? undefined,
+        imageFileId: updatedUser?.imageFileId ?? undefined,
+      },
+      previousFileId,
     };
   },
 });
