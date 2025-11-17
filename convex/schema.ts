@@ -63,9 +63,15 @@ const applicationTables = {
         number: v.optional(v.string()),
       }),
     ),
+    personalizationSignature: v.string(),
   })
     .index("by_user", ["userId"])
-    .index("by_user_and_product", ["userId", "productId"]),
+    .index("by_user_and_product", ["userId", "productId"])
+    .index("by_user_product_signature", [
+      "userId",
+      "productId",
+      "personalizationSignature",
+    ]),
 
   orders: defineTable({
     userId: v.id("users"),

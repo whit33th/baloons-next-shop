@@ -8,10 +8,7 @@ export type DeliveryCityPricing = {
 };
 
 const normalize = (value: string): string =>
-  value
-    .trim()
-    .toLowerCase()
-    .replace(/\s+/g, " ");
+  value.trim().toLowerCase().replace(/\s+/g, " ");
 
 export const DELIVERY_CITY_PRICES: DeliveryCityPricing[] = [
   {

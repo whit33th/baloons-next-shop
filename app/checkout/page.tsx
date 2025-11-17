@@ -36,10 +36,7 @@ import {
   STORE_INFO,
   WHATSAPP_MESSAGES,
 } from "@/constants/config";
-import {
-  matchDeliveryCity,
-  type DeliveryCityPricing,
-} from "@/constants/price";
+import { matchDeliveryCity, type DeliveryCityPricing } from "@/constants/price";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import type { ProductWithImage } from "@/convex/helpers/products";
@@ -756,7 +753,7 @@ export default function CheckoutPage() {
 
   const deliveryCost =
     deliveryType === "delivery"
-      ? matchedDeliveryCity?.price ?? STORE_INFO.delivery.cost
+      ? (matchedDeliveryCity?.price ?? STORE_INFO.delivery.cost)
       : 0;
   const total = cartOnlyTotal + deliveryCost;
 

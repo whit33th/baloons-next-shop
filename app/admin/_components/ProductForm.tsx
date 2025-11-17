@@ -545,7 +545,11 @@ export function ProductForm({
                 type="button"
                 variant="destructive"
                 onClick={() => {
-                  if (!window.confirm("Удалить этот товар? Это действие нельзя отменить.")) {
+                  if (
+                    !window.confirm(
+                      "Удалить этот товар? Это действие нельзя отменить.",
+                    )
+                  ) {
                     return;
                   }
                   void onDelete();

@@ -246,7 +246,7 @@ export default function ProfilePage() {
                   </div>
                 )}
                 <label
-                  className={`absolute -bottom-1 -right-1 inline-flex cursor-pointer items-center gap-1 rounded-full border border-black/10 bg-white/90 px-3 py-1 text-[11px] font-semibold uppercase tracking-widest text-black shadow transition ${isUploadingAvatar ? "pointer-events-none opacity-60" : "hover:bg-white"}`}
+                  className={`absolute -right-1 -bottom-1 inline-flex cursor-pointer items-center gap-1 rounded-full border border-black/10 bg-white/90 px-3 py-1 text-[11px] font-semibold tracking-widest text-black uppercase shadow transition ${isUploadingAvatar ? "pointer-events-none opacity-60" : "hover:bg-white"}`}
                 >
                   <input
                     ref={avatarInputRef}

@@ -1,5 +1,5 @@
 import { v } from "convex/values";
-import type { Id } from "./_generated/dataModel";
+import type { Doc, Id } from "./_generated/dataModel";
 import { type MutationCtx, mutation, query } from "./_generated/server";
 import { requireUser } from "./helpers/auth";
 import {
@@ -8,17 +8,22 @@ import {
 } from "./helpers/products";
 import { productWithImageValidator } from "./validators/product";
 
+type Personalization = {
+  text?: string;
+  color?: string;
+  number?: string;
+};
+
+type CartItemDoc = Doc<"cartItems">;
+
 type CartItemResponse = {
   _id: Id<"cartItems">;
   _creationTime: number;
   userId: Id<"users">;
   productId: Id<"products">;
   quantity: number;
-  personalization?: {
-    text?: string;
-    color?: string;
-    number?: string;
-  };
+  personalization?: Personalization;
+  personalizationSignature: string;
   product: ProductWithImage;
 };
 
@@ -35,8 +40,154 @@ const cartItemResponseValidator = v.object({
       number: v.optional(v.string()),
     }),
   ),
+  personalizationSignature: v.string(),
   product: productWithImageValidator,
 });
+
+const PERSONALIZATION_NONE = "__none__";
+
+const normalizePersonalization = (
+  personalization?: Personalization,
+): Personalization | undefined => {
+  if (!personalization) {
+    return undefined;
+  }
+
+  const normalized: Personalization = {
+    text: personalization.text?.trim() || undefined,
+    color: personalization.color?.trim() || undefined,
+    number: personalization.number?.trim() || undefined,
+  };
+
+  if (!normalized.text && !normalized.color && !normalized.number) {
+    return undefined;
+  }
+
+  return normalized;
+};
+
+const buildPersonalizationSignature = (
+  personalization?: Personalization,
+): string => {
+  if (!personalization) {
+    return PERSONALIZATION_NONE;
+  }
+
+  return JSON.stringify({
+    text: personalization.text ?? null,
+    color: personalization.color ?? null,
+    number: personalization.number ?? null,
+  });
+};
+
+const isSamePersonalization = (
+  a?: Personalization,
+  b?: Personalization,
+): boolean => {
+  if (!a && !b) return true;
+  if (!a || !b) return false;
+  return a.text === b.text && a.color === b.color && a.number === b.number;
+};
+
+const resolvePersonalizationSignature = (
+  personalization: Personalization | undefined,
+  signature?: string,
+) => {
+  if (signature) {
+    return signature;
+  }
+  return buildPersonalizationSignature(personalization);
+};
+
+const mergeDuplicateCartItems = async (
+  ctx: MutationCtx,
+  duplicates: CartItemDoc[],
+): Promise<CartItemDoc> => {
+  const [primary, ...rest] = duplicates;
+  let mergedQuantity = primary.quantity;
+
+  for (const dup of rest) {
+    mergedQuantity += dup.quantity;
+    await ctx.db.delete(dup._id);
+  }
+
+  await ctx.db.patch(primary._id, { quantity: mergedQuantity });
+  const refreshed = await ctx.db.get(primary._id);
+  if (!refreshed) {
+    throw new Error("Failed to merge duplicate cart items");
+  }
+  return refreshed as CartItemDoc;
+};
+
+const findCartItemBySignature = async (
+  ctx: MutationCtx,
+  userId: Id<"users">,
+  productId: Id<"products">,
+  signature: string,
+  personalization?: Personalization,
+) => {
+  const matches: CartItemDoc[] = [];
+  const signatureQuery = ctx.db
+    .query("cartItems")
+    .withIndex("by_user_product_signature", (q) =>
+      q
+        .eq("userId", userId)
+        .eq("productId", productId)
+        .eq("personalizationSignature", signature),
+    );
+
+  for await (const item of signatureQuery) {
+    matches.push(item as CartItemDoc);
+    if (matches.length > 16) {
+      break;
+    }
+  }
+
+  if (matches.length === 1) {
+    return matches[0];
+  }
+
+  if (matches.length > 1) {
+    return mergeDuplicateCartItems(ctx, matches);
+  }
+
+  const legacyMatches: CartItemDoc[] = [];
+  const legacyQuery = ctx.db
+    .query("cartItems")
+    .withIndex("by_user_and_product", (q) =>
+      q.eq("userId", userId).eq("productId", productId),
+    );
+
+  for await (const item of legacyQuery) {
+    const normalizedLegacy = normalizePersonalization(
+      item.personalization as Personalization | undefined,
+    );
+    const legacySignature = resolvePersonalizationSignature(
+      normalizedLegacy,
+      item.personalizationSignature,
+    );
+
+    if (
+      legacySignature === signature &&
+      isSamePersonalization(normalizedLegacy, personalization)
+    ) {
+      legacyMatches.push(item as CartItemDoc);
+      if (legacyMatches.length > 16) {
+        break;
+      }
+    }
+  }
+
+  if (legacyMatches.length === 1) {
+    return legacyMatches[0];
+  }
+
+  if (legacyMatches.length > 1) {
+    return mergeDuplicateCartItems(ctx, legacyMatches);
+  }
+
+  return null;
+};
 
 const ensurePositiveInteger = (quantity: number) => {
   if (!Number.isInteger(quantity) || quantity <= 0) {
@@ -49,11 +200,7 @@ const incrementCartItem = async (
   userId: Id<"users">,
   productId: Id<"products">,
   delta: number,
-  personalization?: {
-    text?: string;
-    color?: string;
-    number?: string;
-  },
+  personalization?: Personalization,
 ) => {
   ensurePositiveInteger(delta);
 
@@ -62,12 +209,16 @@ const incrementCartItem = async (
     throw new Error("Product not found");
   }
 
-  const existingItem = await ctx.db
-    .query("cartItems")
-    .withIndex("by_user_and_product", (q) =>
-      q.eq("userId", userId).eq("productId", productId),
-    )
-    .unique();
+  const normalizedPersonalization = normalizePersonalization(personalization);
+  const signature = buildPersonalizationSignature(normalizedPersonalization);
+
+  const existingItem = await findCartItemBySignature(
+    ctx,
+    userId,
+    productId,
+    signature,
+    normalizedPersonalization,
+  );
 
   if (!product.inStock) {
     throw new Error("Product is out of stock");
@@ -78,14 +229,16 @@ const incrementCartItem = async (
   if (existingItem) {
     await ctx.db.patch(existingItem._id, {
       quantity: newQuantity,
-      personalization,
+      personalization: normalizedPersonalization,
+      personalizationSignature: signature,
     });
   } else {
     await ctx.db.insert("cartItems", {
       userId,
       productId,
       quantity: newQuantity,
-      personalization,
+      personalization: normalizedPersonalization,
+      personalizationSignature: signature,
     });
   }
 };
@@ -113,8 +266,19 @@ export const list = query({
         continue;
       }
 
+      const normalizedPersonalization = normalizePersonalization(
+        item.personalization as Personalization | undefined,
+      );
       const productWithImage = await attachImageToProduct(ctx, product);
-      items.push({ ...item, product: productWithImage });
+      items.push({
+        ...item,
+        personalization: normalizedPersonalization,
+        personalizationSignature: resolvePersonalizationSignature(
+          normalizedPersonalization,
+          item.personalizationSignature,
+        ),
+        product: productWithImage,
+      });
     }
 
     return items;
@@ -249,7 +413,7 @@ export const importGuestItems = mutation({
         userId,
         item.productId,
         item.quantity,
-        item.personalization,
+        item.personalization as Personalization | undefined,
       );
     }
 

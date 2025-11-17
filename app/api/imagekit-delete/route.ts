@@ -5,9 +5,9 @@ import { getImageKitServerClient } from "@/lib/server/imagekitClient";
 export const runtime = "nodejs";
 
 export async function POST(request: NextRequest) {
-  const body = (await request.json().catch(() => null)) as
-    | { fileId?: string }
-    | null;
+  const body = (await request.json().catch(() => null)) as {
+    fileId?: string;
+  } | null;
   const fileId = body?.fileId?.trim();
 
   if (!fileId) {

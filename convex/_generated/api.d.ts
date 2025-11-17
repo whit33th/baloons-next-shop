@@ -15,6 +15,7 @@ import type * as helpers_auth from "../helpers/auth.js";
 import type * as helpers_products from "../helpers/products.js";
 import type * as helpers_stripeClient from "../helpers/stripeClient.js";
 import type * as http from "../http.js";
+import type * as migrations from "../migrations.js";
 import type * as orders from "../orders.js";
 import type * as paymentMutations from "../paymentMutations.js";
 import type * as payments from "../payments.js";
@@ -40,6 +41,7 @@ declare const fullApi: ApiFromModules<{
   "helpers/products": typeof helpers_products;
   "helpers/stripeClient": typeof helpers_stripeClient;
   http: typeof http;
+  migrations: typeof migrations;
   orders: typeof orders;
   paymentMutations: typeof paymentMutations;
   payments: typeof payments;

@@ -1,6 +1,7 @@
 import { preloadQuery } from "convex/nextjs";
 import { api } from "@/convex/_generated/api";
 import { HomePageClient } from "./HomePageClient";
+import { ImageKitUploadNetworkError } from "@imagekit/next";
 
 export default async function HomePage() {
   // Prefetch bestsellers data on the server
