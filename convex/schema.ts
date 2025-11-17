@@ -4,8 +4,7 @@ import { v } from "convex/values";
 
 const usersTable = defineTable({
   name: v.optional(v.string()),
-  image: v.optional(v.string()),
-  imageFileId: v.optional(v.string()),
+  imageFileId: v.optional(v.union(v.id("_storage"), v.string())),
   email: v.optional(v.string()),
   emailVerificationTime: v.optional(v.number()),
   phone: v.optional(v.string()),
@@ -121,7 +120,7 @@ const applicationTables = {
     .index("by_status", ["status"]),
 
   payments: defineTable({
-    orderId: v.id("orders"),
+    orderId: v.optional(v.id("orders")),
     userId: v.optional(v.id("users")),
     paymentIntentId: v.optional(v.string()),
     status: v.union(
@@ -144,6 +143,7 @@ const applicationTables = {
       conversionRate: v.optional(v.number()),
       conversionFeePct: v.optional(v.number()),
     }),
+    cartSignature: v.optional(v.string()),
     customer: v.object({
       name: v.string(),
       email: v.string(),
@@ -184,6 +184,9 @@ const applicationTables = {
           createdAt: v.number(),
         }),
       ),
+    ),
+    paymentSource: v.optional(
+      v.union(v.literal("card"), v.literal("payment_request")),
     ),
   })
     .index("by_payment_intent_id", ["paymentIntentId"])

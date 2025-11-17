@@ -55,25 +55,24 @@ export const shippingValidator = v.object({
   deliveryFee: v.optional(v.number()),
 });
 
-export const createPendingOrderAndPayment = internalMutation({
+export const paymentSourceValidator = v.optional(
+  v.union(v.literal("card"), v.literal("payment_request")),
+);
+
+export type PaymentSource = "card" | "payment_request";
+
+export const preparePaymentDraft = internalMutation({
   args: {
     items: v.array(orderItemInputValidator),
     customer: customerValidator,
     shipping: shippingValidator,
     userId: v.optional(v.id("users")),
-    paymentCurrency: v.string(),
-    displayAmount: v.object({
-      value: v.number(),
-      currency: v.string(),
-      conversionRate: v.optional(v.number()),
-      conversionFeePct: v.optional(v.number()),
-    }),
   },
   returns: v.object({
-    orderId: v.id("orders"),
-    paymentId: v.id("payments"),
-    normalizedAmount: v.number(),
+    userId: v.id("users"),
     items: v.array(orderItemValidator),
+    normalizedAmount: v.number(),
+    amountMinor: v.number(),
   }),
   handler: async (ctx, args) => {
     if (args.items.length === 0) {
@@ -89,6 +88,10 @@ export const createPendingOrderAndPayment = internalMutation({
     const normalizedAmount = totalAmount + deliveryFee;
     const amountMinor = Math.round(normalizedAmount * 100);
 
+    if (amountMinor <= 0) {
+      throw new Error("Calculated order total is invalid");
+    }
+
     const userId = await resolveUserByEmail(
       ctx,
       args.userId,
@@ -96,70 +99,53 @@ export const createPendingOrderAndPayment = internalMutation({
       args.customer.name,
     );
 
-    const orderId = await ctx.db.insert("orders", {
-      userId,
-      items: resolvedItems,
-      totalAmount: normalizedAmount,
-      status: "pending",
-      customerName: args.customer.name,
-      customerEmail: args.customer.email,
-      shippingAddress: args.shipping.address,
-      deliveryType: args.shipping.deliveryType,
-      paymentMethod: "full_online",
-      whatsappConfirmed: false,
-      pickupDateTime: args.shipping.pickupDateTime,
-      currency: args.displayAmount.currency,
-      deliveryFee,
-      grandTotal: args.displayAmount.value,
-    });
-
-    const paymentId = await ctx.db.insert("payments", {
-      orderId,
-      userId,
-      paymentIntentId: undefined,
-      status: "requires_payment_method",
-      amountBase: normalizedAmount,
-      amountMinor,
-      currency: args.paymentCurrency,
-      displayAmount: args.displayAmount,
-      customer: args.customer,
-      shipping: args.shipping,
-      items: resolvedItems,
-      stripeClientSecret: undefined,
-      stripeLatestChargeId: undefined,
-      lastError: undefined,
-      refunds: undefined,
-    });
-
-    return { orderId, paymentId, normalizedAmount, items: resolvedItems };
+    return { userId, items: resolvedItems, normalizedAmount, amountMinor };
   },
 });
 
-export const attachStripeIntentDetails = internalMutation({
+export const createPaymentRecord = internalMutation({
   args: {
-    paymentId: v.id("payments"),
+    userId: v.id("users"),
     paymentIntentId: v.string(),
-    clientSecret: v.string(),
     status: paymentStatusValidator,
+    amountBase: v.number(),
+    amountMinor: v.number(),
+    currency: v.string(),
+    displayAmount: v.object({
+      value: v.number(),
+      currency: v.string(),
+      conversionRate: v.optional(v.number()),
+      conversionFeePct: v.optional(v.number()),
+    }),
+    customer: customerValidator,
+    shipping: shippingValidator,
+    items: v.array(orderItemValidator),
+    cartSignature: v.optional(v.string()),
+    paymentSource: paymentSourceValidator,
+    clientSecret: v.optional(v.string()),
+    lastError: v.optional(v.string()),
   },
-  returns: v.null(),
+  returns: v.id("payments"),
   handler: async (ctx, args) => {
-    const payment = await ctx.db.get(args.paymentId);
-    if (!payment) {
-      throw new Error("Payment record not found");
-    }
-
-    await ctx.db.patch(args.paymentId, {
+    return ctx.db.insert("payments", {
+      orderId: undefined,
+      userId: args.userId,
       paymentIntentId: args.paymentIntentId,
-      stripeClientSecret: args.clientSecret,
       status: args.status,
+      amountBase: args.amountBase,
+      amountMinor: args.amountMinor,
+      currency: args.currency,
+      displayAmount: args.displayAmount,
+      customer: args.customer,
+      shipping: args.shipping,
+      items: args.items,
+      stripeClientSecret: args.clientSecret,
+      stripeLatestChargeId: undefined,
+      lastError: args.lastError,
+      refunds: undefined,
+      cartSignature: args.cartSignature,
+      paymentSource: args.paymentSource,
     });
-
-    await ctx.db.patch(payment.orderId, {
-      paymentIntentId: args.paymentIntentId,
-    });
-
-    return null;
   },
 });
 
@@ -168,7 +154,7 @@ export const getPaymentIntent = internalQuery({
   returns: v.union(
     v.object({
       _id: v.id("payments"),
-      orderId: v.id("orders"),
+      orderId: v.optional(v.id("orders")),
       paymentIntentId: v.optional(v.string()),
       status: paymentStatusValidator,
       customer: customerValidator,
@@ -210,7 +196,7 @@ export const updatePaymentStatus = internalMutation({
   returns: v.union(
     v.object({
       paymentId: v.id("payments"),
-      orderId: v.id("orders"),
+      orderId: v.optional(v.id("orders")),
     }),
     v.null(),
   ),
@@ -235,7 +221,7 @@ export const updatePaymentStatus = internalMutation({
   },
 });
 
-export const processSuccessfulPayment = internalMutation({
+export const finalizePaymentFromIntent = internalMutation({
   args: {
     paymentIntentId: v.string(),
     stripeChargeId: v.optional(v.string()),
@@ -259,19 +245,42 @@ export const processSuccessfulPayment = internalMutation({
       return null;
     }
 
-    if (payment.status === "succeeded") {
+    if (payment.orderId) {
+      await ctx.db.patch(payment._id, {
+        status: "succeeded",
+        stripeLatestChargeId: args.stripeChargeId,
+        lastError: undefined,
+      });
       return { paymentId: payment._id, orderId: payment.orderId };
     }
 
+    if (!payment.userId) {
+      throw new Error("Payment is missing user reference");
+    }
+
+    const orderId = await ctx.db.insert("orders", {
+      userId: payment.userId,
+      items: payment.items,
+      totalAmount: payment.amountBase,
+      status: "confirmed",
+      customerName: payment.customer.name,
+      customerEmail: payment.customer.email,
+      shippingAddress: payment.shipping.address,
+      deliveryType: payment.shipping.deliveryType,
+      paymentMethod: "full_online",
+      whatsappConfirmed: false,
+      pickupDateTime: payment.shipping.pickupDateTime,
+      currency: payment.displayAmount?.currency ?? payment.currency,
+      deliveryFee: payment.shipping.deliveryFee,
+      grandTotal: payment.displayAmount?.value ?? payment.amountBase,
+      paymentIntentId: payment.paymentIntentId,
+    });
+
     await ctx.db.patch(payment._id, {
+      orderId,
       status: "succeeded",
       stripeLatestChargeId: args.stripeChargeId,
       lastError: undefined,
-    });
-
-    await ctx.db.patch(payment.orderId, {
-      status: "confirmed",
-      paymentIntentId: args.paymentIntentId,
     });
 
     for (const item of payment.items) {
@@ -285,8 +294,8 @@ export const processSuccessfulPayment = internalMutation({
       });
     }
 
-    if (payment.userId) {
-      const userId = payment.userId;
+    const userId = payment.userId;
+    if (userId) {
       const cartQuery = ctx.db
         .query("cartItems")
         .withIndex("by_user", (q) => q.eq("userId", userId));
@@ -296,7 +305,7 @@ export const processSuccessfulPayment = internalMutation({
       }
     }
 
-    return { paymentId: payment._id, orderId: payment.orderId };
+    return { paymentId: payment._id, orderId };
   },
 });
 
@@ -482,6 +491,5 @@ async function resolveUserByEmail(
     emailVerificationTime: undefined,
     phone: undefined,
     phoneVerificationTime: undefined,
-    image: undefined,
   });
 }

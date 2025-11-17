@@ -4,11 +4,9 @@ import { useMutation } from "convex/react";
 import { useQuery } from "convex-helpers/react/cache";
 
 import { motion } from "motion/react";
-import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
-import { SignOutButton } from "@/components/SignOutButton";
 import { api } from "@/convex/_generated/api";
 import { STORE_INFO } from "@/constants/config";
 import {
@@ -17,7 +15,17 @@ import {
   parseAddress,
   type AddressFields,
 } from "@/lib/address";
-import { uploadFileInChunks } from "@/lib/chunkedUploadClient";
+import { AvatarPanel } from "./_components/AvatarPanel";
+import { InfoTile } from "./_components/InfoTile";
+import { OrdersPanel } from "./_components/OrdersPanel";
+import { PreferencesPanel } from "./_components/PreferencesPanel";
+import {
+  palette,
+  fieldInputClass,
+  fieldLabelClass,
+  fieldTextareaClass,
+} from "./_components/palette";
+import { useConvexAvatarStorage } from "@/hooks/useConvexAvatarStorage";
 
 type TabId = "profile" | "orders" | "settings";
 
@@ -28,8 +36,6 @@ const tabs: Array<{ id: TabId; label: string; hint: string }> = [
 ];
 
 const MAX_AVATAR_BYTES = 2 * 1024 * 1024; // 2 MB
-const AVATAR_UPLOAD_FOLDER =
-  process.env.NEXT_PUBLIC_IMAGEKIT_AVATAR_FOLDER ?? "/avatars";
 
 const tabButtonId = (tabId: TabId) => `profile-tab-${tabId}`;
 const tabPanelId = (tabId: TabId) => `profile-panel-${tabId}`;
@@ -55,7 +61,11 @@ export default function ProfilePage() {
     phone: "",
     ...createEmptyAddressFields(),
   }));
+
   const avatarInputRef = useRef<HTMLInputElement | null>(null);
+  const { avatarUrl, uploadAvatar } = useConvexAvatarStorage(
+    user?.imageFileId ?? null,
+  );
 
   const resetFormFromUser = useCallback(() => {
     if (!user) {
@@ -84,18 +94,6 @@ export default function ProfilePage() {
     }
   }, [isEditing, resetFormFromUser]);
 
-  const deleteRemoteAvatar = useCallback(async (fileId: string) => {
-    try {
-      await fetch("/api/imagekit-delete", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ fileId }),
-      });
-    } catch (error) {
-      console.error("Failed to delete previous avatar", error);
-    }
-  }, []);
-
   const handleAvatarFileChange = useCallback(
     async (event: React.ChangeEvent<HTMLInputElement>) => {
       const file = event.target.files?.[0];
@@ -111,19 +109,11 @@ export default function ProfilePage() {
 
       setIsUploadingAvatar(true);
       try {
-        const uploadResult = await uploadFileInChunks(file, {
-          folder: AVATAR_UPLOAD_FOLDER,
+        const storageId = await uploadAvatar(file);
+        await updateAvatar({
+          imageFileId: storageId,
         });
-
-        const response = await updateAvatar({
-          imageUrl: uploadResult.url,
-          imageFileId: uploadResult.fileId,
-        });
-
         toast.success("Avatar updated!");
-        if (response.previousFileId) {
-          void deleteRemoteAvatar(response.previousFileId);
-        }
       } catch (error) {
         toast.error(
           error instanceof Error
@@ -135,7 +125,7 @@ export default function ProfilePage() {
         event.target.value = "";
       }
     },
-    [updateAvatar, deleteRemoteAvatar],
+    [updateAvatar, uploadAvatar],
   );
 
   const handleUpdateProfile = async (
@@ -174,14 +164,14 @@ export default function ProfilePage() {
 
   if (user === undefined) {
     return (
-      <div className="min-h-screen">
+      <div className="bg-primary text-deep min-h-screen">
         <div className="mx-auto grid max-w-5xl gap-6 px-4 py-16 md:grid-cols-2">
-          <div className="h-60 animate-pulse rounded-3xl bg-white/70" />
+          <div className="h-60 animate-pulse rounded-3xl bg-[rgba(var(--primary-rgb),0.65)]" />
           <div className="space-y-4">
             {Array.from({ length: 5 }).map((_, index) => (
               <div
                 key={`skeleton-${index}`}
-                className="h-12 animate-pulse rounded-full bg-white/70"
+                className="h-12 animate-pulse rounded-full bg-[rgba(var(--secondary-rgb),0.12)]"
               />
             ))}
           </div>
@@ -192,23 +182,23 @@ export default function ProfilePage() {
 
   if (!user) {
     return (
-      <div className="min-h-screen">
+      <div className="bg-primary text-deep min-h-screen">
         <div className="mx-auto flex min-h-screen max-w-3xl flex-col items-center justify-center px-4 text-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
           >
             <div className="mb-4 text-6xl">🔒</div>
-            <h2 className="mb-3 text-3xl font-semibold text-black">
+            <h2 className="text-deep mb-3 text-3xl font-semibold">
               Sign in to view your profile
             </h2>
-            <p className="mb-6 text-base text-black/70">
+            <p className={`mb-6 text-base ${palette.mutedText}`}>
               Access saved addresses, order history, and track your balloons in
               one place.
             </p>
             <Link
               href="/auth"
-              className="inline-flex h-12 items-center justify-center rounded-full bg-black px-8 text-sm font-semibold tracking-wide text-white uppercase transition hover:bg-black/90"
+              className="bg-accent text-on-accent inline-flex h-12 items-center justify-center rounded-full px-8 text-sm font-semibold tracking-wide uppercase transition hover:brightness-95"
             >
               Go to sign in
             </Link>
@@ -219,66 +209,27 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen pb-16">
+    <div className="bg-primary text-deep min-h-screen pb-16">
       <main className="mx-auto w-full max-w-6xl px-4 pt-12">
         <motion.section
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="relative overflow-hidden rounded-[42px] bg-linear-to-br from-white via-white/95 to-white px-8 py-10 shadow-[0_40px_90px_-50px_rgba(15,23,42,0.6)]"
+          className={`relative overflow-hidden rounded-[42px] border px-8 py-10 shadow-[0_40px_90px_-50px_rgba(15,23,42,0.35)] ${palette.softBorder} ${palette.elevatedSurface}`}
+          style={{
+            background:
+              "linear-gradient(135deg, rgba(var(--primary-rgb),0.97) 0%, rgba(var(--support-warm-rgb),0.35) 45%, rgba(var(--secondary-rgb),0.12) 100%)",
+          }}
         >
-          <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top,rgba(255,205,220,0.35),transparent_60%)]" />
-          <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-              <div className="relative h-24 w-24 shrink-0">
-                {user.image ? (
-                  <Image
-                    src={user.image}
-                    alt={`Avatar of ${user.name ?? "customer"}`}
-                    fill
-                    sizes="96px"
-                    className="rounded-full object-cover ring-4 ring-white/70"
-                    priority
-                  />
-                ) : (
-                  <div className="flex h-full w-full items-center justify-center rounded-full bg-black/5 text-4xl">
-                    🎈
-                  </div>
-                )}
-                <label
-                  className={`absolute -right-1 -bottom-1 inline-flex cursor-pointer items-center gap-1 rounded-full border border-black/10 bg-white/90 px-3 py-1 text-[11px] font-semibold tracking-widest text-black uppercase shadow transition ${isUploadingAvatar ? "pointer-events-none opacity-60" : "hover:bg-white"}`}
-                >
-                  <input
-                    ref={avatarInputRef}
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={handleAvatarFileChange}
-                    disabled={isUploadingAvatar}
-                  />
-                  {isUploadingAvatar ? "Uploading..." : "Change"}
-                </label>
-              </div>
-              <div className="space-y-2">
-                <p className="text-xs tracking-[0.2rem] text-black/50 uppercase">
-                  Welcome back
-                </p>
-                <h1 className="text-4xl font-semibold text-black">
-                  {user.name ?? "Balloon Lover"}
-                </h1>
-                <p className="text-sm text-black/60">{user.email}</p>
-                <p className="text-xs text-black/45">
-                  Max 2 MB · JPG or PNG recommended
-                </p>
-              </div>
-            </div>
-            <div className="flex flex-wrap items-center gap-3">
-              <div className="rounded-full bg-black/5 px-4 py-2 text-xs font-medium tracking-widest text-black/60 uppercase">
-                {formattedOrders.length} orders placed
-              </div>
-              <SignOutButton />
-            </div>
-          </div>
+          <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top,rgba(var(--accent-rgb),0.35),transparent_65%)]" />
+          <AvatarPanel
+            user={user}
+            formattedOrdersCount={formattedOrders.length}
+            isUploadingAvatar={isUploadingAvatar}
+            avatarInputRef={avatarInputRef}
+            onAvatarFileChange={handleAvatarFileChange}
+            avatarUrl={avatarUrl}
+          />
         </motion.section>
 
         <motion.nav
@@ -317,16 +268,18 @@ export default function ProfilePage() {
                     (currentIndex + offset + tabs.length) % tabs.length;
                   setActiveTab(tabs[nextIndex].id);
                 }}
-                className={`flex flex-col rounded-3xl border px-6 py-5 text-left transition focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-black ${
+                className={`focus-visible:outline-accent flex flex-col rounded-3xl border px-6 py-5 text-left transition focus-visible:outline focus-visible:outline-offset-2 ${
                   isActive
-                    ? "border-black bg-white shadow-[0_20px_50px_-35px_rgba(15,23,42,0.7)]"
-                    : "border-black/10 bg-white/70 hover:border-black/40"
+                    ? "border-[rgba(var(--secondary-rgb),0.7)] bg-white shadow-[0_25px_50px_-40px_rgba(52,137,152,0.9)]"
+                    : `${palette.softBorder} ${palette.softSurface} hover:border-[rgba(var(--secondary-rgb),0.4)]`
                 }`}
               >
-                <span className="text-xs tracking-[0.3rem] text-black/40 uppercase">
+                <span
+                  className={`text-xs tracking-[0.3rem] uppercase ${palette.subtleText}`}
+                >
                   {tab.hint}
                 </span>
-                <span className="text-lg font-semibold text-black">
+                <span className="text-deep text-lg font-semibold">
                   {tab.label}
                 </span>
               </button>
@@ -341,7 +294,7 @@ export default function ProfilePage() {
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.45 }}
-              className="grid gap-6 rounded-[36px] bg-white p-8 shadow-[0_28px_70px_-40px_rgba(15,23,42,0.55)]"
+              className={`grid gap-6 rounded-[36px] border p-8 shadow-[0_28px_70px_-40px_rgba(52,137,152,0.45)] ${palette.softBorder} ${palette.elevatedSurface}`}
               role="tabpanel"
               id={tabPanelId("profile")}
               aria-labelledby={tabButtonId("profile")}
@@ -349,10 +302,10 @@ export default function ProfilePage() {
             >
               <div className="flex flex-wrap items-center justify-between gap-4">
                 <div>
-                  <h2 className="text-2xl font-semibold text-black">
+                  <h2 className="text-deep text-2xl font-semibold">
                     Personal details
                   </h2>
-                  <p className="text-sm text-black/60">
+                  <p className={`text-sm ${palette.mutedText}`}>
                     Keep your contact and delivery information up to date.
                   </p>
                 </div>
@@ -367,7 +320,11 @@ export default function ProfilePage() {
                       setIsEditing(true);
                     }
                   }}
-                  className="rounded-full border border-black px-5 py-2 text-xs font-semibold tracking-widest text-black uppercase transition hover:bg-black hover:text-white"
+                  className={`rounded-full px-5 py-2 text-xs font-semibold tracking-widest uppercase transition ${
+                    isEditing
+                      ? `border ${palette.softBorder} text-deep hover:bg-[rgba(var(--primary-rgb),0.7)]`
+                      : "btn-secondary border-none shadow-md hover:brightness-95"
+                  }`}
                 >
                   {isEditing ? "Cancel" : "Edit"}
                 </button>
@@ -378,18 +335,18 @@ export default function ProfilePage() {
                   onSubmit={handleUpdateProfile}
                   className="grid gap-5 md:grid-cols-2"
                 >
-                  <label className="flex flex-col gap-2 text-sm text-black/60">
+                  <label className={fieldLabelClass}>
                     Full name
                     <input
                       value={formData.name}
                       onChange={(event) =>
                         setFormData({ ...formData, name: event.target.value })
                       }
-                      className="h-12 rounded-2xl border border-black/10 px-4 text-sm font-medium text-black transition outline-none focus:border-black"
+                      className={fieldInputClass}
                       placeholder="Jane Balloon"
                     />
                   </label>
-                  <label className="flex flex-col gap-2 text-sm text-black/60">
+                  <label className={fieldLabelClass}>
                     Email address
                     <input
                       type="email"
@@ -397,22 +354,22 @@ export default function ProfilePage() {
                       onChange={(event) =>
                         setFormData({ ...formData, email: event.target.value })
                       }
-                      className="h-12 rounded-2xl border border-black/10 px-4 text-sm font-medium text-black transition outline-none focus:border-black"
+                      className={fieldInputClass}
                       placeholder="you@example.com"
                     />
                   </label>
-                  <label className="flex flex-col gap-2 text-sm text-black/60">
+                  <label className={fieldLabelClass}>
                     Phone number
                     <input
                       value={formData.phone}
                       onChange={(event) =>
                         setFormData({ ...formData, phone: event.target.value })
                       }
-                      className="h-12 rounded-2xl border border-black/10 px-4 text-sm font-medium text-black transition outline-none focus:border-black"
+                      className={fieldInputClass}
                       placeholder="Include country code"
                     />
                   </label>
-                  <label className="flex flex-col gap-2 text-sm text-black/60 md:col-span-2">
+                  <label className={`${fieldLabelClass} md:col-span-2`}>
                     Street & house number
                     <input
                       value={formData.streetAddress}
@@ -422,11 +379,11 @@ export default function ProfilePage() {
                           streetAddress: event.target.value,
                         })
                       }
-                      className="h-12 rounded-2xl border border-black/10 px-4 text-sm font-medium text-black transition outline-none focus:border-black"
+                      className={fieldInputClass}
                       placeholder="Sandgasse 3"
                     />
                   </label>
-                  <label className="flex flex-col gap-2 text-sm text-black/60">
+                  <label className={fieldLabelClass}>
                     City
                     <input
                       value={formData.city}
@@ -436,11 +393,11 @@ export default function ProfilePage() {
                           city: event.target.value,
                         })
                       }
-                      className="h-12 rounded-2xl border border-black/10 px-4 text-sm font-medium text-black transition outline-none focus:border-black"
+                      className={fieldInputClass}
                       placeholder={STORE_INFO.address.city}
                     />
                   </label>
-                  <label className="flex flex-col gap-2 text-sm text-black/60">
+                  <label className={fieldLabelClass}>
                     Postal code
                     <input
                       value={formData.postalCode}
@@ -450,11 +407,11 @@ export default function ProfilePage() {
                           postalCode: event.target.value,
                         })
                       }
-                      className="h-12 rounded-2xl border border-black/10 px-4 text-sm font-medium text-black transition outline-none focus:border-black"
+                      className={fieldInputClass}
                       placeholder={STORE_INFO.address.postalCode}
                     />
                   </label>
-                  <label className="flex flex-col gap-2 text-sm text-black/60 md:col-span-2">
+                  <label className={`${fieldLabelClass} md:col-span-2`}>
                     Delivery notes (door code, floor…)
                     <textarea
                       value={formData.deliveryNotes}
@@ -465,7 +422,7 @@ export default function ProfilePage() {
                         })
                       }
                       rows={3}
-                      className="rounded-2xl border border-black/10 px-4 py-3 text-sm font-medium text-black transition outline-none focus:border-black"
+                      className={fieldTextareaClass}
                       placeholder="Ring the bell twice, leave at reception, etc."
                     />
                   </label>
@@ -473,7 +430,7 @@ export default function ProfilePage() {
                     <motion.button
                       whileTap={{ scale: 0.97 }}
                       type="submit"
-                      className="inline-flex h-12 items-center justify-center rounded-full bg-black px-6 text-xs font-semibold tracking-widest text-white uppercase transition hover:bg-black/90"
+                      className="bg-accent text-on-accent inline-flex h-12 items-center justify-center rounded-full px-6 text-xs font-semibold tracking-widest uppercase transition hover:brightness-95"
                     >
                       Save changes
                     </motion.button>
@@ -483,7 +440,7 @@ export default function ProfilePage() {
                         resetFormFromUser();
                         setIsEditing(false);
                       }}
-                      className="inline-flex h-12 items-center justify-center rounded-full border border-black px-6 text-xs font-semibold tracking-widest text-black uppercase transition hover:bg-black/5"
+                      className={`text-deep inline-flex h-12 items-center justify-center rounded-full border px-6 text-xs font-semibold tracking-widest uppercase transition hover:bg-[rgba(var(--primary-rgb),0.8)] ${palette.softBorder}`}
                     >
                       Discard
                     </button>
@@ -522,80 +479,21 @@ export default function ProfilePage() {
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.45 }}
-              className="grid gap-5 rounded-[36px] bg-white p-8 shadow-[0_28px_70px_-40px_rgba(15,23,42,0.55)]"
+              className={`grid gap-5 rounded-[36px] border p-8 shadow-[0_28px_70px_-40px_rgba(52,137,152,0.45)] ${palette.softBorder} ${palette.elevatedSurface}`}
               role="tabpanel"
               id={tabPanelId("orders")}
               aria-labelledby={tabButtonId("orders")}
               tabIndex={0}
             >
               <div className="flex flex-wrap items-center justify-between gap-3">
-                <h2 className="text-2xl font-semibold text-black">
+                <h2 className="text-deep text-2xl font-semibold">
                   Order history
                 </h2>
-                <p className="text-sm text-black/60">
+                <p className={`text-sm ${palette.mutedText}`}>
                   {formattedOrders.length} placed orders
                 </p>
               </div>
-
-              {orders === undefined ? (
-                <div className="grid gap-4 sm:grid-cols-2">
-                  {Array.from({ length: 4 }).map((_, index) => (
-                    <div
-                      key={`order-skeleton-${index}`}
-                      className="h-32 animate-pulse rounded-3xl bg-white/70"
-                    />
-                  ))}
-                </div>
-              ) : formattedOrders.length === 0 ? (
-                <div className="flex flex-col items-center gap-3 rounded-3xl border border-black/10 bg-white/70 px-8 py-16 text-center">
-                  <div className="text-5xl">🎈</div>
-                  <p className="text-lg font-medium text-black">
-                    No orders yet
-                  </p>
-                  <p className="text-sm text-black/60">
-                    Every celebration starts with a cart full of color.
-                  </p>
-                  <Link
-                    href="/catalog"
-                    className="inline-flex h-11 items-center justify-center rounded-full bg-black px-6 text-xs font-semibold tracking-widest text-white uppercase transition hover:bg-black/90"
-                  >
-                    Shop balloons
-                  </Link>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {formattedOrders.map((order) => (
-                    <div
-                      key={order._id}
-                      className="grid gap-3 rounded-3xl border border-black/10 bg-white/80 px-6 py-5 transition hover:border-black/40"
-                    >
-                      <div className="flex flex-wrap items-center justify-between gap-3">
-                        <div>
-                          <p className="text-xs tracking-[0.3rem] text-black/40 uppercase">
-                            Order
-                          </p>
-                          <p className="text-lg font-medium text-black">
-                            #{order._id.slice(-8)}
-                          </p>
-                        </div>
-                        <div className="rounded-full bg-black px-4 py-1 text-xs font-semibold tracking-[0.2rem] text-white uppercase">
-                          ${order.totalAmount.toFixed(2)}
-                        </div>
-                      </div>
-                      <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-black/60">
-                        <span>
-                          {new Date(order._creationTime).toLocaleDateString()}
-                        </span>
-                        <span>{order.items.length} item(s)</span>
-                        <span>{order.shippingAddress}</span>
-                        <span className="rounded-full bg-black/5 px-3 py-1 text-xs font-semibold tracking-[0.2rem] text-black/60 uppercase">
-                          {order.status}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
+              <OrdersPanel orders={orders} />
             </motion.div>
           ) : null}
 
@@ -605,43 +503,26 @@ export default function ProfilePage() {
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.45 }}
-              className="grid gap-6 rounded-[36px] bg-white p-8 shadow-[0_28px_70px_-40px_rgba(15,23,42,0.55)]"
+              className={`grid gap-6 rounded-[36px] border p-8 shadow-[0_28px_70px_-40px_rgba(52,137,152,0.45)] ${palette.softBorder} ${palette.elevatedSurface}`}
               role="tabpanel"
               id={tabPanelId("settings")}
               aria-labelledby={tabButtonId("settings")}
               tabIndex={0}
             >
               <div>
-                <h2 className="text-2xl font-semibold text-black">
+                <h2 className="text-deep text-2xl font-semibold">
                   Preferences
                 </h2>
-                <p className="text-sm text-black/60">
+                <p className={`text-sm ${palette.mutedText}`}>
                   Decide what updates land in your inbox.
                 </p>
               </div>
 
-              <div className="grid gap-4 sm:grid-cols-2">
-                {[
-                  { label: "Order confirmations", defaultChecked: true },
-                  { label: "Shipping updates", defaultChecked: true },
-                  { label: "Promotions & inspiration", defaultChecked: false },
-                  { label: "Restock alerts", defaultChecked: false },
-                ].map((item) => (
-                  <label
-                    key={item.label}
-                    className="flex items-center justify-between gap-3 rounded-3xl border border-black/10 bg-white/70 px-5 py-4 text-sm text-black/70"
-                  >
-                    <span>{item.label}</span>
-                    <input
-                      type="checkbox"
-                      defaultChecked={item.defaultChecked}
-                      className="h-5 w-5 accent-black"
-                    />
-                  </label>
-                ))}
-              </div>
+              <PreferencesPanel />
 
-              <div className="rounded-3xl border border-black/10 bg-white/70 px-5 py-4 text-sm text-black/60">
+              <div
+                className={`rounded-3xl border px-5 py-4 text-sm ${palette.softBorder} ${palette.softSurface} ${palette.mutedText}`}
+              >
                 We respect your inbox. You can update preferences or unsubscribe
                 at any time.
               </div>
@@ -649,27 +530,6 @@ export default function ProfilePage() {
           ) : null}
         </section>
       </main>
-    </div>
-  );
-}
-
-type InfoTileProps = {
-  label: string;
-  value: string;
-  fullWidth?: boolean;
-};
-
-function InfoTile({ label, value, fullWidth }: InfoTileProps) {
-  return (
-    <div
-      className={`rounded-3xl border border-black/10 bg-white/70 px-5 py-4 ${fullWidth ? "md:col-span-2" : ""}`}
-    >
-      <p className="text-xs tracking-[0.3rem] text-black/40 uppercase">
-        {label}
-      </p>
-      <p className="mt-2 text-lg font-medium whitespace-pre-wrap text-black">
-        {value}
-      </p>
     </div>
   );
 }

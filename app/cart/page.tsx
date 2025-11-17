@@ -9,6 +9,7 @@ import { ADMIN_PREVIEW_IMAGE_TRANSFORMATION } from "@/lib/imagekit";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
 import { type GuestCartItem, useGuestCart } from "../../lib/guestCart";
+import Link from "next/link";
 
 export default function CartPage() {
   const router = useRouter();
@@ -120,11 +121,6 @@ export default function CartPage() {
     }
   };
 
-  const handleCheckout = () => {
-    // Allow checkout without authentication
-    router.push("/checkout");
-  };
-
   if (isLoading) {
     return (
       <div className="bg-primary">
@@ -185,7 +181,23 @@ export default function CartPage() {
                 {totals.itemCount} items
               </p>
             </div>
+            <div className="bg-secondary/5 w-full border-t p-4 sm:p-6">
+              <Link
+                href="/checkout"
+                className="btn-accent block w-full rounded-lg px-2 py-3 text-center font-semibold transition-opacity hover:opacity-90"
+              >
+                Checkout
+              </Link>
 
+              <div className="mt-4 flex items-center justify-between">
+                <span className="text-deep text-lg font-semibold sm:text-xl">
+                  Total:
+                </span>
+                <span className="text-accent text-xl font-bold tabular-nums sm:text-2xl">
+                  €{totals.total.toFixed(2)}
+                </span>
+              </div>
+            </div>
             <div className="divide-y">
               {itemsToDisplay.map((item) => (
                 <div
@@ -287,7 +299,7 @@ export default function CartPage() {
               ))}
             </div>
 
-            <div className="bg-secondary/5 border-t p-4 sm:p-6">
+            {/* <div className="bg-secondary/5 border-t p-4 sm:p-6">
               <div className="mb-4 flex items-center justify-between">
                 <span className="text-deep text-lg font-semibold sm:text-xl">
                   Total:
@@ -301,9 +313,9 @@ export default function CartPage() {
                 onClick={handleCheckout}
                 className="btn-accent w-full rounded-lg py-3 font-semibold transition-opacity hover:opacity-90"
               >
-                Proceed to Checkout
+                Checkout
               </button>
-            </div>
+            </div> */}
           </div>
         </div>
       </main>

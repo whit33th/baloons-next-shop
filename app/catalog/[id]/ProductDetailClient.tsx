@@ -35,6 +35,10 @@ export default function ProductDetailClient({ preloaded }: Props) {
     number?: string;
   }>({});
   const numberInputRef = useRef<HTMLInputElement>(null);
+  const colorSectionRef = useRef<HTMLDivElement>(
+    null,
+  ) as React.RefObject<HTMLDivElement>;
+  const requiresColorSelection = (product?.availableColors?.length ?? 0) > 1;
 
   const galleryImages = useMemo(() => {
     if (!product) {
@@ -73,6 +77,17 @@ export default function ProductDetailClient({ preloaded }: Props) {
       const safeQuantity = Math.max(1, Math.floor(desired));
 
       // Validate required fields
+
+      const needsColorSelection =
+        requiresColorSelection && !personalization.color;
+      if (needsColorSelection) {
+        toast.error("Please select a color");
+        colorSectionRef.current?.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+        });
+        return;
+      }
       const requiresNumber =
         product.isPersonalizable?.number && !personalization.number?.trim();
       if (requiresNumber) {
@@ -120,7 +135,14 @@ export default function ProductDetailClient({ preloaded }: Props) {
         );
       }
     },
-    [product, user, addGuestItem, addToCart, personalization],
+    [
+      product,
+      user,
+      addGuestItem,
+      addToCart,
+      personalization,
+      requiresColorSelection,
+    ],
   );
 
   if (product === undefined) {
@@ -213,6 +235,8 @@ export default function ProductDetailClient({ preloaded }: Props) {
                 isNameEnabled={product.isPersonalizable?.name ?? false}
                 isNumberEnabled={product.isPersonalizable?.number ?? false}
                 onChange={setPersonalization}
+                requireColorSelection={requiresColorSelection}
+                colorSectionRef={colorSectionRef}
               />
             )}
           </div>

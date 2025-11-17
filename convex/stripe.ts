@@ -10,6 +10,7 @@ import { getStripeClient } from "./helpers/stripeClient";
 import {
   customerValidator,
   orderItemInputValidator,
+  paymentSourceValidator,
   type PaymentStatus,
   paymentStatusValidator,
   shippingValidator,
@@ -25,69 +26,24 @@ type StripeIntentSummary = {
   lastError?: string;
 };
 
-type PaymentCustomer = {
-  name: string;
-  email: string;
-  phone?: string;
-};
-
-type PaymentShipping = {
-  address: string;
-  deliveryType: "pickup" | "delivery";
-  pickupDateTime?: string;
-  deliveryFee?: number;
-};
-
-type OrderItemSummary = {
-  productId: Id<"products">;
-  productName: string;
-  quantity: number;
-  price: number;
-  personalization?: {
-    text?: string;
-    color?: string;
-    number?: string;
-  };
-};
-
-type PendingPaymentResult = {
-  orderId: Id<"orders">;
-  paymentId: Id<"payments">;
-  normalizedAmount: number;
-  items: ReadonlyArray<OrderItemSummary>;
-};
-
 type PaymentIntentRecord = {
   _id: Id<"payments">;
-  orderId: Id<"orders">;
-  paymentIntentId?: string;
-  status: PaymentStatus;
-  customer: PaymentCustomer;
-  shipping: PaymentShipping;
-  items: ReadonlyArray<OrderItemSummary>;
+  orderId?: Id<"orders">;
 };
 
-type PaymentMutationResult = {
-  paymentId: Id<"payments">;
-  orderId: Id<"orders">;
-};
-
-type CreatePaymentIntentResult = {
+type SubmitPaymentResult = {
   paymentIntentId: string;
-  clientSecret: string;
-  orderId: Id<"orders">;
-  paymentId: Id<"payments">;
-  amountMinor: number;
-  currency: string;
   status: PaymentStatus;
+  clientSecret?: string;
+  lastError?: string;
 };
 
 type SyncPaymentIntentStatusResult = {
   paymentIntentId: string;
   status: PaymentStatus;
-  orderId: Id<"orders">;
   paymentId: Id<"payments">;
-  clientSecret: string;
+  orderId?: Id<"orders">;
+  clientSecret?: string;
   lastError?: string;
 };
 
@@ -121,27 +77,30 @@ const derivePaymentStatus = (
   }
 };
 
-const mapIntent = (intent: Stripe.PaymentIntent): StripeIntentSummary => {
+const mapIntent = (
+  intent: Stripe.PaymentIntent,
+  options?: { expectClientSecret?: boolean },
+): StripeIntentSummary => {
   const lastError = intent.last_payment_error?.message;
   const latestChargeId =
     typeof intent.latest_charge === "string"
       ? intent.latest_charge
       : intent.latest_charge?.id;
 
-  if (!intent.client_secret) {
+  if (options?.expectClientSecret !== false && !intent.client_secret) {
     throw new Error("Stripe did not return a client secret");
   }
 
   return {
     paymentIntentId: intent.id,
-    clientSecret: intent.client_secret,
+    clientSecret: intent.client_secret ?? "",
     status: derivePaymentStatus(intent.status, lastError),
     latestChargeId: latestChargeId ?? undefined,
     lastError: lastError ?? undefined,
   };
 };
 
-export const createPaymentIntent = action({
+export const submitPayment = action({
   args: {
     items: v.array(orderItemInputValidator),
     customer: customerValidator,
@@ -153,45 +112,40 @@ export const createPaymentIntent = action({
       conversionRate: v.optional(v.number()),
       conversionFeePct: v.optional(v.number()),
     }),
+    paymentMethodId: v.string(),
+    cartSignature: v.optional(v.string()),
+    paymentSource: paymentSourceValidator,
     metadata: v.optional(paymentMetadataValidator),
   },
   returns: v.object({
     paymentIntentId: v.string(),
-    clientSecret: v.string(),
-    orderId: v.id("orders"),
-    paymentId: v.id("payments"),
-    amountMinor: v.number(),
-    currency: v.string(),
     status: paymentStatusValidator,
+    clientSecret: v.optional(v.string()),
+    lastError: v.optional(v.string()),
   }),
-  handler: async (ctx, args): Promise<CreatePaymentIntentResult> => {
-    const userId = await getAuthUserId(ctx);
+  handler: async (ctx, args): Promise<SubmitPaymentResult> => {
+    const authUserId = await getAuthUserId(ctx);
 
-    const pendingPayment: PendingPaymentResult = await ctx.runMutation(
-      internal.paymentMutations.createPendingOrderAndPayment,
+    const draft = await ctx.runMutation(
+      internal.paymentMutations.preparePaymentDraft,
       {
         items: args.items,
         customer: args.customer,
         shipping: args.shipping,
-        userId: userId ?? undefined,
-        paymentCurrency: args.paymentCurrency,
-        displayAmount: args.displayAmount,
+        userId: authUserId ?? undefined,
       },
     );
 
-    const amountMinor = Math.round(pendingPayment.normalizedAmount * 100);
-    if (amountMinor <= 0) {
-      throw new Error("Calculated order total is invalid");
-    }
-
-    const itemsSummary = summarizeItems(pendingPayment.items);
     const metadata: Record<string, string> = {
-      orderId: pendingPayment.orderId.toString(),
-      paymentId: pendingPayment.paymentId.toString(),
       customerEmail: args.customer.email,
       deliveryType: args.shipping.deliveryType,
-      items: itemsSummary,
+      items: summarizeItems(draft.items),
+      amountMinor: draft.amountMinor.toString(),
     };
+
+    if (args.cartSignature) {
+      metadata.cartSignature = args.cartSignature;
+    }
 
     if (args.metadata) {
       for (const [key, value] of Object.entries(args.metadata)) {
@@ -200,31 +154,39 @@ export const createPaymentIntent = action({
     }
 
     const intent = await createStripePaymentIntent({
-      amountMinor,
+      amountMinor: draft.amountMinor,
       currency: args.paymentCurrency,
       receiptEmail: args.customer.email,
       customerName: args.customer.name,
       customerPhone: args.customer.phone,
       shippingAddress: args.shipping.address,
       metadata,
-      description: `Order ${pendingPayment.orderId}`,
+      paymentMethodId: args.paymentMethodId,
+      description: `${args.customer.name} order`,
     });
 
-    await ctx.runMutation(internal.paymentMutations.attachStripeIntentDetails, {
-      paymentId: pendingPayment.paymentId,
+    await ctx.runMutation(internal.paymentMutations.createPaymentRecord, {
+      userId: draft.userId,
       paymentIntentId: intent.paymentIntentId,
-      clientSecret: intent.clientSecret,
       status: intent.status,
+      amountBase: draft.normalizedAmount,
+      amountMinor: draft.amountMinor,
+      currency: args.paymentCurrency,
+      displayAmount: args.displayAmount,
+      customer: args.customer,
+      shipping: args.shipping,
+      items: draft.items,
+      cartSignature: args.cartSignature,
+      paymentSource: args.paymentSource,
+      clientSecret: intent.clientSecret,
+      lastError: intent.lastError,
     });
 
     return {
       paymentIntentId: intent.paymentIntentId,
-      clientSecret: intent.clientSecret,
-      orderId: pendingPayment.orderId,
-      paymentId: pendingPayment.paymentId,
-      amountMinor,
-      currency: args.paymentCurrency,
       status: intent.status,
+      clientSecret: intent.clientSecret,
+      lastError: intent.lastError,
     };
   },
 });
@@ -237,9 +199,9 @@ export const syncPaymentIntentStatus = action({
     v.object({
       paymentIntentId: v.string(),
       status: paymentStatusValidator,
-      orderId: v.id("orders"),
+      orderId: v.optional(v.id("orders")),
       paymentId: v.id("payments"),
-      clientSecret: v.string(),
+      clientSecret: v.optional(v.string()),
       lastError: v.optional(v.string()),
     }),
     v.null(),
@@ -255,25 +217,6 @@ export const syncPaymentIntentStatus = action({
     }
 
     const intent = await retrieveStripePaymentIntent(args.paymentIntentId);
-
-    if (intent.status === "succeeded") {
-      const processed: PaymentMutationResult | null = await ctx.runMutation(
-        internal.paymentMutations.processSuccessfulPayment,
-        {
-          paymentIntentId: args.paymentIntentId,
-          stripeChargeId: intent.latestChargeId,
-        },
-      );
-
-      return {
-        paymentIntentId: intent.paymentIntentId,
-        status: "succeeded",
-        orderId: processed?.orderId ?? paymentRecord.orderId,
-        paymentId: processed?.paymentId ?? paymentRecord._id,
-        clientSecret: intent.clientSecret,
-        lastError: undefined,
-      };
-    }
 
     await ctx.runMutation(internal.paymentMutations.updatePaymentStatus, {
       paymentIntentId: args.paymentIntentId,
@@ -301,6 +244,7 @@ type CreateStripePaymentIntentArgs = {
   shippingAddress: string;
   metadata?: Record<string, string>;
   description?: string;
+  paymentMethodId: string;
 };
 
 const createStripePaymentIntent = async (
@@ -311,9 +255,11 @@ const createStripePaymentIntent = async (
   const intent = await stripe.paymentIntents.create({
     amount: args.amountMinor,
     currency: args.currency,
+    payment_method_types: ["card"],
+    payment_method: args.paymentMethodId,
+    confirm: true,
     automatic_payment_methods: {
-      enabled: true,
-      allow_redirects: "never",
+      enabled: false,
     },
     receipt_email: args.receiptEmail,
     description: args.description,
@@ -338,5 +284,5 @@ const retrieveStripePaymentIntent = async (
     expand: ["latest_charge"],
   });
 
-  return mapIntent(intent);
+  return mapIntent(intent, { expectClientSecret: false });
 };

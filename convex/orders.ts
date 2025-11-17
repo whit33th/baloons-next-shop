@@ -104,7 +104,6 @@ export const createGuest = mutation({
         emailVerificationTime: undefined,
         phone: undefined,
         phoneVerificationTime: undefined,
-        image: undefined,
       });
     }
 

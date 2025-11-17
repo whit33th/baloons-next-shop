@@ -18,7 +18,7 @@ export const loggedInUser = query({
       phone: v.optional(v.string()),
       address: v.optional(v.string()),
       isAdmin: v.optional(v.boolean()),
-      image: v.optional(v.string()),
+      imageFileId: v.optional(v.union(v.id("_storage"), v.string())),
     }),
     v.null(),
   ),
@@ -29,14 +29,17 @@ export const loggedInUser = query({
     }
 
     const user = await ctx.db.get(userId);
+    if (!user) {
+      return null;
+    }
     return {
       _id: userId,
-      name: user?.name ?? undefined,
-      email: user?.email ?? undefined,
-      phone: user?.phone ?? undefined,
-      address: user?.address ?? undefined,
-      isAdmin: user?.isAdmin ?? undefined,
-      image: user?.image ?? undefined,
+      name: user.name ?? undefined,
+      email: user.email ?? undefined,
+      phone: user.phone ?? undefined,
+      address: user.address ?? undefined,
+      isAdmin: user.isAdmin ?? undefined,
+      imageFileId: user.imageFileId ?? undefined,
     };
   },
 });

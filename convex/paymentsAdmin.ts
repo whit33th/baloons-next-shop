@@ -20,7 +20,7 @@ const displayAmountValidator = v.object({
 const paymentRecordValidator = v.object({
   _id: v.id("payments"),
   _creationTime: v.number(),
-  orderId: v.id("orders"),
+  orderId: v.optional(v.id("orders")),
   paymentIntentId: v.optional(v.string()),
   status: paymentStatusValidator,
   amountBase: v.number(),
@@ -48,7 +48,7 @@ type AdminPaymentRow = {
   payment: {
     _id: Id<"payments">;
     _creationTime: number;
-    orderId: Id<"orders">;
+    orderId?: Id<"orders">;
     paymentIntentId?: string;
     status: PaymentStatus;
     amountBase: number;
@@ -93,7 +93,7 @@ export const list = query({
     const rows: AdminPaymentRow[] = [];
 
     for (const payment of payments) {
-      const order = await ctx.db.get(payment.orderId);
+      const order = payment.orderId ? await ctx.db.get(payment.orderId) : null;
 
       rows.push({
         payment: formatPaymentRecord(payment),

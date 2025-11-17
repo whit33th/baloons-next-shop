@@ -1,3 +1,4 @@
+import { getAuthUserId } from "@convex-dev/auth/server";
 import { v } from "convex/values";
 import type { Doc, Id } from "./_generated/dataModel";
 import { type MutationCtx, mutation, query } from "./_generated/server";
@@ -252,7 +253,14 @@ export const list = query({
       return [];
     }
 
-    const { userId } = await requireUser(ctx);
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      return [];
+    }
+
+    if (!(await ctx.db.get(userId))) {
+      return [];
+    }
 
     const items: CartItemResponse[] = [];
     const cartQuery = ctx.db
@@ -433,7 +441,14 @@ export const getTotal = query({
       return { total: 0, itemCount: 0 };
     }
 
-    const { userId } = await requireUser(ctx);
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      return { total: 0, itemCount: 0 };
+    }
+
+    if (!(await ctx.db.get(userId))) {
+      return { total: 0, itemCount: 0 };
+    }
 
     let total = 0;
     let itemCount = 0;

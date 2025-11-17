@@ -1,6 +1,6 @@
 "use client";
 
-import { forwardRef, useState } from "react";
+import { forwardRef, type RefObject, useState } from "react";
 import { BALLOON_COLORS } from "@/constants/colors";
 
 interface PersonalizationOptions {
@@ -14,13 +14,22 @@ interface ProductPersonalizationProps {
   isNameEnabled: boolean;
   isNumberEnabled: boolean;
   onChange: (options: PersonalizationOptions) => void;
+  requireColorSelection?: boolean;
+  colorSectionRef?: RefObject<HTMLDivElement>;
 }
 
 export const ProductPersonalization = forwardRef<
   HTMLInputElement,
   ProductPersonalizationProps
 >(function ProductPersonalization(
-  { availableColors = [], isNameEnabled, isNumberEnabled, onChange },
+  {
+    availableColors = [],
+    isNameEnabled,
+    isNumberEnabled,
+    onChange,
+    requireColorSelection,
+    colorSectionRef,
+  },
   numberInputRef,
 ) {
   const [text, setText] = useState("");
@@ -67,11 +76,12 @@ export const ProductPersonalization = forwardRef<
       <h3 className="text-deep text-xl font-bold tracking-wide">Personalize</h3>
 
       {/* Color Selector */}
-      {availableColors.length > 0 && (
-        <div>
+      {availableColors.length > 1 && (
+        <div ref={colorSectionRef}>
           <div className="mb-3 flex items-center gap-2">
             <span className="text-deep/70 text-xs font-semibold tracking-wider uppercase">
               Color
+              {requireColorSelection && <span className="text-accent">*</span>}
             </span>
             {selectedColor && (
               <span className="text-accent text-xs font-medium">
@@ -115,7 +125,7 @@ export const ProductPersonalization = forwardRef<
               htmlFor="personalization-number"
               className="text-deep/70 text-xs font-semibold tracking-wider uppercase"
             >
-              Number <span className="text-accent">*</span>
+              Number<span className="text-accent">*</span>
             </label>
             <span className="text-deep/50 text-[10px] font-medium">
               Age or special number
@@ -133,13 +143,10 @@ export const ProductPersonalization = forwardRef<
             required
             className={`text-deep h-11 w-full rounded-xl border-2 bg-white px-4 text-sm font-semibold transition-all outline-none focus:ring-2 ${
               !number.trim()
-                ? "border-accent/50 bg-accent/5 focus:border-accent focus:ring-accent/30"
+                ? "border-accent/40 bg-accent/5 focus:border-accent/85 focus:ring-accent/10"
                 : "focus:border-accent focus:ring-accent/30 border-black/20"
             }`}
           />
-          {!number.trim() && (
-            <p className="text-accent mt-1 text-xs font-medium">Required</p>
-          )}
         </div>
       )}
 

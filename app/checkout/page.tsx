@@ -1,8 +1,8 @@
 "use client";
 
 import {
+  CardElement,
   Elements,
-  PaymentElement,
   PaymentRequestButtonElement,
   useElements,
   useStripe,
@@ -10,8 +10,6 @@ import {
 import {
   type Appearance,
   loadStripe,
-  type StripeElementsOptions,
-  type StripePaymentElementChangeEvent,
   type PaymentRequestPaymentMethodEvent,
   type PaymentRequest,
 } from "@stripe/stripe-js";
@@ -79,13 +77,6 @@ const elementsAppearance: Appearance = {
   },
 };
 
-type StripePaymentElementChangeEventWithError =
-  StripePaymentElementChangeEvent & {
-    error?: {
-      message?: string | null;
-    };
-  };
-
 const steps = [
   { id: 1, title: "Details" },
   { id: 2, title: "Payment" },
@@ -118,38 +109,9 @@ type ServerCartItem = {
   product: ProductWithImage;
 };
 
-type PaymentStatus =
-  | "requires_payment_method"
-  | "requires_confirmation"
-  | "requires_action"
-  | "processing"
-  | "requires_capture"
-  | "succeeded"
-  | "canceled"
-  | "failed"
-  | "refunded";
-
-type PaymentSession = {
-  paymentIntentId: string;
-  clientSecret: string;
-  orderId: Id<"orders">;
-  paymentId: Id<"payments">;
-  amountMinor: number;
-  currency: string;
-  status: PaymentStatus;
-  cartSignature: string;
-};
-
 const isServerCartItem = (
   item: ServerCartItem | GuestCartItem,
 ): item is ServerCartItem => "_id" in item;
-
-const createElementsOptions = (
-  clientSecret: string,
-): StripeElementsOptions => ({
-  clientSecret,
-  appearance: elementsAppearance,
-});
 
 type CheckoutItemInput = {
   productId: Id<"products">;
@@ -167,176 +129,98 @@ type CheckoutFormData = AddressFields & {
   phone: string;
 };
 
-type StripePaymentElementProps = {
-  session: PaymentSession;
+type OnlinePaymentFormProps = {
   amountLabel: string;
+  totalMinor: number;
   customer: { name: string; email: string; phone?: string };
-  syncPaymentIntent: (args: { paymentIntentId: string }) => Promise<{
-    paymentIntentId: string;
-    status:
-      | "requires_payment_method"
-      | "requires_confirmation"
-      | "requires_action"
-      | "processing"
-      | "requires_capture"
-      | "succeeded"
-      | "canceled"
-      | "failed"
-      | "refunded";
-    orderId: Id<"orders">;
-    paymentId: Id<"payments">;
-    clientSecret: string;
-    lastError?: string;
-  } | null>;
-  shouldClearGuestCart: boolean;
-  clearGuestCart: () => void;
-  onCompleted: (orderId: Id<"orders">) => void;
+  isBusy: boolean;
+  isAwaitingOrder: boolean;
+  errorMessage: string | null;
+  setErrorMessage: (value: string | null) => void;
+  onSubmit: (args: {
+    paymentMethodId: string;
+    paymentSource: "card" | "payment_request";
+    stripe: import("@stripe/stripe-js").Stripe | null;
+  }) => Promise<void>;
 };
 
-function StripePaymentSection({
-  session,
-  amountLabel,
-  customer,
-  syncPaymentIntent,
-  shouldClearGuestCart,
-  clearGuestCart,
-  onCompleted,
-}: StripePaymentElementProps) {
+function OnlinePaymentForm(props: OnlinePaymentFormProps) {
   return (
     <Elements
-      key={session.paymentIntentId}
       stripe={stripePromise}
-      options={createElementsOptions(session.clientSecret)}
+      options={{ appearance: elementsAppearance }}
     >
-      <StripePaymentElement
-        session={session}
-        amountLabel={amountLabel}
-        customer={customer}
-        syncPaymentIntent={syncPaymentIntent}
-        shouldClearGuestCart={shouldClearGuestCart}
-        clearGuestCart={clearGuestCart}
-        onCompleted={onCompleted}
-      />
+      <OnlinePaymentFormFields {...props} />
     </Elements>
   );
 }
 
-function StripePaymentElement({
-  session,
+function OnlinePaymentFormFields({
   amountLabel,
+  totalMinor,
   customer,
-  syncPaymentIntent,
-  shouldClearGuestCart,
-  clearGuestCart,
-  onCompleted,
-}: StripePaymentElementProps) {
+  isBusy,
+  isAwaitingOrder,
+  errorMessage,
+  setErrorMessage,
+  onSubmit,
+}: OnlinePaymentFormProps) {
   const stripe = useStripe();
   const elements = useElements();
   const [isPaying, setIsPaying] = useState(false);
-  const [elementReady, setElementReady] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [paymentRequest, setPaymentRequest] = useState<PaymentRequest | null>(
     null,
   );
 
-  const finalizePayment = useCallback(async () => {
-    try {
-      const syncResult = await syncPaymentIntent({
-        paymentIntentId: session.paymentIntentId,
-      });
+  const isDisabled = isBusy || isAwaitingOrder || isPaying;
 
-      if (!syncResult) {
-        setErrorMessage(
-          "We couldn’t refresh the payment status. Please try again.",
-        );
-        return;
-      }
-
-      if (syncResult.status === "succeeded") {
-        toast.success("Payment completed successfully.");
-        if (shouldClearGuestCart) {
-          clearGuestCart();
-        }
-        onCompleted(syncResult.orderId);
-        return;
-      }
-
-      if (syncResult.status === "processing") {
-        toast.info("Your bank is still processing the payment.");
-        setErrorMessage("Your bank is still processing the payment.");
-        return;
-      }
-
-      if (syncResult.status === "requires_action") {
-        toast.message("Additional confirmation required", {
-          description: "Follow the Stripe instructions to finish paying.",
-        });
-        setErrorMessage(
-          "Stripe needs extra confirmation. Complete the verification to continue.",
-        );
-        return;
-      }
-
-      if (syncResult.status === "failed") {
-        setErrorMessage(
-          syncResult.lastError ?? "The bank declined this payment attempt.",
-        );
-        return;
-      }
-
-      setErrorMessage(
-        syncResult.lastError ??
-          "The payment isn’t complete yet. Please try again shortly.",
-      );
-    } catch (syncError) {
-      setErrorMessage(
-        syncError instanceof Error
-          ? syncError.message
-          : "We couldn’t sync the payment status.",
-      );
-    }
-  }, [
-    syncPaymentIntent,
-    session.paymentIntentId,
-    shouldClearGuestCart,
-    clearGuestCart,
-    onCompleted,
-  ]);
-
-  const handleConfirm = useCallback(async () => {
+  const handleCardPayment = useCallback(async () => {
     if (!stripe || !elements) {
       toast.error("Stripe is still loading. Please try again in a moment.");
+      return;
+    }
+
+    const cardElement = elements.getElement(CardElement);
+    if (!cardElement) {
+      toast.error("Card field is not ready yet. Please try in a second.");
       return;
     }
 
     setIsPaying(true);
     setErrorMessage(null);
 
-    const result = await stripe.confirmPayment({
-      elements,
-      redirect: "if_required",
-      confirmParams: {
-        payment_method_data: {
-          billing_details: {
-            name: customer.name,
-            email: customer.email,
-            phone: customer.phone,
-          },
+    try {
+      const result = await stripe.createPaymentMethod({
+        type: "card",
+        card: cardElement,
+        billing_details: {
+          name: customer.name,
+          email: customer.email,
+          phone: customer.phone,
         },
-      },
-    });
+      });
 
-    if (result.error) {
+      if (result.error || !result.paymentMethod?.id) {
+        throw new Error(
+          result.error?.message ?? "We couldn’t create a payment method.",
+        );
+      }
+
+      await onSubmit({
+        paymentMethodId: result.paymentMethod.id,
+        paymentSource: "card",
+        stripe,
+      });
+    } catch (error) {
       setErrorMessage(
-        result.error.message ?? "We couldn’t process the payment right now.",
+        error instanceof Error
+          ? error.message
+          : "We couldn’t process the payment right now.",
       );
+    } finally {
       setIsPaying(false);
-      return;
     }
-
-    await finalizePayment();
-    setIsPaying(false);
-  }, [stripe, elements, customer, finalizePayment]);
+  }, [stripe, elements, customer, onSubmit, setErrorMessage]);
 
   useEffect(() => {
     if (!stripe) {
@@ -347,10 +231,10 @@ function StripePaymentElement({
     let isMounted = true;
     const request = stripe.paymentRequest({
       country: STORE_INFO.address.countryCode ?? "AT",
-      currency: session.currency,
+      currency: PAYMENT_CURRENCY,
       total: {
         label: `${STORE_INFO.name} order`,
-        amount: session.amountMinor,
+        amount: totalMinor,
       },
       requestPayerName: true,
       requestPayerEmail: true,
@@ -363,48 +247,18 @@ function StripePaymentElement({
       setIsPaying(true);
       setErrorMessage(null);
       try {
-        const { error: confirmError, paymentIntent } =
-          await stripe.confirmCardPayment(
-            session.clientSecret,
-            {
-              payment_method: event.paymentMethod.id,
-            },
-            { handleActions: false },
-          );
-
-        if (confirmError) {
-          event.complete("fail");
-          setErrorMessage(
-            confirmError.message ??
-              "Express payment failed. Please try another method.",
-          );
-          setIsPaying(false);
-          return;
-        }
-
+        await onSubmit({
+          paymentMethodId: event.paymentMethod.id,
+          paymentSource: "payment_request",
+          stripe,
+        });
         event.complete("success");
-
-        if (paymentIntent?.status === "requires_action") {
-          const { error: actionError } = await stripe.confirmCardPayment(
-            session.clientSecret,
-          );
-          if (actionError) {
-            setErrorMessage(
-              actionError.message ??
-                "We still need additional verification for this card.",
-            );
-            setIsPaying(false);
-            return;
-          }
-        }
-
-        await finalizePayment();
       } catch (error) {
         event.complete("fail");
         setErrorMessage(
           error instanceof Error
             ? error.message
-            : "Express payment failed. Please use the card form.",
+            : "Express payment failed. Please try another method.",
         );
       } finally {
         setIsPaying(false);
@@ -429,19 +283,13 @@ function StripePaymentElement({
       request.off("paymentmethod", handlePaymentMethod);
       setPaymentRequest(null);
     };
-  }, [
-    stripe,
-    session.currency,
-    session.amountMinor,
-    session.clientSecret,
-    finalizePayment,
-  ]);
+  }, [stripe, totalMinor, onSubmit, setErrorMessage]);
 
   return (
     <div className="space-y-4">
       {paymentRequest && (
         <div
-          className={`rounded-2xl border border-gray-200 bg-linear-to-br from-white to-gray-50 p-3 ${isPaying ? "pointer-events-none opacity-70" : ""}`}
+          className={`rounded-2xl border border-gray-200 bg-linear-to-br from-white to-gray-50 p-3 ${isDisabled ? "pointer-events-none opacity-70" : ""}`}
         >
           <p className="text-xs font-semibold tracking-wide text-gray-600 uppercase">
             Express checkout
@@ -464,16 +312,20 @@ function StripePaymentElement({
       )}
 
       <div className="rounded-2xl border border-white/50 bg-white/90 p-4 shadow-sm">
-        <PaymentElement
+        <CardElement
           options={{
-            defaultValues: {},
-            business: {
-              name: "Ballon Boutique",
+            hidePostalCode: true,
+            style: {
+              base: {
+                fontSize: "16px",
+                color: "#111827",
+                "::placeholder": {
+                  color: "#9ca3af",
+                },
+              },
             },
-            wallets: { applePay: "auto", googlePay: "auto", link: "never" },
           }}
-          onReady={() => setElementReady(true)}
-          onChange={(event: StripePaymentElementChangeEventWithError) => {
+          onChange={(event) => {
             if (event.error) {
               setErrorMessage(event.error.message ?? null);
             } else if (errorMessage) {
@@ -485,8 +337,8 @@ function StripePaymentElement({
       <div className="bg-primary/5 flex items-start gap-3 rounded-2xl p-3 text-sm text-gray-700">
         <ShieldCheck className="text-secondary h-5 w-5" />
         <p>
-          Pay with the express buttons above or use the card form. Stripe keeps
-          every method encrypted and PCI compliant.
+          Pay with Apple/Google Pay or the secure card form below. Stripe
+          encrypts every method and keeps it PCI compliant.
         </p>
       </div>
       {errorMessage && (
@@ -494,13 +346,18 @@ function StripePaymentElement({
           {errorMessage}
         </p>
       )}
+      {isAwaitingOrder && (
+        <p className="text-sm font-medium text-gray-600">
+          Payment confirmed — generating your order summary…
+        </p>
+      )}
       <button
         type="button"
-        onClick={handleConfirm}
-        disabled={!stripe || !elementReady || isPaying}
+        onClick={handleCardPayment}
+        disabled={!stripe || isDisabled}
         className="btn-accent w-full rounded-lg py-3 text-base font-semibold disabled:cursor-not-allowed disabled:opacity-60"
       >
-        {isPaying ? "Processing payment..." : `Pay ${amountLabel}`}
+        {isDisabled ? "Processing..." : `Pay ${amountLabel}`}
       </button>
     </div>
   );
@@ -690,7 +547,7 @@ export default function CheckoutPage() {
   const cartTotal = useQuery(api.cart.getTotal);
   const createOrder = useMutation(api.orders.create);
   const createGuestOrder = useMutation(api.orders.createGuest);
-  const createStripePaymentIntent = useAction(api.stripe.createPaymentIntent);
+  const submitStripePayment = useAction(api.stripe.submitPayment);
   const syncStripePaymentIntent = useAction(api.stripe.syncPaymentIntentStatus);
 
   const {
@@ -716,15 +573,17 @@ export default function CheckoutPage() {
   const [pickupDateTime, setPickupDateTime] = useState("");
   const [whatsappConfirmed, setWhatsappConfirmed] = useState(false);
   const [isCashSubmitting, setIsCashSubmitting] = useState(false);
-  const [isCreatingIntent, setIsCreatingIntent] = useState(false);
-  const [paymentSession, setPaymentSession] = useState<PaymentSession | null>(
-    null,
-  );
-  const [lastPreparedSignature, setLastPreparedSignature] = useState<
+  const [isSubmittingPayment, setIsSubmittingPayment] = useState(false);
+  const [paymentError, setPaymentError] = useState<string | null>(null);
+  const [pendingPaymentIntentId, setPendingPaymentIntentId] = useState<
     string | null
   >(null);
-  const [paymentSessionError, setPaymentSessionError] = useState<string | null>(
-    null,
+  const [isAwaitingOrder, setIsAwaitingOrder] = useState(false);
+  const paymentLookup = useQuery(
+    api.paymentsLookup.lookupByIntent,
+    pendingPaymentIntentId
+      ? { paymentIntentId: pendingPaymentIntentId }
+      : "skip",
   );
   const matchedDeliveryCity = useMemo(
     () => matchDeliveryCity(formData.city),
@@ -852,28 +711,6 @@ export default function CheckoutPage() {
     paymentMethod,
   ]);
 
-  useEffect(() => {
-    if (paymentSession && paymentSession.cartSignature !== cartSignature) {
-      setPaymentSession(null);
-    }
-  }, [paymentSession, cartSignature]);
-
-  useEffect(() => {
-    if (!cartSignature) {
-      return;
-    }
-    setLastPreparedSignature(null);
-    setPaymentSessionError(null);
-  }, [cartSignature]);
-
-  useEffect(() => {
-    if (paymentMethod === "cash" && paymentSession) {
-      setPaymentSession(null);
-      setLastPreparedSignature(null);
-      setPaymentSessionError(null);
-    }
-  }, [paymentMethod, paymentSession]);
-
   const handleDeliveryTypeChange = (type: DeliveryType) => {
     setDeliveryType(type);
     if (type === "delivery") {
@@ -900,6 +737,40 @@ export default function CheckoutPage() {
     window.open(whatsappLink, "_blank");
     setWhatsappConfirmed(true);
   };
+
+  useEffect(() => {
+    if (!pendingPaymentIntentId) {
+      return;
+    }
+
+    if (paymentLookup === undefined || paymentLookup === null) {
+      return;
+    }
+
+    if (paymentLookup.status === "failed" && paymentLookup.lastError) {
+      setPaymentError(paymentLookup.lastError);
+      setIsAwaitingOrder(false);
+      setPendingPaymentIntentId(null);
+      toast.error(paymentLookup.lastError);
+      return;
+    }
+
+    if (paymentLookup.orderId) {
+      setIsAwaitingOrder(false);
+      setPendingPaymentIntentId(null);
+      if (!isAuthenticated) {
+        clearGuestCart();
+      }
+      toast.success("Payment confirmed! Redirecting to your receipt.");
+      router.push(`/order-confirmation/${paymentLookup.orderId}`);
+    }
+  }, [
+    paymentLookup,
+    pendingPaymentIntentId,
+    isAuthenticated,
+    clearGuestCart,
+    router,
+  ]);
 
   const handleCashCheckout = useCallback(async () => {
     if (!isFormValid) {
@@ -981,75 +852,141 @@ export default function CheckoutPage() {
     router,
   ]);
 
-  const handleCreatePaymentSession = useCallback(async () => {
-    if (!isFormValid) {
-      toast.error("Fill in the contact details to continue to payment.");
-      return;
-    }
-    if (checkoutItems.length === 0) {
-      toast.error("Your cart is empty.");
-      return;
-    }
+  const handleOnlinePayment = useCallback(
+    async ({
+      paymentMethodId,
+      paymentSource,
+      stripe,
+    }: {
+      paymentMethodId: string;
+      paymentSource: "card" | "payment_request";
+      stripe: import("@stripe/stripe-js").Stripe | null;
+    }) => {
+      if (!isFormValid) {
+        throw new Error("Fill in the contact details to continue to payment.");
+      }
+      if (checkoutItems.length === 0) {
+        throw new Error("Your cart is empty.");
+      }
 
-    setIsCreatingIntent(true);
-    setPaymentSessionError(null);
-    try {
-      const session = await createStripePaymentIntent({
-        items: checkoutItems,
-        customer: {
-          name: formData.customerName,
-          email: formData.customerEmail,
-          phone: formData.phone.trim() || undefined,
-        },
-        shipping: {
-          address: normalizedShippingAddress,
-          deliveryType,
-          pickupDateTime:
-            deliveryType === "pickup" ? pickupDateTime || undefined : undefined,
-          deliveryFee: deliveryCost || undefined,
-        },
-        paymentCurrency: PAYMENT_CURRENCY,
-        displayAmount: {
-          value: Number(total.toFixed(2)),
-          currency: DISPLAY_CURRENCY,
-        },
-        metadata: {
+      setIsSubmittingPayment(true);
+      setPaymentError(null);
+
+      const finalizeSuccessfulPayment = async (paymentIntentId: string) => {
+        const syncResult = await syncStripePaymentIntent({
+          paymentIntentId,
+        });
+
+        if (!syncResult) {
+          throw new Error(
+            "We couldn’t sync the payment status. Please retry shortly.",
+          );
+        }
+
+        if (syncResult.status === "failed") {
+          throw new Error(
+            syncResult.lastError ??
+              "The bank declined this payment attempt. Try another card.",
+          );
+        }
+
+        setPendingPaymentIntentId(paymentIntentId);
+        setIsAwaitingOrder(true);
+      };
+
+      try {
+        const response = await submitStripePayment({
+          items: checkoutItems,
+          customer: {
+            name: formData.customerName,
+            email: formData.customerEmail,
+            phone: formData.phone.trim() || undefined,
+          },
+          shipping: {
+            address: normalizedShippingAddress,
+            deliveryType,
+            pickupDateTime:
+              deliveryType === "pickup"
+                ? pickupDateTime || undefined
+                : undefined,
+            deliveryFee: deliveryCost || undefined,
+          },
+          paymentCurrency: PAYMENT_CURRENCY,
+          displayAmount: {
+            value: Number(total.toFixed(2)),
+            currency: DISPLAY_CURRENCY,
+          },
+          paymentMethodId,
           cartSignature,
-        },
-      });
+          paymentSource,
+        });
 
-      setPaymentSession({ ...session, cartSignature });
-      setPaymentSessionError(null);
-      toast.success("Payment form ready — you can pay now!");
-    } catch (error) {
-      const message =
-        error instanceof Error
-          ? error.message
-          : "We couldn’t prepare the payment. Please try again.";
-      setPaymentSessionError(message);
-      toast.error(message);
-    } finally {
-      setIsCreatingIntent(false);
-      setLastPreparedSignature(cartSignature);
-    }
-  }, [
-    isFormValid,
-    checkoutItems,
-    createStripePaymentIntent,
-    formData.customerName,
-    formData.customerEmail,
-    formData.phone,
-    normalizedShippingAddress,
-    deliveryType,
-    pickupDateTime,
-    deliveryCost,
-    total,
-    cartSignature,
-  ]);
+        if (response.status === "requires_action") {
+          if (!response.clientSecret) {
+            throw new Error(
+              "Stripe requires additional confirmation but no client secret was returned.",
+            );
+          }
+          if (!stripe) {
+            throw new Error(
+              "Stripe is not ready to finalize the additional confirmation.",
+            );
+          }
 
-  const handlePaymentCompleted = (orderId: Id<"orders">) => {
-    router.push(`/order-confirmation/${orderId}`);
-  };
+          const { error } = await stripe.confirmCardPayment(
+            response.clientSecret,
+          );
+          if (error) {
+            throw new Error(
+              error.message ??
+                "We still need additional verification for this card.",
+            );
+          }
+          await finalizeSuccessfulPayment(response.paymentIntentId);
+          toast.success("Payment confirmed. Finalizing your order…");
+          return;
+        }
+
+        if (
+          response.status === "succeeded" ||
+          response.status === "processing"
+        ) {
+          await finalizeSuccessfulPayment(response.paymentIntentId);
+          toast.success("Payment confirmed. Finalizing your order…");
+          return;
+        }
+
+        throw new Error(
+          response.lastError ??
+            "Payment couldn’t be completed. Try another card or method.",
+        );
+      } catch (error) {
+        const message =
+          error instanceof Error
+            ? error.message
+            : "We couldn’t submit the payment. Please try again.";
+        setPaymentError(message);
+        throw new Error(message);
+      } finally {
+        setIsSubmittingPayment(false);
+      }
+    },
+    [
+      isFormValid,
+      checkoutItems,
+      submitStripePayment,
+      formData.customerName,
+      formData.customerEmail,
+      formData.phone,
+      normalizedShippingAddress,
+      deliveryType,
+      pickupDateTime,
+      deliveryCost,
+      total,
+      cartSignature,
+      syncStripePaymentIntent,
+    ],
+  );
 
   const proceedToPaymentStep = () => {
     if (!isFormValid) {
@@ -1134,15 +1071,10 @@ export default function CheckoutPage() {
                   deliveryType={deliveryType}
                   whatsappConfirmed={whatsappConfirmed}
                   isFormValid={isFormValid}
-                  isCreatingIntent={isCreatingIntent}
                   isCashSubmitting={isCashSubmitting}
-                  paymentSession={paymentSession}
-                  cartSignature={cartSignature}
-                  lastPreparedSignature={lastPreparedSignature}
                   setPaymentMethod={handlePaymentMethodChange}
                   handleWhatsAppConfirm={handleWhatsAppConfirm}
                   handleCashCheckout={handleCashCheckout}
-                  handleCreatePaymentSession={handleCreatePaymentSession}
                   returnToDetailsStep={returnToDetailsStep}
                   customer={{
                     name: formData.customerName,
@@ -1150,11 +1082,11 @@ export default function CheckoutPage() {
                     phone: formData.phone,
                   }}
                   total={total}
-                  syncStripePaymentIntent={syncStripePaymentIntent}
-                  clearGuestCart={clearGuestCart}
-                  shouldClearGuestCart={!isAuthenticated}
-                  onCompleted={handlePaymentCompleted}
-                  paymentSessionError={paymentSessionError}
+                  isSubmittingPayment={isSubmittingPayment}
+                  isAwaitingOrder={isAwaitingOrder}
+                  paymentError={paymentError}
+                  setPaymentError={setPaymentError}
+                  handleOnlinePayment={handleOnlinePayment}
                 />
               )}
             </section>
@@ -1431,23 +1363,18 @@ type StepTwoProps = {
   deliveryType: DeliveryType;
   whatsappConfirmed: boolean;
   isFormValid: boolean;
-  isCreatingIntent: boolean;
   isCashSubmitting: boolean;
-  paymentSession: PaymentSession | null;
-  cartSignature: string;
-  lastPreparedSignature: string | null;
   setPaymentMethod: (method: PaymentMethod) => void;
   handleWhatsAppConfirm: () => void;
   handleCashCheckout: () => Promise<void> | void;
-  handleCreatePaymentSession: () => Promise<void> | void;
   returnToDetailsStep: () => void;
   customer: { name: string; email: string; phone: string };
   total: number;
-  syncStripePaymentIntent: StripePaymentElementProps["syncPaymentIntent"];
-  clearGuestCart: () => void;
-  shouldClearGuestCart: boolean;
-  onCompleted: (orderId: Id<"orders">) => void;
-  paymentSessionError: string | null;
+  isSubmittingPayment: boolean;
+  isAwaitingOrder: boolean;
+  paymentError: string | null;
+  setPaymentError: (value: string | null) => void;
+  handleOnlinePayment: OnlinePaymentFormProps["onSubmit"];
 };
 
 function StepTwo({
@@ -1455,46 +1382,19 @@ function StepTwo({
   deliveryType,
   whatsappConfirmed,
   isFormValid,
-  isCreatingIntent,
   isCashSubmitting,
-  paymentSession,
-  cartSignature,
-  lastPreparedSignature,
   setPaymentMethod,
   handleWhatsAppConfirm,
   handleCashCheckout,
-  handleCreatePaymentSession,
   returnToDetailsStep,
   customer,
   total,
-  syncStripePaymentIntent,
-  clearGuestCart,
-  shouldClearGuestCart,
-  onCompleted,
-  paymentSessionError,
+  isSubmittingPayment,
+  isAwaitingOrder,
+  paymentError,
+  setPaymentError,
+  handleOnlinePayment,
 }: StepTwoProps) {
-  useEffect(() => {
-    if (
-      paymentMethod === "full_online" &&
-      isFormValid &&
-      !paymentSession &&
-      !isCreatingIntent &&
-      cartSignature !== lastPreparedSignature &&
-      !paymentSessionError
-    ) {
-      void handleCreatePaymentSession();
-    }
-  }, [
-    paymentMethod,
-    isFormValid,
-    paymentSession,
-    isCreatingIntent,
-    cartSignature,
-    lastPreparedSignature,
-    paymentSessionError,
-    handleCreatePaymentSession,
-  ]);
-
   return (
     <div className="space-y-6">
       <div className="rounded-3xl bg-white p-6 shadow-sm">
@@ -1524,57 +1424,22 @@ function StepTwo({
           <h3 className="text-base font-semibold text-gray-900">
             Secure online checkout
           </h3>
-          {paymentSession ? (
-            <div className="mt-4">
-              <StripePaymentSection
-                session={paymentSession}
-                amountLabel={formatCurrency(total)}
-                customer={{
-                  name: customer.name,
-                  email: customer.email,
-                  phone: customer.phone.trim() || undefined,
-                }}
-                syncPaymentIntent={syncStripePaymentIntent}
-                shouldClearGuestCart={shouldClearGuestCart}
-                clearGuestCart={clearGuestCart}
-                onCompleted={onCompleted}
-              />
-            </div>
-          ) : (
-            <div className="mt-4 rounded-2xl border border-dashed border-gray-200 bg-gray-50/80 p-4">
-              <p className="text-sm font-semibold text-gray-800">
-                Building the Stripe form…
-              </p>
-              {paymentSessionError ? (
-                <>
-                  <p className="mt-1 text-xs text-rose-600">
-                    {paymentSessionError}
-                  </p>
-                  <button
-                    type="button"
-                    onClick={handleCreatePaymentSession}
-                    disabled={isCreatingIntent}
-                    className="btn-accent mt-4 rounded-full px-4 py-2 text-xs font-semibold disabled:cursor-not-allowed disabled:opacity-60"
-                  >
-                    {isCreatingIntent ? "Retrying…" : "Retry now"}
-                  </button>
-                </>
-              ) : (
-                <>
-                  <p className="mt-1 text-xs text-gray-600">
-                    As soon as contact details are valid we initialize card
-                    fields and Apple/Google Pay automatically.
-                  </p>
-                  <div className="mt-4 h-2 w-full overflow-hidden rounded-full bg-white">
-                    <span
-                      className={`bg-secondary block h-full rounded-full ${isCreatingIntent ? "animate-pulse" : ""}`}
-                      style={{ width: isCreatingIntent ? "80%" : "35%" }}
-                    />
-                  </div>
-                </>
-              )}
-            </div>
-          )}
+          <div className="mt-4">
+            <OnlinePaymentForm
+              amountLabel={formatCurrency(total)}
+              totalMinor={Math.round(total * 100)}
+              customer={{
+                name: customer.name,
+                email: customer.email,
+                phone: customer.phone,
+              }}
+              isBusy={isSubmittingPayment}
+              isAwaitingOrder={isAwaitingOrder}
+              errorMessage={paymentError}
+              setErrorMessage={setPaymentError}
+              onSubmit={handleOnlinePayment}
+            />
+          </div>
         </div>
       )}
 
