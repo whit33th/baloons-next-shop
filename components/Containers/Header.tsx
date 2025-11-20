@@ -92,6 +92,8 @@ export function Header() {
             alt="Logo"
             width={30}
             height={30}
+            priority
+            loading="eager"
           />
           Ballon Boutique
         </Link>

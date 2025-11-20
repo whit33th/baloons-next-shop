@@ -21,6 +21,7 @@ interface UserNavProps {
     name?: string;
     email?: string;
     imageFileId?: string;
+    image?: string;
   };
 }
 
@@ -36,9 +37,11 @@ export function UserNav({ user }: UserNavProps) {
         .toUpperCase()
     : "";
 
-  const { avatarUrl } = useConvexAvatarStorage(
+  const avatarUrlFromRecord = currentUser?.image ?? null;
+  const { avatarUrl: avatarUrlFromStorage } = useConvexAvatarStorage(
     currentUser?.imageFileId ?? null,
   );
+  const avatarUrl = avatarUrlFromRecord ?? avatarUrlFromStorage;
   const { signOut } = useAuthActions();
 
   return (

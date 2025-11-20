@@ -15,6 +15,7 @@ const profileResponseValidator = v.object({
   phone: v.optional(v.string()),
   address: v.optional(v.string()),
   imageFileId: v.optional(v.union(v.id("_storage"), v.string())),
+  image: v.optional(v.string()),
 });
 
 type ProfilePatch = {
@@ -23,6 +24,7 @@ type ProfilePatch = {
   phone?: string;
   address?: string;
   imageFileId?: Id<"_storage"> | string;
+  image?: string;
 };
 
 export const updateProfile = mutation({
@@ -31,6 +33,7 @@ export const updateProfile = mutation({
     email: v.optional(v.string()),
     phone: v.optional(v.string()),
     address: v.optional(v.string()),
+    image: v.optional(v.string()),
   },
   returns: profileResponseValidator,
   handler: async (ctx, args) => {
@@ -49,6 +52,9 @@ export const updateProfile = mutation({
     if (args.address !== undefined) {
       patch.address = args.address;
     }
+    if (args.image !== undefined) {
+      patch.image = args.image;
+    }
 
     if (Object.keys(patch).length > 0) {
       await ctx.db.patch(userId, patch);
@@ -63,13 +69,15 @@ export const updateProfile = mutation({
       phone: updatedUser.phone ?? undefined,
       address: updatedUser.address ?? undefined,
       imageFileId: updatedUser.imageFileId ?? undefined,
+      image: updatedUser.image ?? undefined,
     };
   },
 });
 
 export const updateAvatar = mutation({
   args: {
-    imageFileId: v.id("_storage"),
+    imageFileId: v.optional(v.union(v.id("_storage"), v.string())),
+    image: v.optional(v.string()),
   },
   returns: profileResponseValidator,
   handler: async (ctx, args) => {
@@ -77,16 +85,42 @@ export const updateAvatar = mutation({
     const user = await ctx.db.get(userId);
     const previousFileId = user?.imageFileId;
 
-    await ctx.db.patch(userId, {
-      imageFileId: args.imageFileId,
-    });
+    const patch: ProfilePatch = {};
+
+    if (args.imageFileId !== undefined) {
+      patch.imageFileId = args.imageFileId as Id<"_storage"> | string;
+      // Try to resolve a public URL for the storage id and save it to `image` too
+      try {
+        if (isStorageId(args.imageFileId)) {
+          const publicUrl = await ctx.storage.getUrl(
+            args.imageFileId as Id<"_storage">,
+          );
+          patch.image = publicUrl ?? undefined;
+        }
+      } catch (_e) {
+        // ignore errors resolving public url
+      }
+    }
+
+    if (args.image !== undefined) {
+      patch.image = args.image ?? null;
+    }
+
+    if (Object.keys(patch).length > 0) {
+      await ctx.db.patch(userId, patch);
+    }
 
     if (
       previousFileId &&
+      args.imageFileId &&
       previousFileId !== args.imageFileId &&
       isStorageId(previousFileId)
     ) {
-      await ctx.storage.delete(previousFileId);
+      try {
+        await ctx.storage.delete(previousFileId);
+      } catch (_e) {
+        // ignore delete errors
+      }
     }
 
     const updatedUser = (await ctx.db.get(userId)) ?? user;
@@ -98,6 +132,7 @@ export const updateAvatar = mutation({
       phone: updatedUser?.phone ?? undefined,
       address: updatedUser?.address ?? undefined,
       imageFileId: updatedUser?.imageFileId ?? undefined,
+      image: updatedUser?.image ?? undefined,
     };
   },
 });

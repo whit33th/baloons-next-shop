@@ -73,9 +73,8 @@ export default function ProfilePageClient({
   const router = useRouter();
   const searchParams = useSearchParams();
   const _hasRedirected = useRef(false);
-  const { avatarUrl, uploadAvatar } = useConvexAvatarStorage(
-    user?.imageFileId ?? null,
-  );
+  const { avatarUrl: avatarUrlFromStorage, uploadAvatar } =
+    useConvexAvatarStorage(user?.imageFileId ?? null);
 
   const resetFormFromUser = useCallback(() => {
     if (!user) {
@@ -239,7 +238,9 @@ export default function ProfilePageClient({
             isUploadingAvatar={isUploadingAvatar}
             avatarInputRef={avatarInputRef}
             onAvatarFileChange={handleAvatarFileChange}
-            avatarUrl={avatarUrl}
+            // Prefer the `image` field stored on the user document (full URL).
+            // If it's not set, fall back to the storage-derived URL.
+            avatarUrl={user.image ?? avatarUrlFromStorage}
           />
         </motion.section>
 
