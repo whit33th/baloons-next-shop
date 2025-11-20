@@ -1,7 +1,7 @@
-import { api } from "@/convex/_generated/api";
 import { convexAuthNextjsToken } from "@convex-dev/auth/nextjs/server";
-import { preloadQuery, preloadedQueryResult } from "convex/nextjs";
+import { preloadedQueryResult, preloadQuery } from "convex/nextjs";
 import { redirect } from "next/navigation";
+import { api } from "@/convex/_generated/api";
 import AdminPageClient from "./ClientPage";
 
 export default async function AdminPage() {

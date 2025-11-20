@@ -3,7 +3,11 @@ import { v } from "convex/values";
 import type { Doc } from "./_generated/dataModel";
 import { internalMutation, mutation, query } from "./_generated/server";
 import { requireUser } from "./helpers/auth";
-import { attachImageToProduct, getProductCategories } from "./helpers/products";
+import {
+  attachImageToProduct,
+  getProductCategories,
+  type ProductWithImage,
+} from "./helpers/products";
 import { productWithImageValidator } from "./validators/product";
 
 type ProductDoc = Doc<"products">;
@@ -697,6 +701,21 @@ export const get = query({
     }
 
     return attachImageToProduct(ctx, product);
+  },
+});
+
+export const getMany = query({
+  args: { ids: v.array(v.id("products")) },
+  returns: v.array(productWithImageValidator),
+  handler: async (ctx, args) => {
+    const results: ProductWithImage[] = [];
+    for (const id of args.ids) {
+      const product = await ctx.db.get(id);
+      if (!product) continue;
+      const p = await attachImageToProduct(ctx, product);
+      results.push(p);
+    }
+    return results;
   },
 });
 

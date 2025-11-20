@@ -30,11 +30,11 @@ const formatAmount = (amountMinor: number, currency: string) =>
     maximumFractionDigits: 2,
   }).format(amountMinor / 100);
 
-const formatDate = (timestamp: number) =>
+const formatDate = (timestamp: number | Date) =>
   new Intl.DateTimeFormat("en-GB", {
     dateStyle: "medium",
     timeStyle: "short",
-  }).format(timestamp);
+  }).format(typeof timestamp === "number" ? new Date(timestamp) : timestamp);
 
 type PaymentsTabProps = {
   convexPayments: AdminPaymentListItem[];
@@ -54,6 +54,17 @@ export function PaymentsTab({
   onReloadStripe,
 }: PaymentsTabProps) {
   const [activeTab, setActiveTab] = useState<"convex" | "stripe">("convex");
+  const [expandedConvex, setExpandedConvex] = useState<Record<string, boolean>>(
+    {},
+  );
+  const [expandedStripe, setExpandedStripe] = useState<Record<string, boolean>>(
+    {},
+  );
+
+  const toggleConvex = (id: string) =>
+    setExpandedConvex((s) => ({ ...s, [id]: !s[id] }));
+  const toggleStripe = (id: string) =>
+    setExpandedStripe((s) => ({ ...s, [id]: !s[id] }));
 
   const convexSummary = useMemo(() => {
     if (!convexPayments.length) {
@@ -145,68 +156,139 @@ export function PaymentsTab({
           ) : convexPayments.length === 0 ? (
             <EmptyState message="Нет платежей в Convex базе. Как только появятся оплаты, мы покажем их здесь." />
           ) : (
-            <div className="overflow-x-auto rounded-2xl border border-slate-200">
-              <table className="min-w-full divide-y divide-slate-200 text-sm">
-                <thead className="bg-slate-50 text-xs text-slate-500 uppercase">
-                  <tr>
-                    <th className="px-4 py-3 text-left">Payment</th>
-                    <th className="px-4 py-3 text-left">Customer</th>
-                    <th className="px-4 py-3 text-left">Amount</th>
-                    <th className="px-4 py-3 text-left">Status</th>
-                    <th className="px-4 py-3 text-left">Order</th>
-                    <th className="px-4 py-3 text-left">Created</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 bg-white">
-                  {convexPayments.map((item) => (
-                    <tr key={item.payment._id}>
-                      <td className="px-4 py-3 font-mono text-xs text-slate-600">
-                        #{item.payment._id.slice(-8)}
-                      </td>
-                      <td className="px-4 py-3">
+            <>
+              {/* Table for larger screens */}
+              <div className="hidden overflow-x-auto rounded-2xl border border-slate-200 md:block">
+                <table className="min-w-full divide-y divide-slate-200 text-sm">
+                  <thead className="bg-slate-50 text-xs text-slate-500 uppercase">
+                    <tr>
+                      <th className="px-4 py-3 text-left">Payment</th>
+                      <th className="px-4 py-3 text-left">Customer</th>
+                      <th className="px-4 py-3 text-left">Amount</th>
+                      <th className="px-4 py-3 text-left">Status</th>
+                      <th className="px-4 py-3 text-left">Order</th>
+                      <th className="px-4 py-3 text-left">Created</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 bg-white">
+                    {convexPayments.map((item) => (
+                      <tr key={item.payment._id}>
+                        <td className="px-4 py-3 font-mono text-xs text-slate-600">
+                          #{item.payment._id.slice(-8)}
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="font-semibold text-slate-900">
+                            {item.payment.customer.name}
+                          </div>
+                          <div className="text-xs text-slate-500">
+                            {item.payment.customer.email}
+                          </div>
+                        </td>
+                        <td className="px-4 py-3 font-semibold text-slate-900">
+                          {formatAmount(
+                            item.payment.amountMinor,
+                            item.payment.currency.toUpperCase(),
+                          )}
+                        </td>
+                        <td className="px-4 py-3">
+                          <StatusBadge status={item.payment.status} />
+                          {item.payment.lastError && (
+                            <p className="mt-1 text-xs text-rose-600">
+                              {item.payment.lastError}
+                            </p>
+                          )}
+                        </td>
+                        <td className="px-4 py-3">
+                          {item.order ? (
+                            <span
+                              className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${ORDER_STATUS_META[item.order.status]?.tone ?? "bg-slate-100 text-slate-700"}`}
+                            >
+                              {ORDER_STATUS_META[item.order.status]?.label ??
+                                item.order.status}
+                            </span>
+                          ) : (
+                            <span className="text-xs text-slate-400">
+                              No link
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-4 py-3 text-xs text-slate-500">
+                          {formatDate(item.payment._creationTime)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Mobile cards */}
+              <div className="space-y-3 md:hidden">
+                {convexPayments.map((item) => (
+                  <div
+                    key={`convex-${item.payment._id}`}
+                    className="rounded-lg border border-slate-200 bg-white p-3"
+                  >
+                    <div className="flex items-start justify-between">
+                      <div>
                         <div className="font-semibold text-slate-900">
-                          {item.payment.customer.name}
+                          #{item.payment._id.slice(-8)}
                         </div>
                         <div className="text-xs text-slate-500">
                           {item.payment.customer.email}
                         </div>
-                      </td>
-                      <td className="px-4 py-3 font-semibold text-slate-900">
-                        {formatAmount(
-                          item.payment.amountMinor,
-                          item.payment.currency.toUpperCase(),
-                        )}
-                      </td>
-                      <td className="px-4 py-3">
-                        <StatusBadge status={item.payment.status} />
-                        {item.payment.lastError && (
-                          <p className="mt-1 text-xs text-rose-600">
-                            {item.payment.lastError}
-                          </p>
-                        )}
-                      </td>
-                      <td className="px-4 py-3">
-                        {item.order ? (
-                          <span
-                            className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${ORDER_STATUS_META[item.order.status]?.tone ?? "bg-slate-100 text-slate-700"}`}
-                          >
-                            {ORDER_STATUS_META[item.order.status]?.label ??
-                              item.order.status}
-                          </span>
-                        ) : (
-                          <span className="text-xs text-slate-400">
-                            No link
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-4 py-3 text-xs text-slate-500">
-                        {formatDate(item.payment._creationTime)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                        <div className="text-xs text-slate-400">
+                          {formatDate(item.payment._creationTime)}
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="font-semibold">
+                          {formatAmount(
+                            item.payment.amountMinor,
+                            item.payment.currency.toUpperCase(),
+                          )}
+                        </div>
+                        <div className="mt-2">
+                          <StatusBadge status={item.payment.status} />
+                        </div>
+                      </div>
+                    </div>
+                    {item.payment.lastError && (
+                      <div className="mt-2 text-xs text-rose-600">
+                        {item.payment.lastError}
+                      </div>
+                    )}
+                    <div className="mt-3 flex items-center justify-between">
+                      <button
+                        type="button"
+                        className="text-sm text-slate-500"
+                        onClick={() => toggleConvex(item.payment._id)}
+                      >
+                        {expandedConvex[item.payment._id]
+                          ? "Скрыть"
+                          : "Показать детали"}
+                      </button>
+                    </div>
+                    {expandedConvex[item.payment._id] && (
+                      <div className="mt-3 border-t pt-3 text-sm text-slate-700">
+                        <div className="text-xs text-slate-500">Order:</div>
+                        <div className="text-sm text-slate-800">
+                          {item.order
+                            ? (ORDER_STATUS_META[item.order.status]?.label ??
+                              item.order.status)
+                            : "—"}
+                        </div>
+                        <div className="mt-2 text-xs text-slate-500">
+                          Intent ID:
+                        </div>
+                        <div className="text-sm text-slate-800">
+                          {item.payment.paymentIntentId ?? "—"}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </>
           )}
         </TabsContent>
 
@@ -236,52 +318,121 @@ export function PaymentsTab({
           ) : !stripePayments || stripePayments.length === 0 ? (
             <EmptyState message="Stripe API не вернул платежей. Попробуйте обновить список." />
           ) : (
-            <div className="overflow-x-auto rounded-2xl border border-slate-200">
-              <table className="min-w-full divide-y divide-slate-200 text-sm">
-                <thead className="bg-slate-50 text-xs text-slate-500 uppercase">
-                  <tr>
-                    <th className="px-4 py-3 text-left">Intent</th>
-                    <th className="px-4 py-3 text-left">Customer</th>
-                    <th className="px-4 py-3 text-left">Amount</th>
-                    <th className="px-4 py-3 text-left">Status</th>
-                    <th className="px-4 py-3 text-left">Risk</th>
-                    <th className="px-4 py-3 text-left">Created</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 bg-white">
-                  {stripePayments.map((payment) => (
-                    <tr key={payment.id}>
-                      <td className="px-4 py-3 font-mono text-xs text-slate-600">
-                        {payment.id}
-                      </td>
-                      <td className="px-4 py-3">
+            <>
+              {/* Table for larger screens */}
+              <div className="hidden overflow-x-auto rounded-2xl border border-slate-200 md:block">
+                <table className="min-w-full divide-y divide-slate-200 text-sm">
+                  <thead className="bg-slate-50 text-xs text-slate-500 uppercase">
+                    <tr>
+                      <th className="px-4 py-3 text-left">Intent</th>
+                      <th className="px-4 py-3 text-left">Customer</th>
+                      <th className="px-4 py-3 text-left">Amount</th>
+                      <th className="px-4 py-3 text-left">Status</th>
+                      <th className="px-4 py-3 text-left">Risk</th>
+                      <th className="px-4 py-3 text-left">Created</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 bg-white">
+                    {stripePayments.map((payment) => (
+                      <tr key={payment.id}>
+                        <td className="px-4 py-3 font-mono text-xs text-slate-600">
+                          {payment.id}
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="font-semibold text-slate-900">
+                            {payment.customer.name ?? "–"}
+                          </div>
+                          <div className="text-xs text-slate-500">
+                            {payment.customer.email ?? "–"}
+                          </div>
+                        </td>
+                        <td className="px-4 py-3 font-semibold text-slate-900">
+                          {formatAmount(
+                            payment.amountMinor,
+                            payment.currency.toUpperCase(),
+                          )}
+                        </td>
+                        <td className="px-4 py-3">
+                          <StatusBadge status={payment.status} />
+                        </td>
+                        <td className="px-4 py-3 text-xs text-slate-600 capitalize">
+                          {payment.riskLevel ?? "n/a"}
+                        </td>
+                        <td className="px-4 py-3 text-xs text-slate-500">
+                          {formatDate(payment.created)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Mobile cards */}
+              <div className="space-y-3 md:hidden">
+                {stripePayments.map((payment) => (
+                  <div
+                    key={`stripe-${payment.id}`}
+                    className="rounded-lg border border-slate-200 bg-white p-3"
+                  >
+                    <div className="flex items-start justify-between">
+                      <div>
                         <div className="font-semibold text-slate-900">
                           {payment.customer.name ?? "–"}
                         </div>
                         <div className="text-xs text-slate-500">
                           {payment.customer.email ?? "–"}
                         </div>
-                      </td>
-                      <td className="px-4 py-3 font-semibold text-slate-900">
-                        {formatAmount(
-                          payment.amountMinor,
-                          payment.currency.toUpperCase(),
-                        )}
-                      </td>
-                      <td className="px-4 py-3">
-                        <StatusBadge status={payment.status} />
-                      </td>
-                      <td className="px-4 py-3 text-xs text-slate-600 capitalize">
-                        {payment.riskLevel ?? "n/a"}
-                      </td>
-                      <td className="px-4 py-3 text-xs text-slate-500">
-                        {formatDate(payment.created * 1000)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                        <div className="text-xs text-slate-400">
+                          {formatDate(payment.created)}
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="font-semibold">
+                          {formatAmount(
+                            payment.amountMinor,
+                            payment.currency.toUpperCase(),
+                          )}
+                        </div>
+                        <div className="mt-2 text-xs text-slate-600 capitalize">
+                          {payment.riskLevel ?? "n/a"}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="mt-3 flex items-center justify-between">
+                      <button
+                        type="button"
+                        className="text-sm text-slate-500"
+                        onClick={() => toggleStripe(payment.id)}
+                      >
+                        {expandedStripe[payment.id]
+                          ? "Скрыть"
+                          : "Показать детали"}
+                      </button>
+                    </div>
+                    {expandedStripe[payment.id] && (
+                      <div className="mt-3 border-t pt-3 text-sm text-slate-700">
+                        <div className="text-xs text-slate-500">Intent ID:</div>
+                        <div className="text-sm text-slate-800">
+                          {payment.id}
+                        </div>
+                        <div className="mt-2 text-xs text-slate-500">
+                          Source type:
+                        </div>
+                        <div className="text-sm text-slate-800">
+                          {payment.sourceType ?? "—"}
+                        </div>
+                        <div className="mt-2 text-xs text-slate-500">
+                          Device:
+                        </div>
+                        <div className="text-sm text-slate-800">
+                          {payment.device ?? "—"}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </>
           )}
         </TabsContent>
       </Tabs>

@@ -38,6 +38,7 @@
       "react": "recommended"
     }
   },
+  "css": {},
   "assist": {
     "actions": {
       "source": {

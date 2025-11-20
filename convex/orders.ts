@@ -48,6 +48,13 @@ export const createGuest = mutation({
       v.object({
         productId: v.id("products"),
         quantity: v.number(),
+        personalization: v.optional(
+          v.object({
+            text: v.optional(v.string()),
+            color: v.optional(v.string()),
+            number: v.optional(v.string()),
+          }),
+        ),
       }),
     ),
   },
@@ -76,12 +83,16 @@ export const createGuest = mutation({
         throw new Error(`${product.name} is out of stock`);
       }
 
-      orderItems.push({
+      const orderItem = {
         productId: item.productId,
         productName: product.name,
         quantity: item.quantity,
         price: product.price,
-      });
+        personalization: item.personalization ?? undefined,
+        productImageUrl: product.imageUrls?.[0] ?? null,
+      } as OrderItem;
+
+      orderItems.push(orderItem);
 
       totalAmount += product.price * item.quantity;
 
@@ -175,12 +186,17 @@ export const create = mutation({
         throw new Error(`${product.name} is out of stock`);
       }
 
-      orderItems.push({
+      const orderItem = {
         productId: cartItem.productId,
         productName: product.name,
         quantity: cartItem.quantity,
         price: product.price,
-      });
+        // Preserve personalization from the cart so order shows color/text/number
+        personalization: cartItem.personalization ?? undefined,
+        productImageUrl: product.imageUrls?.[0] ?? null,
+      } as OrderItem;
+
+      orderItems.push(orderItem);
 
       totalAmount += product.price * cartItem.quantity;
 

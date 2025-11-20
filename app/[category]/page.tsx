@@ -20,7 +20,6 @@ export default async function CategoryLandingPage({
   params: Promise<{ category: string }>;
 }) {
   const { category } = await params;
-  console.log(params);
   const groupValue = SLUG_TO_CATEGORY_GROUP[category];
   if (!groupValue) {
     console.log(params);

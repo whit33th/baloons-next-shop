@@ -1,5 +1,21 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  type Preloaded,
+  useAction,
+  useMutation,
+  usePreloadedQuery,
+} from "convex/react";
+import { useQuery } from "convex-helpers/react/cache";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  type FieldErrors,
+  type Path,
+  type Resolver,
+  useForm,
+} from "react-hook-form";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -12,23 +28,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { CategoryGroupValue } from "@/constants/categories";
 import { PRODUCT_CATEGORY_GROUPS } from "@/constants/categories";
 import { uploadImageKitFile } from "@/lib/imagekitUploadClient";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useQuery } from "convex-helpers/react/cache";
-import {
-  Preloaded,
-  useAction,
-  useMutation,
-  usePreloadedQuery,
-} from "convex/react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { type FieldErrors, type Path, useForm } from "react-hook-form";
-import { toast } from "sonner";
 import { api } from "../../convex/_generated/api";
 import type { Doc } from "../../convex/_generated/dataModel";
 import {
   type AdminPaymentListItem,
   EmptyProductsState,
   ORDER_STATUS_FILTERS,
+  OrderDetails,
   OrderMetricsCards,
   type OrderStatus,
   OrdersTable,
@@ -39,9 +45,9 @@ import {
   ProductForm,
   type ProductFormValues,
   ProductMetricsCard,
+  productFormSchema,
   type StripePaymentListItem,
   type UploadProgressState,
-  productFormSchema,
 } from "./_components";
 
 const DEFAULT_CATEGORY_GROUP = PRODUCT_CATEGORY_GROUPS[0];
@@ -125,8 +131,8 @@ export default function AdminPageClient({
   }) as AdminPaymentListItem[] | undefined;
 
   const form = useForm<ProductFormValues>({
-    resolver: zodResolver(productFormSchema),
     defaultValues: buildProductDefaultValues(),
+    resolver: zodResolver(productFormSchema) as Resolver<ProductFormValues>,
   });
 
   const categoryGroup = form.watch("categoryGroup");
@@ -200,6 +206,9 @@ export default function AdminPageClient({
   const convexPayments = paymentsResult ?? [];
   const paymentsLoading = paymentsResult === undefined;
 
+  const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
+  const detailsRef = useRef<HTMLDivElement | null>(null);
+
   const refreshStripePayments = useCallback(async () => {
     if (!isAdmin) {
       return;
@@ -227,6 +236,26 @@ export default function AdminPageClient({
     }
     void refreshStripePayments();
   }, [isAdmin, refreshStripePayments]);
+
+  useEffect(() => {
+    if (activeTab !== "orders") {
+      setSelectedOrderId(null);
+    }
+  }, [activeTab]);
+
+  useEffect(() => {
+    if (!selectedOrderId) return;
+    // Scroll the aside/details panel into view when an order is selected
+    // Apply a 56px offset so the panel sits slightly below the top (e.g., for a fixed header)
+    const el = detailsRef.current;
+    if (!el || typeof window === "undefined") return;
+    const offset = 56;
+    const targetY = Math.max(
+      0,
+      el.getBoundingClientRect().top + window.scrollY - offset,
+    );
+    window.scrollTo({ top: targetY, behavior: "smooth" });
+  }, [selectedOrderId]);
 
   const productMetrics = useMemo(() => {
     if (!products.length) {
@@ -257,16 +286,33 @@ export default function AdminPageClient({
 
   const orderMetrics = useMemo(() => {
     if (!orders.length) {
-      return { total: 0, pending: 0, delivered: 0, revenue: 0 };
+      return {
+        total: 0,
+        pending: 0,
+        confirmed: 0,
+        shipped: 0,
+        delivered: 0,
+        revenue: 0,
+      };
     }
 
-    const pending = orders.filter((order) => order.status === "pending").length;
-    const delivered = orders.filter(
-      (order) => order.status === "delivered",
-    ).length;
-    const revenue = orders.reduce((acc, order) => acc + order.totalAmount, 0);
+    const pending = orders.filter((o) => o.status === "pending").length;
+    const confirmed = orders.filter((o) => o.status === "confirmed").length;
+    const shipped = orders.filter((o) => o.status === "shipped").length;
+    const delivered = orders.filter((o) => o.status === "delivered").length;
+    const revenue = orders.reduce(
+      (acc, o) => acc + (o.grandTotal ?? o.totalAmount),
+      0,
+    );
 
-    return { total: orders.length, pending, delivered, revenue };
+    return {
+      total: orders.length,
+      pending,
+      confirmed,
+      shipped,
+      delivered,
+      revenue,
+    };
   }, [orders]);
 
   const handleSelectImages = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -751,7 +797,39 @@ export default function AdminPageClient({
                 </Select>
               </div>
 
-              <OrdersTable orders={orders} isLoading={ordersLoading} />
+              {/* Two-column layout: orders list + details panel */}
+              <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_420px]">
+                <div className="order-2 lg:order-1">
+                  <OrdersTable
+                    orders={orders}
+                    isLoading={ordersLoading}
+                    onSelect={(id) =>
+                      setSelectedOrderId((prev) => (prev === id ? null : id))
+                    }
+                    selectedOrderId={selectedOrderId}
+                  />
+                </div>
+                <div className="order-1 lg:order-2" ref={detailsRef}>
+                  {selectedOrderId ? (
+                    (() => {
+                      const selected = orders.find(
+                        (o) => o._id === selectedOrderId,
+                      );
+                      return selected ? (
+                        <OrderDetails order={selected} />
+                      ) : (
+                        <div className="rounded-2xl border border-slate-200 bg-white/80 p-5 text-sm text-slate-500">
+                          Заказ не найден.
+                        </div>
+                      );
+                    })()
+                  ) : (
+                    <div className="rounded-2xl border border-slate-200 bg-white/80 p-5 text-sm text-slate-500">
+                      Выберите заказ в таблице, чтобы увидеть все детали.
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           </TabsContent>
 

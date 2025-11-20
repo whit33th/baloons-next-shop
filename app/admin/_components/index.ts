@@ -1,5 +1,6 @@
 export { EmptyProductsState } from "./EmptyProductsState";
 export { ImageUpload } from "./ImageUpload";
+export { OrderDetails } from "./OrderDetails";
 export { OrderMetricsCards } from "./OrderMetricsCards";
 export { OrdersTable } from "./OrdersTable";
 export { PaymentsTab } from "./PaymentsTab";

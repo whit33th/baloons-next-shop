@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useEffect, useRef } from "react";
 import {
   DropdownMenu,
@@ -118,7 +118,6 @@ export function Header() {
             <IconButton Icon={ShieldCheck} ariaLabel="Admin" />
           </Link>
         ) : null}
-        ё
         <AuthAction />
         <Link href="/cart" className="relative">
           <IconButton Icon={ShoppingBag} ariaLabel="Open cart" />
