@@ -1,11 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  type Preloaded,
-  useMutation,
-  usePreloadedQuery,
-} from "convex/react";
+import { type Preloaded, useMutation, usePreloadedQuery } from "convex/react";
 import { motion } from "motion/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -26,9 +22,7 @@ import { STORE_INFO } from "@/constants/config";
 import { COURIER_DELIVERY_CITIES } from "@/constants/delivery";
 import { api } from "@/convex/_generated/api";
 import { useConvexAvatarStorage } from "@/hooks/useConvexAvatarStorage";
-import {
-  createEmptyAddressFields,
-} from "@/lib/address";
+import { createEmptyAddressFields } from "@/lib/address";
 import { AvatarPanel } from "./_components/AvatarPanel";
 import { InfoTile } from "./_components/InfoTile";
 import { OrdersPanel } from "./_components/OrdersPanel";
@@ -81,9 +75,13 @@ const profileDetailsSchema = z.object({
     .string()
     .optional()
     .refine(
-      (val) => !val || val.trim().length === 0 || phoneRegex.test(val.trim()),
+      (val) => {
+        if (!val || val.trim().length === 0) return true;
+        const trimmed = val.trim();
+        return trimmed.length <= 30 && phoneRegex.test(trimmed);
+      },
       {
-        message: "Enter a valid phone number or leave the field empty.",
+        message: "Phone number must be 6-30 characters and valid format.",
       },
     ),
   address: z
@@ -477,6 +475,7 @@ export default function ProfilePageClient({
                       {...form.register("name")}
                       className={fieldInputClass}
                       placeholder="Jane Balloon"
+                      maxLength={100}
                     />
                     {form.formState.errors.name && (
                       <p className="mt-1 text-xs text-red-600">
@@ -492,6 +491,7 @@ export default function ProfilePageClient({
                       readOnly
                       className={`${fieldInputClass} cursor-not-allowed opacity-60`}
                       placeholder="you@example.com"
+                      maxLength={100}
                     />
                     {form.formState.errors.email && (
                       <p className="mt-1 text-xs text-red-600">
@@ -505,6 +505,7 @@ export default function ProfilePageClient({
                       {...form.register("phone")}
                       className={fieldInputClass}
                       placeholder="Include country code"
+                      maxLength={30}
                     />
                     {form.formState.errors.phone && (
                       <p className="mt-1 text-xs text-red-600">
@@ -518,6 +519,7 @@ export default function ProfilePageClient({
                       {...form.register("address.streetAddress")}
                       className={fieldInputClass}
                       placeholder="Mariahilfer Str. 10"
+                      maxLength={200}
                     />
                     {form.formState.errors.address?.streetAddress && (
                       <p className="mt-1 text-xs text-red-600">
@@ -550,6 +552,7 @@ export default function ProfilePageClient({
                       })}
                     </div>
                     <input
+                      maxLength={100}
                       className="sr-only"
                       {...form.register("address.city")}
                     />
@@ -565,6 +568,7 @@ export default function ProfilePageClient({
                       {...form.register("address.postalCode")}
                       className={fieldInputClass}
                       placeholder={STORE_INFO.address.postalCode}
+                      maxLength={10}
                     />
                     {form.formState.errors.address?.postalCode && (
                       <p className="mt-1 text-xs text-red-600">
@@ -579,6 +583,7 @@ export default function ProfilePageClient({
                       rows={3}
                       className={fieldTextareaClass}
                       placeholder="Ring the bell twice, leave at reception, etc."
+                      maxLength={500}
                     />
                     {form.formState.errors.address?.deliveryNotes && (
                       <p className="mt-1 text-xs text-red-600">

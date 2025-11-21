@@ -283,6 +283,7 @@ const checkoutDetailsSchema = z
     phone: z
       .string()
       .optional()
+
       .refine(
         (value) => !value || phoneRegex.test(value.trim()),
         "Enter a valid phone number or leave the field empty.",
@@ -1287,16 +1288,16 @@ export default function CheckoutPage() {
       setIsCashSubmitting(false);
     }
   }, [
-    form, 
-    paymentMethod, 
-    whatsappConfirmed, 
-    itemsToDisplay, 
-    isAuthenticated, 
-    createOrder, 
-    createGuestOrder, 
-    guestItems, 
-    clearGuestCart, 
-    router
+    form,
+    paymentMethod,
+    whatsappConfirmed,
+    itemsToDisplay,
+    isAuthenticated,
+    createOrder,
+    createGuestOrder,
+    guestItems,
+    clearGuestCart,
+    router,
   ]);
 
   const handleOnlinePayment = useCallback(
@@ -1654,6 +1655,7 @@ function StepOne({
                       placeholder="e.g., Anna Mayer"
                       autoComplete="name"
                       className="rounded-xl border-gray-200 px-4 py-3 text-base"
+                      maxLength={100}
                     />
                   </FormControl>
                   <FormMessage />
@@ -1678,6 +1680,7 @@ function StepOne({
                       className={`px-4 py-3 text-base ${
                         isEmailReadOnly ? "bg-gray-50 text-gray-500" : ""
                       }`}
+                      maxLength={100}
                     />
                   </FormControl>
 
@@ -1700,6 +1703,7 @@ function StepOne({
                       placeholder="Include country code"
                       autoComplete="tel"
                       className="rounded-xl border-gray-200 px-4 py-3 text-base"
+                      maxLength={30}
                     />
                   </FormControl>
                   <FormMessage />
@@ -1820,6 +1824,7 @@ function StepOne({
                         placeholder="Mariahilfer Str. 10"
                         autoComplete="address-line1"
                         className="rounded-xl border-gray-200 px-4 py-3 text-base"
+                        maxLength={200}
                       />
                     </FormControl>
                     <FormMessage />
@@ -1841,6 +1846,7 @@ function StepOne({
                         placeholder="1070"
                         autoComplete="postal-code"
                         className="rounded-xl border-gray-200 px-4 py-3 text-base"
+                        maxLength={10}
                       />
                     </FormControl>
                     <FormMessage />
@@ -1863,6 +1869,7 @@ function StepOne({
                         placeholder="Door code, floor, or pickup preferences"
                         autoComplete="address-line2"
                         className="rounded-2xl border-gray-200 px-4 py-3 text-sm"
+                        maxLength={500}
                       />
                     </FormControl>
                     <FormMessage />
