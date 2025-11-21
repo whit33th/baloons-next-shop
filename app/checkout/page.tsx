@@ -29,12 +29,7 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import type { ChangeEvent, FocusEvent } from "react";
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { type Resolver, type UseFormReturn, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -924,7 +919,7 @@ export default function CheckoutPage() {
         !currentValue ||
         (typeof currentValue === "string" && !currentValue.trim())
       ) {
-        form.setValue(field, nextValue, {
+        form.setValue(field, nextValue as never, {
           shouldDirty: false,
           shouldValidate: false,
         });
@@ -1767,7 +1762,7 @@ function StepOne({
                   }
 
                   const selectedDate = new Date(value);
-                  
+
                   // If selected date is before minimum, set to minimum
                   if (selectedDate < minDate) {
                     field.onChange(minDateTime);

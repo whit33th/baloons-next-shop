@@ -376,14 +376,14 @@ export default function CheckoutConfirmantPage() {
               }
             }, 900);
           }}
-          className="w-full rounded-2xl border border-gray-200 py-3 font-semibold text-gray-900 transition hover:border-gray-300"
+          className="w-full rounded-2xl border border-gray-200 py-3 font-semibold text-gray-900 shadow transition hover:border-gray-300"
         >
           Download PDF
         </button>
         <button
           type="button"
           onClick={handlePrimaryAction}
-          className="btn-accent flex w-full items-center justify-center gap-2 rounded-2xl px-3 py-3 font-semibold"
+          className="btn-accent flex w-full items-center justify-center gap-2 rounded-2xl px-3 py-3 font-semibold shadow"
         >
           Continue shopping
           <ArrowRight className="h-4 w-4" />
