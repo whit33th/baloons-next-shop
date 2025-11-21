@@ -136,3 +136,86 @@ export const updateAvatar = mutation({
     };
   },
 });
+
+export const deleteAccount = mutation({
+  args: {},
+  returns: v.object({ deleted: v.boolean() }),
+  handler: async (ctx) => {
+    const { userId, user } = await requireUser(ctx);
+
+    // Attempt to delete any uploaded avatar from storage
+    try {
+      const previousFileId = (user as any)?.imageFileId;
+      if (previousFileId && isStorageId(previousFileId)) {
+        try {
+          await ctx.storage.delete(previousFileId as Id<"_storage">);
+        } catch (_e) {
+          // ignore storage delete errors
+        }
+      }
+    } catch (_e) {
+      // ignore
+    }
+
+    // Remove authentication-related records tied to this user
+    // Helper to run async map operations
+    const asyncMap = async <T, R>(arr: T[], fn: (v: T) => Promise<R>) =>
+      Promise.all(arr.map(fn));
+
+    try {
+      const [authSessions, authAccounts] = await Promise.all([
+        ctx.db
+          .query("authSessions")
+          .withIndex("userId", (q) => q.eq("userId", userId))
+          .collect(),
+        ctx.db
+          .query("authAccounts")
+          .withIndex("userId", (q) => q.eq("userId", userId))
+          .collect(),
+      ]);
+
+      const [authRefreshTokens, authVerificationCodes, authVerifiers] =
+        await Promise.all([
+          (
+            await asyncMap(authSessions, async (session: any) => {
+              return ctx.db
+                .query("authRefreshTokens")
+                .withIndex("sessionId", (q) => q.eq("sessionId", session._id))
+                .collect();
+            })
+          ).flat(),
+          (
+            await asyncMap(authAccounts, async (account: any) => {
+              return ctx.db
+                .query("authVerificationCodes")
+                .withIndex("accountId", (q) => q.eq("accountId", account._id))
+                .collect();
+            })
+          ).flat(),
+          (
+            await asyncMap(authSessions, async (session: any) => {
+              return ctx.db
+                .query("authVerifiers")
+                .withIndex("sessionId", (q) => q.eq("sessionId", session._id))
+                .collect();
+            })
+          ).flat(),
+        ]);
+
+      await Promise.all([
+        asyncMap(authSessions, (session: any) => ctx.db.delete(session._id)),
+        asyncMap(authAccounts, (account: any) => ctx.db.delete(account._id)),
+        asyncMap(authRefreshTokens, (token: any) => ctx.db.delete(token._id)),
+        asyncMap(authVerificationCodes, (code: any) => ctx.db.delete(code._id)),
+        asyncMap(authVerifiers, (verifier: any) => ctx.db.delete(verifier._id)),
+      ]);
+    } catch (_e) {
+      // If anything goes wrong while cleaning auth records, continue with user deletion
+    }
+
+    // Finally, remove the user document
+    await ctx.db.delete(userId);
+
+    return { deleted: true };
+  },
+});

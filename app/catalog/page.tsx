@@ -3,7 +3,7 @@ import CatalogPage from "./ClientPage";
 
 export default function page() {
   return (
-    <Suspense fallback={<div>loading</div>}>
+    <Suspense>
       <CatalogPage />
     </Suspense>
   );

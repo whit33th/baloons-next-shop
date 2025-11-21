@@ -1221,6 +1221,19 @@ export default function CheckoutPage() {
       return;
     }
     setCurrentStep(2);
+
+    // Smooth scroll to the top of the checkout form container
+    if (typeof window !== "undefined") {
+      try {
+        const mainEl = document.querySelector("main.container");
+        const top = mainEl
+          ? mainEl.getBoundingClientRect().top + window.scrollY
+          : 0;
+        window.scrollTo({ top, behavior: "smooth" });
+      } catch (_e) {
+        // fail silently if scrolling is not available
+      }
+    }
   };
 
   const returnToDetailsStep = () => {

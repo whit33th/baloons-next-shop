@@ -22,7 +22,6 @@ import type * as payments from "../payments.js";
 import type * as paymentsAdmin from "../paymentsAdmin.js";
 import type * as paymentsLookup from "../paymentsLookup.js";
 import type * as products from "../products.js";
-import type * as router from "../router.js";
 import type * as storage from "../storage.js";
 import type * as stripe from "../stripe.js";
 import type * as stripeWebhook from "../stripeWebhook.js";
@@ -52,7 +51,6 @@ declare const fullApi: ApiFromModules<{
   paymentsAdmin: typeof paymentsAdmin;
   paymentsLookup: typeof paymentsLookup;
   products: typeof products;
-  router: typeof router;
   storage: typeof storage;
   stripe: typeof stripe;
   stripeWebhook: typeof stripeWebhook;

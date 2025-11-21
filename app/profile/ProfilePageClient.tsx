@@ -2,9 +2,19 @@
 
 import { type Preloaded, useMutation, usePreloadedQuery } from "convex/react";
 import { motion } from "motion/react";
+import type { Route } from "next";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { STORE_INFO } from "@/constants/config";
 import { COURIER_DELIVERY_CITIES } from "@/constants/delivery";
 import { api } from "@/convex/_generated/api";
@@ -58,10 +68,13 @@ export default function ProfilePageClient({
   const orders = usePreloadedQuery(preloadedOrders);
   const updateProfile = useMutation(api.users.updateProfile);
   const updateAvatar = useMutation(api.users.updateAvatar);
+  const deleteAccount = useMutation(api.users.deleteAccount as any);
 
   const [activeTab, setActiveTab] = useState<TabId>("profile");
   const [isEditing, setIsEditing] = useState(false);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [isDeletingAccount, setIsDeletingAccount] = useState(false);
   const [formData, setFormData] = useState<ProfileFormData>(() => ({
     name: "",
     email: "",
@@ -270,9 +283,9 @@ export default function ProfilePageClient({
                   // the query param entirely.
                   try {
                     if (tab.id === "profile") {
-                      void router.replace("/profile");
+                      router.replace("/profile");
                     } else {
-                      void router.replace(`?tab=${tab.id}`);
+                      router.replace(`?tab=${tab.id}`);
                     }
                   } catch (_e) {
                     // ignore router errors
@@ -562,6 +575,82 @@ export default function ProfilePageClient({
               </div>
 
               <PreferencesPanel />
+
+              <div className="mt-6 border-t pt-6">
+                <h3 className="text-deep text-lg font-semibold">Danger zone</h3>
+                <p className={`text-sm ${palette.mutedText} mt-1`}>
+                  Permanently delete your account and all personal data. This
+                  action cannot be undone.
+                </p>
+
+                <div className="mt-4">
+                  <Button
+                    variant="destructive"
+                    onClick={() => setIsDeleteOpen(true)}
+                  >
+                    Delete account
+                  </Button>
+                </div>
+
+                <Dialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
+                  <DialogContent>
+                    <DialogHeader className="space-y-2">
+                      <DialogTitle>Delete account?</DialogTitle>
+                      <DialogDescription>
+                        This will permanently delete your account and cannot be
+                        undone. Are you sure you want to continue?
+                      </DialogDescription>
+                    </DialogHeader>
+
+                    <DialogFooter>
+                      <Button
+                        variant="ghost"
+                        onClick={() => setIsDeleteOpen(false)}
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        onClick={async () => {
+                          setIsDeletingAccount(true);
+                          try {
+                            await deleteAccount({});
+                            // Очищаем все хранилища
+                            localStorage.clear();
+                            sessionStorage.clear();
+                            document.cookie.split(";").forEach((c) => {
+                              document.cookie = c
+                                .replace(/^ +/, "")
+                                .replace(
+                                  /=.*/,
+                                  "=;expires=" +
+                                    new Date().toUTCString() +
+                                    ";path=/",
+                                );
+                              window.location.replace("/auth" as Route);
+                              window.location.reload();
+                            });
+                            toast.success("Account deleted");
+                            router.replace("/"); // или другой редирект
+                          } catch (e) {
+                            toast.error(
+                              e instanceof Error
+                                ? e.message
+                                : "Failed to delete account",
+                            );
+                          } finally {
+                            setIsDeletingAccount(false);
+                            setIsDeleteOpen(false);
+                          }
+                        }}
+                        disabled={isDeletingAccount}
+                      >
+                        {isDeletingAccount ? "Deleting..." : "Delete account"}
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              </div>
             </motion.div>
           ) : null}
         </section>

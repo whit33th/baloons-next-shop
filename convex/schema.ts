@@ -197,6 +197,12 @@ const applicationTables = {
 
 export default defineSchema({
   ...authTables,
+  authSessions: authTables.authSessions,
+  authAccounts: authTables.authAccounts.index("userId", ["userId"]),
+  authRefreshTokens: authTables.authRefreshTokens,
+  authVerificationCodes: authTables.authVerificationCodes,
+  authVerifiers: authTables.authVerifiers.index("sessionId", ["sessionId"]),
+  authRateLimits: authTables.authRateLimits,
   users: usersTable,
   ...applicationTables,
 });

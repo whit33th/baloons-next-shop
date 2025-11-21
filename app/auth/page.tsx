@@ -1,11 +1,11 @@
 "use client";
 
 import { useAuthActions } from "@convex-dev/auth/react";
+import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import { Label } from "@radix-ui/react-label";
 import { ConvexError } from "convex/values";
-import { ArrowLeft, Eye, EyeOff, Loader2 } from "lucide-react";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
 import Image from "next/image";
-import Link from "next/link";
 import type React from "react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -61,20 +61,37 @@ export default function AuthPage() {
             <Image
               src="/bg.png"
               fill
+              sizes="(max-width: 1024px) 100vw, 50vw"
               alt="Ballon Boutique Editorial"
               className="h-full w-full object-cover transition-transform duration-700 hover:scale-105"
             />
-            <div className="absolute inset-0 bg-black/10" />{" "}
+            <DotLottieReact
+              className="tra absolute bottom-0 left-0 z-10 h-auto w-full drop-shadow-xl"
+              src="https://lottie.host/b3574b60-c6c8-4eee-9992-ee4e70017a18/BFK8bAk4NW.lottie"
+              loop
+              autoplay
+            />
+            <div>
+              <div
+                aria-hidden
+                className="pointer-events-none absolute top-0 right-0 left-0 h-30 bg-linear-to-b from-black/10 to-transparent"
+              />
+              <div
+                aria-hidden
+                className="pointer-events-none absolute right-0 bottom-0 left-0 h-30 bg-linear-to-t from-black/10 to-transparent"
+              />
+              <div
+                aria-hidden
+                className="pointer-events-none absolute top-0 left-0 h-full w-30 bg-linear-to-r from-black/10 to-transparent"
+              />
+              <div
+                aria-hidden
+                className="pointer-events-none absolute top-0 right-0 h-full w-30 bg-linear-to-l from-black/10 to-transparent"
+              />
+            </div>
             {/* Very subtle overlay */}
             {/* Content Overlay */}
-            <div className="absolute inset-0 flex flex-col justify-between p-10 text-white">
-              <Link
-                href="/"
-                className="flex w-fit items-center gap-2 rounded-full bg-white/20 px-4 py-2 text-sm font-medium backdrop-blur-md transition-colors hover:bg-white/30"
-              >
-                <ArrowLeft className="h-4 w-4" />
-                Back to Store
-              </Link>
+            <div className="absolute inset-0 z-20 flex flex-col justify-end p-10 text-white">
               <div className="absolute inset-0 bg-linear-to-t from-black/40 to-transparent to-20% pt-4"></div>
 
               <div className="max-w-md space-y-4">
@@ -102,19 +119,20 @@ export default function AuthPage() {
             <div className="relative h-48 w-40 overflow-hidden rounded-t-full shadow-md ring-4 ring-white">
               <Image
                 src="/bg.png"
-                width={160}
-                height={192}
+                fill
+                sizes="(max-width: 640px) 100vw, 40vw"
                 alt="Ballon Boutique"
                 className="h-full w-full object-cover"
+                priority
+              />
+              <DotLottieReact
+                className="w- absolute bottom-0 left-0 h-auto drop-shadow-xl"
+                src="https://lottie.host/b3574b60-c6c8-4eee-9992-ee4e70017a18/BFK8bAk4NW.lottie"
+                loop
+                autoplay
               />
             </div>
-
-            <div className="text-center">
-              <h3 className="text-2xl text-[#2D2A26]">Ballon Boutique</h3>
-              {/* <p className="text-muted-foreground text-xs tracking-widest uppercase">
-                Est. 2025
-              </p> */}
-            </div>
+            {/* Top and bottom gradients */}
           </div>
 
           <div className="w-full max-w-sm space-y-8">
