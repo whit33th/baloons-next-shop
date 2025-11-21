@@ -27,6 +27,7 @@ import type * as stripe from "../stripe.js";
 import type * as stripeWebhook from "../stripeWebhook.js";
 import type * as stripeWebhookHandler from "../stripeWebhookHandler.js";
 import type * as users from "../users.js";
+import type * as validators_address from "../validators/address.js";
 import type * as validators_order from "../validators/order.js";
 import type * as validators_product from "../validators/product.js";
 
@@ -56,6 +57,7 @@ declare const fullApi: ApiFromModules<{
   stripeWebhook: typeof stripeWebhook;
   stripeWebhookHandler: typeof stripeWebhookHandler;
   users: typeof users;
+  "validators/address": typeof validators_address;
   "validators/order": typeof validators_order;
   "validators/product": typeof validators_product;
 }>;

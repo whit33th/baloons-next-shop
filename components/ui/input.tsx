@@ -37,7 +37,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
     return (
       <label
         className={cn(
-          "relative flex items-center gap-2.5 rounded-lg px-2.5 py-0 transition focus-within:border-slate-300",
+          "relative flex items-center gap-2.5 rounded-lg transition focus-within:border-slate-300",
           isInvalid && "border-destructive/70 ring-destructive/20 ring-1",
         )}
         // Use semantic tokens defined in `globals.css` so inputs match the site's palette
@@ -60,7 +60,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
           ref={ref}
           {...props}
           className={cn(
-            "flex-1 border-none bg-transparent outline-none focus:outline-none",
+            "h-full w-full flex-1 rounded-lg border-none bg-transparent outline-none focus:outline-none",
             isInvalid && "placeholder:text-destructive/70 text-destructive",
             className,
           )}

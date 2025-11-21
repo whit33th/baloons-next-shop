@@ -2,6 +2,7 @@ import { v } from "convex/values";
 import type { Id } from "./_generated/dataModel";
 import { mutation } from "./_generated/server";
 import { requireUser } from "./helpers/auth";
+import { optionalAddressValidator } from "./validators/address";
 
 const STORAGE_ID_PATTERN = /^[a-z0-9]{32}$/;
 
@@ -13,7 +14,7 @@ const profileResponseValidator = v.object({
   name: v.optional(v.string()),
   email: v.optional(v.string()),
   phone: v.optional(v.string()),
-  address: v.optional(v.string()),
+  address: optionalAddressValidator,
   imageFileId: v.optional(v.union(v.id("_storage"), v.string())),
   image: v.optional(v.string()),
 });
@@ -22,7 +23,12 @@ type ProfilePatch = {
   name?: string;
   email?: string;
   phone?: string;
-  address?: string;
+  address?: {
+    streetAddress: string;
+    city: string;
+    postalCode: string;
+    deliveryNotes: string;
+  };
   imageFileId?: Id<"_storage"> | string;
   image?: string;
 };
@@ -32,7 +38,7 @@ export const updateProfile = mutation({
     name: v.optional(v.string()),
     email: v.optional(v.string()),
     phone: v.optional(v.string()),
-    address: v.optional(v.string()),
+    address: optionalAddressValidator,
     image: v.optional(v.string()),
   },
   returns: profileResponseValidator,

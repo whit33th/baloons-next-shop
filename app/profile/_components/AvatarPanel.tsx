@@ -12,7 +12,12 @@ type AvatarPanelProps = {
     name?: string;
     email?: string;
     phone?: string;
-    address?: string;
+    address?: string | {
+      streetAddress: string;
+      city: string;
+      postalCode: string;
+      deliveryNotes: string;
+    };
     isAdmin?: boolean;
   };
   formattedOrdersCount: number;

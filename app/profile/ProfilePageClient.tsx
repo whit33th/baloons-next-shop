@@ -1,11 +1,14 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
 import { type Preloaded, useMutation, usePreloadedQuery } from "convex/react";
 import { motion } from "motion/react";
 import type { Route } from "next";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { type Resolver, useForm } from "react-hook-form";
 import { toast } from "sonner";
+import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -15,14 +18,24 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import Input from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { STORE_INFO } from "@/constants/config";
 import { COURIER_DELIVERY_CITIES } from "@/constants/delivery";
 import { api } from "@/convex/_generated/api";
 import { useConvexAvatarStorage } from "@/hooks/useConvexAvatarStorage";
 import {
   type AddressFields,
-  composeAddress,
   createEmptyAddressFields,
+  optionalAddressSchema,
   parseAddress,
 } from "@/lib/address";
 import { AvatarPanel } from "./_components/AvatarPanel";
@@ -49,11 +62,28 @@ const MAX_AVATAR_BYTES = 2 * 1024 * 1024; // 2 MB
 const tabButtonId = (tabId: TabId) => `profile-tab-${tabId}`;
 const tabPanelId = (tabId: TabId) => `profile-panel-${tabId}`;
 
-type ProfileFormData = {
-  name: string;
-  email: string;
-  phone: string;
-} & AddressFields;
+const phoneRegex = /^[+]?[\d\s()-]{6,}$/;
+
+const profileDetailsSchema = z.object({
+  name: z
+    .string()
+    .min(2, "Full name must be at least 2 characters.")
+    .max(120, "Full name must be under 120 characters."),
+  email: z
+    .string()
+    .min(1, "Email address is required.")
+    .email("Enter a valid email address."),
+  phone: z
+    .string()
+    .optional()
+    .refine(
+      (value) => !value || phoneRegex.test(value.trim()),
+      "Enter a valid phone number or leave the field empty.",
+    ),
+  address: optionalAddressSchema.optional(),
+});
+
+type ProfileDetailsFormValues = z.infer<typeof profileDetailsSchema>;
 
 interface IProfilePage {
   preloadedUser: Preloaded<typeof api.auth.loggedInUser>;
@@ -75,12 +105,17 @@ export default function ProfilePageClient({
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
-  const [formData, setFormData] = useState<ProfileFormData>(() => ({
-    name: "",
-    email: "",
-    phone: "",
-    ...createEmptyAddressFields(),
-  }));
+  const form = useForm<ProfileDetailsFormValues>({
+    resolver: zodResolver(
+      profileDetailsSchema,
+    ) as Resolver<ProfileDetailsFormValues>,
+    defaultValues: {
+      name: "",
+      email: "",
+      phone: "",
+      ...createEmptyAddressFields(),
+    },
+  });
 
   const avatarInputRef = useRef<HTMLInputElement | null>(null);
   const router = useRouter();
@@ -89,26 +124,54 @@ export default function ProfilePageClient({
   const { avatarUrl: avatarUrlFromStorage, uploadAvatar } =
     useConvexAvatarStorage(user?.imageFileId ?? null);
 
+  // Use user's saved address when not editing, form values when editing
+  const displayAddress = useMemo(() => {
+    if (!isEditing && user) {
+      // Handle both old string format and new object format
+      if (typeof user.address === "string") {
+        return parseAddress(user.address);
+      } else if (user.address) {
+        return user.address;
+      }
+      return createEmptyAddressFields();
+    }
+    const formValues = form.getValues();
+    return formValues.address || createEmptyAddressFields();
+  }, [isEditing, user, form]);
+
   const resetFormFromUser = useCallback(() => {
     if (!user) {
-      setFormData({
+      form.reset({
         name: "",
         email: "",
         phone: "",
-        ...createEmptyAddressFields(),
+        address: {
+          streetAddress: "",
+          city: "",
+          postalCode: "",
+          deliveryNotes: "",
+        },
       });
       return;
     }
 
-    const parsedAddress = parseAddress(user.address);
+    // Handle both old string format and new object format
+    let parsedAddress: AddressFields;
+    if (typeof user.address === "string") {
+      parsedAddress = parseAddress(user.address);
+    } else if (user.address) {
+      parsedAddress = user.address;
+    } else {
+      parsedAddress = createEmptyAddressFields();
+    }
 
-    setFormData({
+    form.reset({
       name: user.name ?? "",
       email: user.email ?? "",
       phone: user.phone ?? "",
-      ...parsedAddress,
+      address: parsedAddress,
     });
-  }, [user]);
+  }, [form, user]);
 
   useEffect(() => {
     if (!isEditing) {
@@ -150,37 +213,49 @@ export default function ProfilePageClient({
     [updateAvatar, uploadAvatar],
   );
 
-  const handleUpdateProfile = async (
-    event: React.FormEvent<HTMLFormElement>,
-  ) => {
-    event.preventDefault();
-    try {
-      const normalizedAddress = composeAddress({
-        streetAddress: formData.streetAddress,
-        city: formData.city,
-        postalCode: formData.postalCode,
-        deliveryNotes: formData.deliveryNotes,
-      });
+  const handleUpdateProfile = useCallback(
+    async (values: ProfileDetailsFormValues) => {
+      try {
+        const addressToSend = values.address
+          ? {
+              streetAddress: values.address.streetAddress || "",
+              city: values.address.city || "",
+              postalCode: values.address.postalCode || "",
+              deliveryNotes: values.address.deliveryNotes || "",
+            }
+          : undefined;
 
-      const updated = await updateProfile({
-        name: formData.name || undefined,
-        email: formData.email || undefined,
-        phone: formData.phone || undefined,
-        address: normalizedAddress || undefined,
-      });
-      const parsed = parseAddress(updated?.address);
-      setFormData({
-        name: updated?.name ?? "",
-        email: updated?.email ?? "",
-        phone: updated?.phone ?? "",
-        ...parsed,
-      });
-      toast.success("Profile updated successfully!");
-      setIsEditing(false);
-    } catch (_error) {
-      toast.error("Failed to update profile");
-    }
-  };
+        const updated = await updateProfile({
+          name: values.name || undefined,
+          email: values.email || undefined,
+          phone: values.phone || undefined,
+          address: addressToSend,
+        });
+
+        // Handle both old string format and new object format
+        let parsedAddress: AddressFields;
+        if (typeof updated?.address === "string") {
+          parsedAddress = parseAddress(updated.address);
+        } else if (updated?.address) {
+          parsedAddress = updated.address;
+        } else {
+          parsedAddress = createEmptyAddressFields();
+        }
+
+        form.reset({
+          name: updated?.name ?? "",
+          email: updated?.email ?? "",
+          phone: updated?.phone ?? "",
+          address: parsedAddress,
+        });
+        toast.success("Profile updated successfully!");
+        setIsEditing(false);
+      } catch (_error) {
+        toast.error("Failed to update profile");
+      }
+    },
+    [form, updateProfile],
+  );
 
   // useEffect(() => {
   //   if (user === null && !hasRedirected.current) {
@@ -370,158 +445,202 @@ export default function ProfilePageClient({
               </div>
 
               {isEditing ? (
-                <form
-                  onSubmit={handleUpdateProfile}
-                  className="grid gap-5 md:grid-cols-2"
-                >
-                  <label className={fieldLabelClass}>
-                    Full name
-                    <input
-                      value={formData.name}
-                      onChange={(event) =>
-                        setFormData({ ...formData, name: event.target.value })
-                      }
-                      className={fieldInputClass}
-                      placeholder="Jane Balloon"
+                <Form {...form}>
+                  <form
+                    onSubmit={form.handleSubmit(handleUpdateProfile)}
+                    className="grid gap-5 md:grid-cols-2"
+                  >
+                    <FormField
+                      control={form.control}
+                      name="name"
+                      render={({ field }) => (
+                        <FormItem className={fieldLabelClass}>
+                          <FormLabel>Full name</FormLabel>
+                          <FormControl>
+                            <Input
+                              {...field}
+                              placeholder="Jane Balloon"
+                              className={fieldInputClass}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
                     />
-                  </label>
-                  <label className={fieldLabelClass}>
-                    Email address
-                    <input
-                      type="email"
-                      value={formData.email}
-                      onChange={(event) =>
-                        setFormData({ ...formData, email: event.target.value })
-                      }
-                      className={fieldInputClass}
-                      placeholder="you@example.com"
+                    <FormField
+                      control={form.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem className={fieldLabelClass}>
+                          <FormLabel>Email address</FormLabel>
+                          <FormControl>
+                            <Input
+                              {...field}
+                              type="email"
+                              placeholder="you@example.com"
+                              className={fieldInputClass}
+                              disabled
+                              readOnly
+                            />
+                          </FormControl>
+                          <FormMessage />
+                          <p className="mt-1 text-xs text-[rgba(var(--deep-rgb),0.5)]">
+                            Email cannot be changed. Contact support if you need
+                            to update it.
+                          </p>
+                        </FormItem>
+                      )}
                     />
-                  </label>
-                  <label className={fieldLabelClass}>
-                    Phone number
-                    <input
-                      value={formData.phone}
-                      onChange={(event) =>
-                        setFormData({ ...formData, phone: event.target.value })
-                      }
-                      className={fieldInputClass}
-                      placeholder="Include country code"
+                    <FormField
+                      control={form.control}
+                      name="phone"
+                      render={({ field }) => (
+                        <FormItem className={fieldLabelClass}>
+                          <FormLabel>Phone number</FormLabel>
+                          <FormControl>
+                            <Input
+                              {...field}
+                              placeholder="Include country code"
+                              className={fieldInputClass}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
                     />
-                  </label>
-                  <label className={`${fieldLabelClass} md:col-span-2`}>
-                    Street & house number
-                    <input
-                      value={formData.streetAddress}
-                      onChange={(event) =>
-                        setFormData({
-                          ...formData,
-                          streetAddress: event.target.value,
-                        })
-                      }
-                      className={fieldInputClass}
-                      placeholder="Mariahilfer Str. 10"
+                    <FormField
+                      control={form.control}
+                      name="address.streetAddress"
+                      render={({ field }) => (
+                        <FormItem
+                          className={`${fieldLabelClass} md:col-span-2`}
+                        >
+                          <FormLabel>Street &amp; house number</FormLabel>
+                          <FormControl>
+                            <Input
+                              {...field}
+                              placeholder="Mariahilfer Str. 10"
+                              className={fieldInputClass}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
                     />
-                  </label>
-                  <label className={fieldLabelClass}>
-                    City
-                    <div className="mt-2 flex flex-wrap gap-2.5">
-                      {COURIER_DELIVERY_CITIES.map((city) => {
-                        const selected = formData.city === city.name;
-                        return (
-                          <button
-                            key={city.id}
-                            type="button"
-                            onClick={() =>
-                              setFormData({ ...formData, city: city.name })
-                            }
-                            className={`focus:outline-accent flex items-center justify-center rounded-lg border px-3 py-2 text-sm font-medium transition ${
-                              selected
-                                ? "border-accent bg-[rgba(var(--accent-rgb),0.08)]"
-                                : `${palette.softBorder} hover:border-accent/40`
-                            }`}
-                          >
-                            {city.name}
-                          </button>
-                        );
-                      })}
+                    <FormField
+                      control={form.control}
+                      name="address.city"
+                      render={({ field }) => (
+                        <FormItem className={fieldLabelClass}>
+                          <FormLabel>City</FormLabel>
+                          <FormControl>
+                            <div className="mt-2 flex flex-wrap gap-2.5">
+                              {COURIER_DELIVERY_CITIES.map((city) => {
+                                const selected = field.value === city.name;
+                                return (
+                                  <button
+                                    key={city.id}
+                                    type="button"
+                                    onClick={() => field.onChange(city.name)}
+                                    className={`focus:outline-accent flex items-center justify-center rounded-lg border px-3 py-2 text-sm font-medium transition ${
+                                      selected
+                                        ? "border-accent bg-[rgba(var(--accent-rgb),0.08)]"
+                                        : `${palette.softBorder} hover:border-accent/40`
+                                    }`}
+                                  >
+                                    {city.name}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="address.postalCode"
+                      render={({ field }) => (
+                        <FormItem className={fieldLabelClass}>
+                          <FormLabel>Postal code</FormLabel>
+                          <FormControl>
+                            <Input
+                              {...field}
+                              placeholder={STORE_INFO.address.postalCode}
+                              className={fieldInputClass}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="address.deliveryNotes"
+                      render={({ field }) => (
+                        <FormItem
+                          className={`${fieldLabelClass} md:col-span-2`}
+                        >
+                          <FormLabel>
+                            Delivery notes (door code, floor…)
+                          </FormLabel>
+                          <FormControl>
+                            <Textarea
+                              {...field}
+                              rows={3}
+                              placeholder="Ring the bell twice, leave at reception, etc."
+                              className={fieldTextareaClass}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <div className="flex flex-wrap items-center gap-3 md:col-span-2">
+                      <motion.button
+                        whileTap={{ scale: 0.97 }}
+                        type="submit"
+                        disabled={form.formState.isSubmitting}
+                        className="bg-accent text-on-accent inline-flex h-12 items-center justify-center rounded-full px-6 text-xs font-semibold tracking-widest uppercase transition hover:brightness-95 disabled:opacity-60"
+                      >
+                        {form.formState.isSubmitting
+                          ? "Saving…"
+                          : "Save changes"}
+                      </motion.button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          resetFormFromUser();
+                          setIsEditing(false);
+                        }}
+                        className={`text-deep inline-flex h-12 items-center justify-center rounded-full border px-6 text-xs font-semibold tracking-widest uppercase transition hover:bg-[rgba(var(--primary-rgb),0.8)] ${palette.softBorder}`}
+                      >
+                        Discard
+                      </button>
                     </div>
-                    <input
-                      className="sr-only"
-                      value={formData.city}
-                      onChange={(event) =>
-                        setFormData({ ...formData, city: event.target.value })
-                      }
-                    />
-                  </label>
-                  <label className={fieldLabelClass}>
-                    Postal code
-                    <input
-                      value={formData.postalCode}
-                      onChange={(event) =>
-                        setFormData({
-                          ...formData,
-                          postalCode: event.target.value,
-                        })
-                      }
-                      className={fieldInputClass}
-                      placeholder={STORE_INFO.address.postalCode}
-                    />
-                  </label>
-                  <label className={`${fieldLabelClass} md:col-span-2`}>
-                    Delivery notes (door code, floor…)
-                    <textarea
-                      value={formData.deliveryNotes}
-                      onChange={(event) =>
-                        setFormData({
-                          ...formData,
-                          deliveryNotes: event.target.value,
-                        })
-                      }
-                      rows={3}
-                      className={fieldTextareaClass}
-                      placeholder="Ring the bell twice, leave at reception, etc."
-                    />
-                  </label>
-                  <div className="flex flex-wrap items-center gap-3 md:col-span-2">
-                    <motion.button
-                      whileTap={{ scale: 0.97 }}
-                      type="submit"
-                      className="bg-accent text-on-accent inline-flex h-12 items-center justify-center rounded-full px-6 text-xs font-semibold tracking-widest uppercase transition hover:brightness-95"
-                    >
-                      Save changes
-                    </motion.button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        resetFormFromUser();
-                        setIsEditing(false);
-                      }}
-                      className={`text-deep inline-flex h-12 items-center justify-center rounded-full border px-6 text-xs font-semibold tracking-widest uppercase transition hover:bg-[rgba(var(--primary-rgb),0.8)] ${palette.softBorder}`}
-                    >
-                      Discard
-                    </button>
-                  </div>
-                </form>
+                  </form>
+                </Form>
               ) : (
                 <div className="grid gap-6 md:grid-cols-2">
                   <InfoTile label="Full name" value={user.name ?? "Not set"} />
                   <InfoTile label="Email" value={user.email ?? "Not set"} />
-                  <InfoTile
-                    label="Phone"
-                    value={user.phone ?? (formData.phone || "Not set")}
-                  />
+                  <InfoTile label="Phone" value={user.phone || "Not set"} />
                   <InfoTile
                     label="Street & house number"
-                    value={formData.streetAddress || "Not set"}
+                    value={displayAddress.streetAddress || "Not set"}
                   />
-                  <InfoTile label="City" value={formData.city || "Not set"} />
+                  <InfoTile
+                    label="City"
+                    value={displayAddress.city || "Not set"}
+                  />
                   <InfoTile
                     label="Postal code"
-                    value={formData.postalCode || "Not set"}
+                    value={displayAddress.postalCode || "Not set"}
                   />
                   <InfoTile
                     label="Delivery notes"
-                    value={formData.deliveryNotes || "Not set"}
+                    value={displayAddress.deliveryNotes || "Not set"}
                     fullWidth
                   />
                 </div>
