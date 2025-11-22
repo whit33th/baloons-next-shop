@@ -1,16 +1,15 @@
 "use client";
 
-import type { Route } from "next";
 import { useSearchParams } from "next/navigation";
 import { useLocale } from "next-intl";
 import { useTransition } from "react";
-import { usePathname, useRouter } from "@/i18n/routing";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { usePathname, useRouter } from "@/i18n/routing";
 import { persistLocalePreference } from "@/lib/localePreference";
 import { cn } from "@/lib/utils";
 import {
@@ -50,7 +49,7 @@ const languages = [
 
 export function LanguageSwitcher() {
   const locale = useLocale();
-  const router = useRouter();
+  const _router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();

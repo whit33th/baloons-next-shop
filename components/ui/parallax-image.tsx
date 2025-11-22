@@ -1,8 +1,8 @@
 "use client";
+
+import { Image } from "@imagekit/next";
 import { motion, useScroll, useTransform } from "motion/react";
 import { useRef } from "react";
-
-import ImageKitPicture from "@/components/ui/ImageKitPicture";
 
 export default function ParallaxImage() {
   const ref = useRef<HTMLDivElement>(null);
@@ -23,15 +23,16 @@ export default function ParallaxImage() {
         style={{ y, scale: 1.1 }}
         className="absolute inset-0 will-change-transform"
       >
-        <ImageKitPicture
+        <Image
           src="/baloons2.png"
           alt="Parallax background"
           fill
           priority
           sizes="100vw"
           className="object-cover"
-          transformation={[{ width: 1600, quality: 65, format: "auto" }]}
-          placeholderOptions={{ width: 48, quality: 12, blur: 40 }}
+          transformation={[
+            { width: 1600, quality: 65, format: "auto", progressive: true },
+          ]}
         />
       </motion.div>
     </section>

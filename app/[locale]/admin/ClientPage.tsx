@@ -631,15 +631,15 @@ export default function AdminPageClient({
 
   const getFieldLabel = (fieldName: string): string => {
     const labels: Record<string, string> = {
-      name: t("productForm.name"),
-      description: t("productForm.description"),
-      price: t("productForm.price"),
-      categoryGroup: t("productForm.categoryGroup"),
-      categories: t("productForm.categories"),
-      availableColors: t("productForm.availableColors"),
-      inStock: t("productForm.inStock"),
-      "isPersonalizable.name": t("productForm.isPersonalizable.name"),
-      "isPersonalizable.number": t("productForm.isPersonalizable.number"),
+      name: tProductForm("name"),
+      description: tProductForm("description"),
+      price: tProductForm("price"),
+      categoryGroup: tProductForm("group"),
+      categories: tProductForm("categories"),
+      availableColors: tProductForm("colors"),
+      inStock: tProductForm("inStock"),
+      "isPersonalizable.name": tProductForm("nameLabel"),
+      "isPersonalizable.number": tProductForm("numberLabel"),
     };
     return labels[fieldName] || fieldName;
   };

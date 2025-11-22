@@ -1,11 +1,14 @@
 "use client";
 
+import { buildSrc, Image } from "@imagekit/next";
 import type { Route } from "next";
-import { type ReactNode, ViewTransition } from "react";
-import ImageKitPicture from "@/components/ui/ImageKitPicture";
+import { type ReactNode, useMemo, useState, ViewTransition } from "react";
 import type { Doc } from "@/convex/_generated/dataModel";
 import { Link } from "@/i18n/routing";
-import { DEFAULT_PRODUCT_IMAGE_TRANSFORMATION } from "@/lib/imagekit";
+import {
+  DEFAULT_PRODUCT_IMAGE_TRANSFORMATION,
+  imageKitConfig,
+} from "@/lib/imagekit";
 import { balloonColors } from "../ProductGrid";
 
 type ProductTag = "new" | "bestseller";
@@ -41,6 +44,32 @@ export default function ProductCard({
   const tags: ProductTag[] = product.tags ?? [];
   const formattedPrice = `${product.price.toFixed(2)} €`;
 
+  const [showPlaceholder, setShowPlaceholder] = useState(true);
+
+  const placeholderStyle = useMemo(() => {
+    if (!showPlaceholder || !displayImage || !imageKitConfig.urlEndpoint) {
+      return {};
+    }
+
+    const placeholderSrc = buildSrc({
+      urlEndpoint: imageKitConfig.urlEndpoint,
+      src: displayImage,
+      transformation: [
+        {
+          width: 40,
+          quality: 10,
+          blur: 90,
+        },
+      ],
+    });
+
+    return {
+      backgroundImage: `url(${placeholderSrc})`,
+      backgroundSize: "cover",
+      backgroundRepeat: "no-repeat",
+    };
+  }, [showPlaceholder, displayImage]);
+
   return (
     <Link
       href={productHref}
@@ -60,16 +89,17 @@ export default function ProductCard({
                 </ViewTransition>
               ),
               (
-                <ImageKitPicture
+                <Image
                   src={displayImage}
                   alt={product.name}
-                  width={400}
-                  height={600}
+                  fill
                   className="aspect-3/4 h-full w-full object-cover"
-                  loading={index < 2 ? "eager" : "lazy"}
                   transformation={DEFAULT_PRODUCT_IMAGE_TRANSFORMATION}
-                  placeholderOptions={{ width: 36, quality: 12, blur: 40 }}
-                  sizes="(min-width: 1280px) 20vw, (min-width: 768px) 30vw, 90vw"
+                  sizes="(max-width: 720px) 50vw, (min-width: 965px) 33vw, (min-width: 1200px) 25vw, (min-width: 1440px) 20vw, (min-width: 1680px) 17vw, 400px "
+                  style={placeholderStyle}
+                  onLoad={() => {
+                    setShowPlaceholder(false);
+                  }}
                 />
               ) as ReactNode,
             )

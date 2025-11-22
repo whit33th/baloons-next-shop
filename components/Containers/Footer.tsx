@@ -94,6 +94,13 @@ const legalLinks: InternalLink[] = [
   { labelKey: "footer.imprint", href: "/legal/imprint" },
 ];
 
+// Популярные ссылки, для которых нужен prefetch
+const popularLinks = new Set(["/", "/catalog", "/cart", "/profile"]);
+
+const shouldPrefetch = (href: string): boolean => {
+  return popularLinks.has(href);
+};
+
 export const Footer = () => {
   const t = useTranslations();
   const year = new Date().getFullYear();
@@ -105,6 +112,7 @@ export const Footer = () => {
           <div className="space-y-4">
             <Link
               href="/"
+              prefetch={true}
               className="text-xl font-semibold tracking-tight text-white"
             >
               {t('store.name')}
@@ -187,6 +195,7 @@ export const Footer = () => {
                       <li key={link.labelKey}>
                         <Link
                           href={link.href}
+                          prefetch={shouldPrefetch(link.href)}
                           className="transition-opacity hover:opacity-80"
                         >
                           {t(link.labelKey)}
@@ -210,6 +219,7 @@ export const Footer = () => {
                 <Link
                   key={link.labelKey}
                   href={link.href}
+                  prefetch={false}
                   className="transition-opacity hover:opacity-80"
                 >
                   {t(link.labelKey)}

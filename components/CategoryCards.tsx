@@ -19,15 +19,15 @@ export default function CategoryCards({ group }: CategoryCardsProps) {
   const tHome = useTranslations("home");
   const tCatalog = useTranslations("catalog");
   const SUBCATEGORY_IMAGES: Record<string, string> = {
-    "for kids boys": "/imgs/subcategories/balloons/kids-for-him.jpg",
-    "for kids girls": "/imgs/subcategories/balloons/kids-for-her.jpg",
-    "for her": "/imgs/subcategories/balloons/for-her.jpg",
-    "for him": "/imgs/subcategories/balloons/for-him.jpg",
-    love: "/imgs/subcategories/balloons/love.jpg",
-    mom: "/imgs/subcategories/balloons/mom.jpg",
-    anniversary: "/imgs/subcategories/balloons/anniversary.jpg",
-    "baby birth": "/imgs/subcategories/balloons/baby-birth.jpg",
-    "surprise box": "/imgs/subcategories/balloons/surprise-box.jpg",
+    "for kids boys": "/imgs/subcategories/balloons/kids-for-him.webp",
+    "for kids girls": "/imgs/subcategories/balloons/kids-for-her.webp",
+    "for her": "/imgs/subcategories/balloons/for-her.webp",
+    "for him": "/imgs/subcategories/balloons/for-him.webp",
+    love: "/imgs/subcategories/balloons/love.webp",
+    mom: "/imgs/subcategories/balloons/mom.webp",
+    anniversary: "/imgs/subcategories/balloons/anniversary.webp",
+    "baby birth": "/imgs/subcategories/balloons/baby-birth.webp",
+    "surprise box": "/imgs/subcategories/balloons/surprise-box.webp",
   };
 
   return (

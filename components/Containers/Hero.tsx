@@ -1,25 +1,15 @@
-"use client";
+import { getTranslations } from "next-intl/server";
 
-import { useTranslations } from 'next-intl';
-
-export const Hero = () => {
-  const t = useTranslations('home');
+export const Hero = async () => {
+  const t = await getTranslations("home");
 
   return (
     <section className="container mx-auto px-4 py-12 text-center md:py-16">
-      {/* <Image
-        src={"/imgs/baloonsGif/1.jpg"}
-        alt="hero img"
-        className="absolute inset-0 -z-10 h-full w-full scale-110 object-cover object-top blur-sm contrast-150"
-        fill
-        priority
-      /> */}
-
       <h1 className="text-foreground mb-3 font-serif text-3xl font-normal tracking-tight text-balance md:text-4xl lg:text-5xl">
-        {t('heroTitle')}
+        {t("heroTitle")}
       </h1>
       <p className="text-muted-foreground mx-auto mb-8 max-w-2xl text-base leading-relaxed text-pretty md:text-lg">
-        {t('heroSubtitle')}
+        {t("heroSubtitle")}
       </p>
       <div className="mx-auto flex max-w-md items-center justify-center gap-2">
         <div className="via-border h-px flex-1 bg-linear-to-r from-transparent to-transparent" />

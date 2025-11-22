@@ -1,7 +1,8 @@
 "use client";
 
+import { Image } from "@imagekit/next";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { useTranslations } from 'next-intl';
+import { useTranslations } from "next-intl";
 import {
   memo,
   type ReactNode,
@@ -17,7 +18,6 @@ import {
   CarouselContent,
   CarouselItem,
 } from "@/components/ui/carousels/carousel";
-import ImageKitPicture from "@/components/ui/ImageKitPicture";
 import {
   ADMIN_PREVIEW_IMAGE_TRANSFORMATION,
   PRODUCT_DETAIL_IMAGE_TRANSFORMATION,
@@ -40,7 +40,7 @@ export const ProductGallery = memo(function ProductGallery({
   transitionId,
   transitionGroups,
 }: ProductGalleryProps) {
-  const t = useTranslations('product.gallery');
+  const t = useTranslations("product.gallery");
   const canNavigate = images.length > 1;
   const [carouselApi, setCarouselApi] = useState<CarouselApi>();
   // Use transition name only for the first image to match product card
@@ -136,7 +136,7 @@ export const ProductGallery = memo(function ProductGallery({
               }}
               onClick={() => handleNextImage()}
             >
-              <ImageKitPicture
+              <Image
                 src={slide.src}
                 alt={productName}
                 fill
@@ -145,7 +145,6 @@ export const ProductGallery = memo(function ProductGallery({
                 className="z-50 aspect-3/4 h-full w-full object-contain drop-shadow"
                 sizes="(min-width: 1024px) 50vw, 100vw"
                 transformation={PRODUCT_DETAIL_IMAGE_TRANSFORMATION}
-                placeholderOptions={{ width: 48, quality: 12, blur: 45 }}
               />
             </button>
           </CarouselItem>
@@ -172,7 +171,7 @@ export const ProductGallery = memo(function ProductGallery({
               type="button"
               onClick={handlePreviousImage}
               className="text-deep hover:bg-secondary ml-4 flex h-11 w-11 items-center justify-center rounded-full bg-white/90 shadow-lg transition-[transform,background-color,color] duration-200 hover:scale-110 hover:text-white md:flex"
-              aria-label={t('previousImage')}
+              aria-label={t("previousImage")}
             >
               <ChevronLeft className="h-6 w-6" />
             </button>
@@ -183,7 +182,7 @@ export const ProductGallery = memo(function ProductGallery({
               type="button"
               onClick={handleNextImage}
               className="text-deep hover:bg-secondary mr-4 flex h-11 w-11 items-center justify-center rounded-full bg-white/90 shadow-lg transition-[transform,background-color,color] duration-200 hover:scale-110 hover:text-white md:flex"
-              aria-label={t('nextImage')}
+              aria-label={t("nextImage")}
             >
               <ChevronRight className="h-6 w-6" />
             </button>
@@ -221,14 +220,13 @@ export const ProductGallery = memo(function ProductGallery({
                 : "ring-border hover:ring-secondary/50 ring-1 hover:shadow-md"
             }`}
           >
-            <ImageKitPicture
+            <Image
               src={slide.src}
               width={100}
               height={100}
               alt={`${productName} ${slide.index + 1}`}
               className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
               transformation={ADMIN_PREVIEW_IMAGE_TRANSFORMATION}
-              placeholderOptions={{ width: 24, quality: 12, blur: 40 }}
             />
             {activeImage === slide.index && (
               <div className="bg-secondary/10 absolute inset-0" />

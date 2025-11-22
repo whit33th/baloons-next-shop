@@ -266,7 +266,14 @@
       "processingError": "Es gab einen Verarbeitungsfehler. Bitte versuchen Sie es erneut oder verwenden Sie eine andere Karte.",
       "incorrectNumber": "Die Kartennummer scheint falsch zu sein. Bitte überprüfen Sie und versuchen Sie es erneut.",
       "tooManyAttempts": "Zu viele Versuche mit dieser Karte. Versuchen Sie es später erneut oder verwenden Sie eine andere Zahlungsmethode.",
-      "additionalVerification": "Wir benötigen noch eine zusätzliche Verifizierung für diese Karte."
+      "additionalVerification": "Wir benötigen noch eine zusätzliche Verifizierung für diese Karte.",
+      "fraudDetected": "Zahlung wurde wegen Betrugsverdacht blockiert. Versuchen Sie eine andere Zahlungsmethode.",
+      "invalidRequest": "Ungültige Anfrage. Bitte überprüfen Sie Ihre Zahlungsinformationen und versuchen Sie es erneut.",
+      "connectionError": "Netzwerkfehler. Bitte überprüfen Sie Ihre Verbindung und versuchen Sie es erneut.",
+      "serviceError": "Zahlungsdienst vorübergehend nicht verfügbar. Bitte versuchen Sie es später erneut.",
+      "authenticationError": "Authentifizierungsfehler. Bitte kontaktieren Sie den Support.",
+      "rateLimit": "Zu viele Anfragen. Bitte warten Sie einen Moment und versuchen Sie es erneut.",
+      "duplicateRequest": "Doppelte Anfrage erkannt. Bitte versuchen Sie es erneut."
     },
     "placeOrder": "Bestellung aufgeben",
     "processing": "Wird verarbeitet...",

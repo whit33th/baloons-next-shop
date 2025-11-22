@@ -1,7 +1,5 @@
-"use client";
-
 import Image from "next/image";
-import { useTranslations } from "next-intl";
+import { getTranslations } from "next-intl/server";
 import {
   buildCatalogLink,
   buildCategoryPagePath,
@@ -9,9 +7,10 @@ import {
 } from "@/constants/categories";
 import { Link } from "@/i18n/routing";
 
-export function CategorySection() {
-  const t = useTranslations("home");
-  const tCatalog = useTranslations("catalog");
+export async function CategorySection() {
+  const t = await getTranslations("home");
+  const tCatalog = await getTranslations("catalog");
+
   return (
     <section className="relative w-full overflow-hidden">
       <div className="flex items-center justify-between p-4 px-4">
@@ -60,9 +59,8 @@ export function CategorySection() {
                     alt={tCatalog(`categoryGroups.${group.value}`)}
                     fill
                     className="object-cover"
-                    priority
                     sizes="(max-width: 768px) 50vw, 33vw"
-                    loading="eager"
+                    priority
                   />
                 </div>
 
@@ -96,9 +94,8 @@ export function CategorySection() {
                 alt={t("allProducts")}
                 fill
                 className="object-cover"
-                priority
-                loading="eager"
                 sizes="(max-width: 768px) 50vw, 33vw"
+                priority
               />
             </div>
 

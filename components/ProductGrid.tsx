@@ -215,7 +215,7 @@ export function ProductGrid({ filters }: ProductGridProps) {
           repeat: Infinity,
           repeatType: "reverse",
         }}
-        className="border-foreground grid grid-cols-2 border-t sm:grid-cols-[repeat(auto-fill,minmax(280px,1fr))]"
+        className="border-foreground grid w-full grid-cols-2 border-t sm:grid-cols-[repeat(auto-fill,minmax(240px,1fr))] 2xl:grid-cols-[repeat(auto-fill,minmax(280px,1fr))]"
       >
         {mounted &&
           Array.from({ length: itemsToLoad ?? getItemsToLoad() }).map(

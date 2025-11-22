@@ -1,11 +1,11 @@
 "use client";
 
+import { Image } from "@imagekit/next";
 import { useMutation } from "convex/react";
 import { useQuery } from "convex-helpers/react/cache";
 import { ShoppingBag } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
-import ImageKitPicture from "@/components/ui/ImageKitPicture";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { Link, useRouter } from "@/i18n/routing";
@@ -203,17 +203,12 @@ export default function CartPage() {
                 >
                   <div className="bg-secondary/10 relative flex h-20 w-20 shrink-0 items-center justify-center rounded-lg">
                     {item.product.primaryImageUrl ? (
-                      <ImageKitPicture
+                      <Image
                         src={item.product.primaryImageUrl}
                         alt={item.product.name}
                         fill
                         className="rounded-lg object-cover"
                         transformation={ADMIN_PREVIEW_IMAGE_TRANSFORMATION}
-                        placeholderOptions={{
-                          width: 28,
-                          quality: 12,
-                          blur: 40,
-                        }}
                         sizes="80px"
                       />
                     ) : (

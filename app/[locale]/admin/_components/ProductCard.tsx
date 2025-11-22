@@ -1,7 +1,7 @@
 "use client";
 
+import { Image } from "@imagekit/next";
 import { useTranslations } from "next-intl";
-import ImageKitPicture from "@/components/ui/ImageKitPicture";
 import { ADMIN_PRODUCT_IMAGE_TRANSFORMATION } from "@/lib/imagekit";
 import { cn } from "@/lib/utils";
 import type { ProductCardData } from "./types";
@@ -30,7 +30,7 @@ export function ProductCard({ product, onClick }: ProductCardProps) {
     >
       <div className="relative mb-4 aspect-3/4 overflow-hidden rounded-xl bg-slate-100">
         {product.primaryImageUrl ? (
-          <ImageKitPicture
+          <Image
             src={product.primaryImageUrl}
             alt={product.name}
             fill
@@ -38,11 +38,6 @@ export function ProductCard({ product, onClick }: ProductCardProps) {
             sizes="(min-width: 1280px) 20vw, (min-width: 768px) 30vw, 90vw"
             className="object-cover transition group-hover:scale-105"
             transformation={ADMIN_PRODUCT_IMAGE_TRANSFORMATION}
-            placeholderOptions={{
-              width: 40,
-              quality: 10,
-              blur: 35,
-            }}
           />
         ) : (
           <div className="flex h-full items-center justify-center text-4xl">

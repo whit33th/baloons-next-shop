@@ -1,15 +1,15 @@
 "use client";
 
+import { Image as ImageKitImage } from "@imagekit/next";
 import { useQuery } from "convex-helpers/react/cache";
 import { Mail, MapPin, Phone, User } from "lucide-react";
 import Image from "next/image";
-import { useTranslations } from 'next-intl';
+import { useTranslations } from "next-intl";
 import { useState } from "react";
-import ImageKitPicture from "@/components/ui/ImageKitPicture";
 import { BALLOON_COLORS, getColorStyle } from "@/constants/colors";
 import { api } from "@/convex/_generated/api";
 import type { Doc } from "@/convex/_generated/dataModel";
-import { Link } from '@/i18n/routing';
+import { Link } from "@/i18n/routing";
 import { palette } from "./palette";
 
 type OrdersPanelProps = {
@@ -17,8 +17,8 @@ type OrdersPanelProps = {
 };
 
 export function OrdersPanel({ orders }: OrdersPanelProps) {
-  const t = useTranslations('profile.orders');
-  const tCommon = useTranslations('common');
+  const t = useTranslations("profile.orders");
+  const tCommon = useTranslations("common");
   const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
   const formattedOrders = orders ?? [];
 
@@ -44,19 +44,19 @@ export function OrdersPanel({ orders }: OrdersPanelProps) {
       >
         <Image
           src="/imgs/cat.png"
-          alt={tCommon('noBalloonsFound')}
+          alt={tCommon("noBalloonsFound")}
           width={150}
           height={150}
         />
-        <p className="text-deep text-lg font-medium">{t('noOrdersYet')}</p>
+        <p className="text-deep text-lg font-medium">{t("noOrdersYet")}</p>
         <p className={`text-sm ${palette.mutedText}`}>
-          {t('everyCelebrationStarts')}
+          {t("everyCelebrationStarts")}
         </p>
         <Link
           href="/catalog"
           className="bg-secondary text-on-secondary inline-flex items-center justify-center rounded-full px-6 py-3 text-xs font-semibold tracking-widest uppercase transition hover:brightness-95"
         >
-          {t('shopBalloons')}
+          {t("shopBalloons")}
         </Link>
       </div>
     );
@@ -87,7 +87,7 @@ type OrderCardProps = {
 };
 
 function OrderCard({ order, isExpanded, onToggle }: OrderCardProps) {
-  const t = useTranslations('profile.orders');
+  const t = useTranslations("profile.orders");
   const loggedInUser = useQuery(api.auth.loggedInUser);
 
   return (
@@ -99,7 +99,7 @@ function OrderCard({ order, isExpanded, onToggle }: OrderCardProps) {
           <p
             className={`text-xs tracking-[0.3rem] uppercase ${palette.subtleText}`}
           >
-            {t('order')}
+            {t("order")}
           </p>
           <p className="text-deep text-lg font-medium">
             #{order._id.slice(-8)}
@@ -117,7 +117,7 @@ function OrderCard({ order, isExpanded, onToggle }: OrderCardProps) {
             className="flex items-center gap-1 rounded-full border px-3 py-1 text-[0.6rem] font-semibold transition hover:border-[rgba(var(--accent-rgb),0.6)]"
             onClick={onToggle}
           >
-            {isExpanded ? t('hide') : t('details')}
+            {isExpanded ? t("hide") : t("details")}
             <span className="text-xs">↕</span>
           </button>
         </div>
@@ -128,7 +128,7 @@ function OrderCard({ order, isExpanded, onToggle }: OrderCardProps) {
       >
         <div className="flex items-center gap-3">
           <span>{new Date(order._creationTime).toLocaleDateString()}</span>
-          <span>{t('items', {count: order.items.length})}</span>
+          <span>{t("items", { count: order.items.length })}</span>
         </div>
 
         <div className="shrink-0">
@@ -151,7 +151,7 @@ function OrderCard({ order, isExpanded, onToggle }: OrderCardProps) {
             className={`w-full rounded-lg border bg-[rgba(var(--surface-rgb),0.02)] px-4 py-3 ${palette.softBorder}`}
           >
             <div className="mb-2 text-xs tracking-wide text-[rgba(var(--deep-rgb),0.45)] uppercase">
-              {t('recipient')}
+              {t("recipient")}
             </div>
 
             <div className="flex flex-col gap-2">
@@ -223,7 +223,7 @@ function OrderCard({ order, isExpanded, onToggle }: OrderCardProps) {
 type OrderItem = Doc<"orders">["items"][number];
 
 function OrderItemRow({ item }: { item: OrderItem }) {
-  const t = useTranslations('profile.orders');
+  const t = useTranslations("profile.orders");
   const product = useQuery(api.products.get, { id: item.productId });
   const colorHex = (() => {
     const colorName = item.personalization?.color;
@@ -245,13 +245,14 @@ function OrderItemRow({ item }: { item: OrderItem }) {
           <div className="flex w-full gap-3">
             <div className="bg-secondary/10 relative aspect-square h-10 w-10 shrink-0 overflow-hidden rounded-md sm:h-12 sm:w-12">
               {product?.primaryImageUrl ? (
-                <ImageKitPicture
+                <ImageKitImage
                   src={product.primaryImageUrl}
                   alt={item.productName}
                   width={48}
                   height={48}
                   className="aspect-square object-cover"
                   sizes="48px"
+                  transformation={[{ progressive: true }]}
                 />
               ) : (
                 <div className="flex h-full items-center justify-center">
@@ -272,7 +273,7 @@ function OrderItemRow({ item }: { item: OrderItem }) {
                       <span
                         className={`${palette.mutedText} text-[10px] font-semibold`}
                       >
-                        {t('color')}:
+                        {t("color")}:
                       </span>
                       <span className="text-deep inline-flex items-center gap-1 rounded-full bg-white/50 px-0 py-0.5 text-xs font-medium sm:gap-2">
                         <span
@@ -300,7 +301,7 @@ function OrderItemRow({ item }: { item: OrderItem }) {
                       <span
                         className={`${palette.mutedText} text-[10px] font-semibold`}
                       >
-                        {t('text')}:
+                        {t("text")}:
                       </span>
                       <span className="text-deep inline-flex items-center rounded-full bg-white/50 px-0 py-0.5 text-xs font-medium italic">
                         <span className="whitespace-nowrap">
@@ -315,7 +316,7 @@ function OrderItemRow({ item }: { item: OrderItem }) {
                       <span
                         className={`${palette.mutedText} text-[10px] font-semibold`}
                       >
-                        {t('number')}:
+                        {t("number")}:
                       </span>
                       <span className="text-deep inline-flex items-center rounded-full bg-white/50 px-0 py-0.5 text-xs font-medium">
                         <span className="whitespace-nowrap">

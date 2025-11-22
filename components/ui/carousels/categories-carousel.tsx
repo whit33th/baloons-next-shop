@@ -1,5 +1,6 @@
 "use client";
 
+import { Image } from "@imagekit/next";
 import type { Route } from "next";
 import { useEffect, useLayoutEffect, useState } from "react";
 import {
@@ -10,7 +11,6 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousels/carousel";
-import ImageKitPicture from "@/components/ui/ImageKitPicture";
 import { Link } from "@/i18n/routing";
 
 export interface Category {
@@ -85,15 +85,19 @@ export function CategoriesCarousel({ categories }: CategoriesCarouselProps) {
                   className="group border-foreground block border-r"
                 >
                   <article className="relative aspect-square overflow-hidden bg-linear-to-br from-green-100 to-yellow-100">
-                    <ImageKitPicture
+                    <Image
                       src={category.image}
                       alt={category.name}
                       fill
                       className="object-cover transition-transform group-hover:scale-105"
                       transformation={[
-                        { width: 640, quality: 65, format: "auto" },
+                        {
+                          width: 640,
+                          quality: 65,
+                          format: "auto",
+                          progressive: true,
+                        },
                       ]}
-                      placeholderOptions={{ width: 36, quality: 12, blur: 40 }}
                       sizes="(min-width: 1280px) 12vw, (min-width: 768px) 22vw, 45vw"
                     />
                     <div className="absolute inset-0 flex items-center justify-center bg-black/30">

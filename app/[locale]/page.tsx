@@ -1,12 +1,11 @@
-import { preloadQuery } from "convex/nextjs";
 import { getTranslations, setRequestLocale } from "next-intl/server";
+import { Suspense } from "react";
 import { CategorySection } from "@/components/CategorySection";
 import { Hero } from "@/components/Containers";
-import { ProductCarousels } from "@/components/Containers/ProductCarousels";
-import { AnimatedSection } from "@/components/ui/animated-section";
 import RainbowArcText from "@/components/ui/rainbow-text";
-import { api } from "@/convex/_generated/api";
 import { routing } from "@/i18n/routing";
+import { ProductCarouselsFallback } from "./_components/ProductCarouselsFallback";
+import { ProductCarouselsWrapper } from "./_components/ProductCarouselsWrapper";
 
 export const dynamicParams = false;
 
@@ -28,42 +27,23 @@ export default async function HomePage({
 
   const t = await getTranslations({ locale, namespace: "home" });
 
-  // Preload data on the server using preloadQuery
-  const preloadedBestsellers = await preloadQuery(api.products.list, {
-    order: "orderCount-desc",
-    paginationOpts: {
-      cursor: null,
-      numItems: 8,
-    },
-  });
-
-  const preloadedNewArrivals = await preloadQuery(api.products.list, {
-    order: "createdAt-desc",
-    paginationOpts: {
-      cursor: null,
-      numItems: 8,
-    },
-  });
-
   return (
     <main className="flex min-h-screen flex-col">
-      <AnimatedSection>
-        <Hero />
-      </AnimatedSection>
+      {/* Static content - pre-rendered at build time */}
+      <Hero />
 
       <div className="flex flex-col gap-6">
-        <AnimatedSection>
-          <CategorySection />
-        </AnimatedSection>
+        {/* CategorySection as Server Component - static, pre-rendered */}
+        <CategorySection />
 
-        {/* Product Carousels - Client Component with preloaded data */}
-        <ProductCarousels
-          preloadedBestsellers={preloadedBestsellers}
-          preloadedNewArrivals={preloadedNewArrivals}
-        />
+        {/* Product Carousels - Dynamic content wrapped in Suspense for streaming */}
+        {/* Static shell renders immediately, dynamic content loads asynchronously */}
+        <Suspense fallback={<ProductCarouselsFallback />}>
+          <ProductCarouselsWrapper />
+        </Suspense>
       </div>
 
-      {/* Rainbow Text */}
+      {/* Rainbow Text - Client Component with static text */}
       <RainbowArcText
         className="py-5 text-[10vw] sm:text-[8vw]"
         text={t("rainbowText")}

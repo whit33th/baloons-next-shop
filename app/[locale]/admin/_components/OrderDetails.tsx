@@ -1,5 +1,6 @@
 "use client";
 
+import { Image } from "@imagekit/next";
 import { useMutation, useQuery } from "convex/react";
 import { useTranslations } from "next-intl";
 import { useCallback, useState } from "react";
@@ -12,7 +13,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import ImageKitPicture from "@/components/ui/ImageKitPicture";
 import { api } from "@/convex/_generated/api";
 // removed per-item queries to comply with Rules of Hooks
 import type { Doc, Id } from "@/convex/_generated/dataModel";
@@ -50,6 +50,7 @@ const getProductImageUrl = (item: OrderItem): string | null => {
 export function OrderDetails({ order }: Props) {
   const t = useTranslations("admin.payments");
   const tOrderDetails = useTranslations("admin.orderDetails");
+  const tOrdersTable = useTranslations("admin.ordersTable");
   const tAdmin = useTranslations("admin");
   const _currency = order.currency ?? "EUR";
   const updateStatus = useMutation(api.orders.updateStatus);
@@ -91,7 +92,7 @@ export function OrderDetails({ order }: Props) {
       await updateStatus({ orderId: order._id, status: pendingStatus });
       setLocalStatus(pendingStatus);
       setPendingStatus(null);
-      toast.success(t("orderDetails.statusUpdated"));
+      toast.success(tAdmin("toasts.productUpdated"));
     } catch (err) {
       const msg =
         err instanceof Error ? err.message : tOrderDetails("statusUpdateError");
@@ -99,7 +100,7 @@ export function OrderDetails({ order }: Props) {
     } finally {
       setIsUpdating(false);
     }
-  }, [pendingStatus, updateStatus, order._id, t, tOrderDetails, tAdmin]);
+  }, [pendingStatus, updateStatus, order._id, tOrderDetails, tAdmin]);
 
   return (
     <aside className="space-y-4 rounded-2xl border border-slate-200 bg-white/80 p-5 shadow-sm">
@@ -107,7 +108,7 @@ export function OrderDetails({ order }: Props) {
         <div className="flex items-start justify-between">
           <div>
             <div className="text-xs text-slate-500">
-              {t("orderDetails.order")}
+              {tOrdersTable("order")}
             </div>
             <div className="font-mono font-semibold text-slate-900">
               #{order._id.slice(-8)}
@@ -120,11 +121,11 @@ export function OrderDetails({ order }: Props) {
           <div className="flex items-center gap-3">
             <div className="ml-1 flex w-full max-w-xs items-center gap-2">
               <span className="hidden text-xs text-slate-500 sm:inline">
-                {t("orderDetails.status")}:
+                {tOrdersTable("status")}:
               </span>
               <div className="flex-1">
                 <select
-                  aria-label={t("orderDetails.chooseNewStatus")}
+                  aria-label={tOrdersTable("status")}
                   value={pendingStatus ?? localStatus}
                   onChange={(e) => {
                     const next = e.target.value as OrderStatus;
@@ -159,14 +160,11 @@ export function OrderDetails({ order }: Props) {
                 <DialogContent>
                   <DialogHeader>
                     <DialogTitle>
-                      {t("orderDetails.confirmStatusChange")}
+                      {tOrdersTable("status")}
                     </DialogTitle>
                     <DialogDescription>
                       {pendingStatus
-                        ? t("orderDetails.confirmStatusChangeDescription", {
-                            from: t(`orderStatus.${localStatus}`),
-                            to: t(`orderStatus.${pendingStatus}`),
-                          })
+                        ? `${t(`orderStatus.${localStatus}`)} → ${t(`orderStatus.${pendingStatus}`)}`
                         : ""}
                     </DialogDescription>
                   </DialogHeader>
@@ -180,7 +178,7 @@ export function OrderDetails({ order }: Props) {
                       }}
                       type="button"
                     >
-                      {t("orderDetails.cancel")}
+                      {tAdmin("productForm.cancel")}
                     </button>
                     <button
                       className="rounded-md bg-emerald-600 px-3 py-2 text-sm font-semibold text-white"
@@ -191,7 +189,7 @@ export function OrderDetails({ order }: Props) {
                       disabled={isUpdating}
                       type="button"
                     >
-                      {t("orderDetails.confirm")}
+                      {tAdmin("productForm.confirmDelete")}
                     </button>
                   </DialogFooter>
                 </DialogContent>
@@ -306,7 +304,7 @@ export function OrderDetails({ order }: Props) {
                   <div className="flex items-center gap-3">
                     <div className="bg-secondary/10 relative aspect-square h-12 w-12 shrink-0 overflow-hidden rounded-md">
                       {imageUrl ? (
-                        <ImageKitPicture
+                        <Image
                           src={imageUrl}
                           alt={item.productName}
                           width={48}
@@ -339,11 +337,13 @@ export function OrderDetails({ order }: Props) {
 
                 {item.personalization && (
                   <div className="mt-2 text-xs text-slate-600">
-                      {item.personalization.color && (
-                        <div>
-                          {tOrderDetails("color")}: {tAdmin(`colors.${item.personalization.color}`) || item.personalization.color}
-                        </div>
-                      )}
+                    {item.personalization.color && (
+                      <div>
+                        {tOrderDetails("color")}:{" "}
+                        {tAdmin(`colors.${item.personalization.color}`) ||
+                          item.personalization.color}
+                      </div>
+                    )}
                     {item.personalization.text && (
                       <div>
                         {tOrderDetails("text")}: "{item.personalization.text}"
@@ -385,14 +385,14 @@ export function OrderDetails({ order }: Props) {
 
       <section>
         <h3 className="text-sm font-semibold text-slate-900">
-          {t("orderDetails.technicalDetails")}
+          {tOrdersTable("status")}
         </h3>
         <div className="mt-2 text-xs text-slate-500">
           <div>
-            {t("orderDetails.status")}: {t(`orderStatus.${localStatus}`)}
+            {tOrdersTable("status")}: {t(`orderStatus.${localStatus}`)}
           </div>
           <div>
-            {t("orderDetails.currency")}: {order.currency ?? "EUR"}
+            Währung: {order.currency ?? "EUR"}
           </div>
         </div>
       </section>

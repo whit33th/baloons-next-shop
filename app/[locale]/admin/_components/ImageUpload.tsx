@@ -1,8 +1,8 @@
 "use client";
 
+import { Image as ImageKitImage } from "@imagekit/next";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
-import ImageKitPicture from "@/components/ui/ImageKitPicture";
 import { ADMIN_PRODUCT_IMAGE_TRANSFORMATION } from "@/lib/imagekit";
 import type { PendingImage } from "./types";
 
@@ -31,9 +31,7 @@ export function ImageUpload({
   return (
     <div className="rounded-2xl border border-slate-200 bg-white/70 p-5 shadow-sm">
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-slate-900">
-          {t("title")}
-        </h3>
+        <h3 className="text-sm font-semibold text-slate-900">{t("title")}</h3>
         {totalImages > 0 ? (
           <button
             type="button"
@@ -52,9 +50,7 @@ export function ImageUpload({
             <div className="text-sm font-medium text-slate-700">
               {t("selectFiles")}
             </div>
-            <p className="text-xs text-slate-400">
-              {t("fileLimit")}
-            </p>
+            <p className="text-xs text-slate-400">{t("fileLimit")}</p>
             <input
               ref={fileInputRef}
               type="file"
@@ -72,7 +68,7 @@ export function ImageUpload({
                 className="group relative aspect-3/4 overflow-hidden rounded-xl border border-slate-200"
               >
                 <div className="relative aspect-3/4 w-full overflow-hidden">
-                  <ImageKitPicture
+                  <ImageKitImage
                     src={url}
                     alt={t("productPhoto")}
                     fill

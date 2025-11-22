@@ -20,6 +20,21 @@ export default convexAuthNextjsMiddleware(
   async (request, { convexAuth }) => {
     const { pathname } = request.nextUrl;
 
+    // Handle API routes separately - they should not have locale prefix
+    if (pathname.startsWith("/api/")) {
+      // Protected API routes require authentication
+      const isProtectedApiRoute =
+        pathname.startsWith("/api/imagekit-") ||
+        pathname.startsWith("/api/admin");
+
+      if (isProtectedApiRoute && !(await convexAuth.isAuthenticated())) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      }
+
+      // Allow API routes to proceed without locale handling
+      return NextResponse.next();
+    }
+
     // Handle locale redirection first
     // Check for saved locale preference in cookie
     const savedLocale = request.cookies.get("NEXT_LOCALE")?.value;
@@ -84,5 +99,9 @@ export default convexAuthNextjsMiddleware(
 );
 
 export const config = {
-  matcher: ["/((?!.*\\..*|_next).*)", "/", "/(api|trpc)(.*)"],
+  matcher: [
+    "/((?!.*\\..*|_next).*)", // исключаем .* и _next, но включаем api
+    "/",
+    "/(api|trpc)(.*)", // API роуты должны проходить через middleware для авторизации
+  ],
 };

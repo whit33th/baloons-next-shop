@@ -266,7 +266,14 @@
       "processingError": "There was a processing error. Please try again or use a different card.",
       "incorrectNumber": "The card number appears incorrect. Please check and try again.",
       "tooManyAttempts": "Too many attempts with this card. Try again later or use another payment method.",
-      "additionalVerification": "We still need additional verification for this card."
+      "additionalVerification": "We still need additional verification for this card.",
+      "fraudDetected": "Payment was blocked for suspected fraud. Please try a different payment method.",
+      "invalidRequest": "Invalid request. Please check your payment information and try again.",
+      "connectionError": "Network error. Please check your connection and try again.",
+      "serviceError": "Payment service temporarily unavailable. Please try again later.",
+      "authenticationError": "Authentication error. Please contact support.",
+      "rateLimit": "Too many requests. Please wait a moment and try again.",
+      "duplicateRequest": "Duplicate request detected. Please try again."
     },
     "placeOrder": "Place Order",
     "processing": "Processing...",

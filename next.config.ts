@@ -7,8 +7,8 @@ const nextConfig: NextConfig = {
   experimental: {
     viewTransition: true,
     globalNotFound: true,
+    turbopackFileSystemCacheForDev: true,
   },
-
   reactCompiler: true,
   typedRoutes: true,
   images: {

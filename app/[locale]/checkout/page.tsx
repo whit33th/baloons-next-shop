@@ -33,6 +33,7 @@ import type { ChangeEvent, FocusEvent } from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { type Resolver, type UseFormReturn, useForm } from "react-hook-form";
 import { toast } from "sonner";
+import type Stripe from "stripe";
 import { z } from "zod";
 import {
   Form,
@@ -126,20 +127,120 @@ const getMinPickupDateTime = (): string => {
 /**
  * Helper: turn Stripe/Convex/server errors into user-friendly English messages
  */
-
-// biome-ignore lint/suspicious/noExplicitAny: <no type for now>
+type StripeError =
+  | Stripe.StripeRawError
+  | string
+  | null
+  | undefined
+  | unknown
+  | {
+      message?: string;
+      code?: string;
+      type?: string;
+      decline_code?: string;
+      [key: string]: unknown;
+    };
 function mapStripeErrorToMessage(
-  err: any,
+  err: StripeError,
   t: ReturnType<typeof useTranslations<"checkout">>,
 ): string {
   if (!err) {
     return t("paymentErrors.couldNotComplete");
   }
+
   // Normalize into a raw string for fallback cleaning
-  let raw =
-    typeof err === "string" ? err : (err?.message ?? JSON.stringify(err ?? ""));
+  let raw: string;
+  if (typeof err === "string") {
+    raw = err;
+  } else if (
+    err &&
+    typeof err === "object" &&
+    "message" in err &&
+    typeof err.message === "string"
+  ) {
+    raw = err.message;
+  } else {
+    raw = JSON.stringify(err ?? "");
+  }
   raw = String(raw || "");
 
+  // Try to parse as structured Stripe error JSON first (from our server)
+  let errorObj: {
+    type?: string;
+    code?: string;
+    message?: string;
+    decline_code?: string;
+    param?: string;
+  } | null = null;
+
+  try {
+    const parsed = JSON.parse(raw);
+    if (parsed && typeof parsed === "object" && parsed.type) {
+      errorObj = parsed;
+    }
+  } catch (_) {
+    // Not JSON, continue with raw parsing
+  }
+
+  // If we have structured error, use it directly
+  if (errorObj) {
+    const code = errorObj.code || errorObj.decline_code || errorObj.type;
+    const message = errorObj.message;
+
+    // Map error codes according to Stripe documentation
+    switch (errorObj.type) {
+      case "card_error":
+        // Handle specific card error codes
+        switch (code) {
+          case "fraud_detected":
+            return t("paymentErrors.fraudDetected");
+          case "card_declined":
+            return t("paymentErrors.cardDeclined");
+          case "expired_card":
+            return t("paymentErrors.expiredCard");
+          case "insufficient_funds":
+            return t("paymentErrors.insufficientFunds");
+          case "lost_card":
+            return t("paymentErrors.lostCard");
+          case "stolen_card":
+            return t("paymentErrors.stolenCard");
+          case "incorrect_cvc":
+            return t("paymentErrors.incorrectCvc");
+          case "incorrect_number":
+            return t("paymentErrors.incorrectNumber");
+          case "processing_error":
+            return t("paymentErrors.processingError");
+          case "card_velocity_exceeded":
+            return t("paymentErrors.tooManyAttempts");
+          default:
+            // Use message if available, otherwise generic card error
+            return message || t("paymentErrors.cardDeclined");
+        }
+
+      case "invalid_request_error":
+        return message || t("paymentErrors.invalidRequest");
+
+      case "api_connection_error":
+        return message || t("paymentErrors.connectionError");
+
+      case "api_error":
+        return message || t("paymentErrors.serviceError");
+
+      case "authentication_error":
+        return message || t("paymentErrors.authenticationError");
+
+      case "rate_limit_error":
+        return message || t("paymentErrors.rateLimit");
+
+      case "idempotency_error":
+        return message || t("paymentErrors.duplicateRequest");
+
+      default:
+        return message || t("paymentErrors.couldNotComplete");
+    }
+  }
+
+  // Fallback: try to extract codes from unstructured error
   // Strip common Convex/transport prefixes and bracketed metadata that may appear
   // e.g. "[CONVEX A(stripe:submitPayment)] [Request ID: ...] Server Error Uncaught Error: ..."
   raw = raw.replace(/\[[^\]]+\]\s*/g, "");
@@ -156,23 +257,26 @@ function mapStripeErrorToMessage(
   let code: string | null = null;
 
   // If err is an object, check common properties first
-  if (typeof err === "object" && err !== null) {
-    code = (err.decline_code ||
-      err.declineCode ||
-      err.code ||
-      err.type ||
-      err.stripeCode ||
-      err.error?.code ||
-      err.error?.decline_code) as string | null;
+  if (typeof err === "object" && err !== null && !Array.isArray(err)) {
+    const errObj = err as Record<string, unknown>;
+    code = (errObj.decline_code ||
+      errObj.code ||
+      errObj.type ||
+      errObj.message) as string | null;
     // Convex sometimes wraps details inside an `info` / `details` / `payload` property
     if (!code) {
       const maybe =
-        err.info || err.details || err.payload || err.lastError || err.error;
-      if (maybe && typeof maybe === "object") {
-        code = (maybe.decline_code ||
-          maybe.code ||
-          maybe.type ||
-          maybe.stripeCode) as string | null;
+        errObj.info ||
+        errObj.details ||
+        errObj.payload ||
+        errObj.lastError ||
+        errObj.error;
+      if (maybe && typeof maybe === "object" && !Array.isArray(maybe)) {
+        const maybeObj = maybe as Record<string, unknown>;
+        code = (maybeObj.decline_code ||
+          maybeObj.code ||
+          maybeObj.type ||
+          maybeObj.stripeCode) as string | null;
       }
     }
   }
@@ -739,6 +843,7 @@ function OrderSummary({
   selectedCourierCity,
 }: SummaryProps) {
   const t = useTranslations("checkout");
+  const tCommon = useTranslations("common");
   const getItemDetails = (item: ServerCartItem | GuestCartItem) => {
     if (isServerCartItem(item)) {
       return {
@@ -777,13 +882,13 @@ function OrderSummary({
                     {details.name}
                   </p>
                   <p className="text-xs text-gray-500">
-                    {t("common.quantity")}: {details.quantity}
+                    {tCommon("quantity")}: {details.quantity}
                   </p>
                   {details.personalization && (
                     <div className="mt-1 space-y-0.5 text-xs text-gray-600">
                       {details.personalization.color && (
                         <p>
-                          {t("common.color")}: {details.personalization.color}
+                          {tCommon("color")}: {details.personalization.color}
                         </p>
                       )}
                       {details.personalization.text && (
@@ -793,7 +898,7 @@ function OrderSummary({
                       )}
                       {details.personalization.number && (
                         <p>
-                          {t("common.number")}: {details.personalization.number}
+                          {tCommon("number")}: {details.personalization.number}
                         </p>
                       )}
                     </div>
@@ -1673,6 +1778,7 @@ function StepOne({
   isEmailReadOnly,
 }: StepOneProps) {
   const t = useTranslations("checkout");
+  const tCommon = useTranslations("common");
   return (
     <Form {...form}>
       <div className="space-y-6">
@@ -1917,7 +2023,7 @@ function StepOne({
                     <FormControl>
                       <Input
                         {...field}
-                        placeholder={t("common.exampleAddress")}
+                        placeholder={tCommon("exampleAddress")}
                         autoComplete="address-line1"
                         className="rounded-xl border-gray-200 px-4 py-3 text-base"
                         maxLength={200}

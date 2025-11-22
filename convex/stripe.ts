@@ -168,30 +168,67 @@ export const submitPayment = action({
       }
     }
 
-    const intent = await createStripePaymentIntent({
-      amountMinor: draft.amountMinor,
-      currency: args.paymentCurrency,
-      receiptEmail: args.customer.email,
-      customerName: args.customer.name,
-      customerPhone: args.customer.phone,
-      shippingAddress: (() => {
-        const addr = args.shipping.address;
-        if (typeof addr === "string") {
-          return addr;
+    let intent: StripeIntentSummary;
+    try {
+      intent = await createStripePaymentIntent({
+        amountMinor: draft.amountMinor,
+        currency: args.paymentCurrency,
+        receiptEmail: args.customer.email,
+        customerName: args.customer.name,
+        customerPhone: args.customer.phone,
+        shippingAddress: (() => {
+          const addr = args.shipping.address;
+          if (typeof addr === "string") {
+            return addr;
+          }
+          // Format address for Stripe: street, postalCode city, notes
+          const streetLine = addr.streetAddress.trim();
+          const cityLine = [addr.postalCode.trim(), addr.city.trim()]
+            .filter(Boolean)
+            .join(" ")
+            .trim();
+          const notesLine = addr.deliveryNotes.trim();
+          return [streetLine, cityLine, notesLine]
+            .filter(Boolean)
+            .join("\n")
+            .trim();
+        })(),
+        metadata,
+        paymentMethodId: args.paymentMethodId,
+        description: `${args.customer.name} order`,
+      });
+    } catch (error) {
+      // Extract error message from Stripe error
+      let errorMessage: string | undefined;
+
+      if (error instanceof Error) {
+        // Check if error message is JSON (structured Stripe error)
+        try {
+          const parsed = JSON.parse(error.message);
+          if (parsed && typeof parsed === "object") {
+            errorMessage = JSON.stringify({
+              type: parsed.type,
+              code: parsed.code,
+              message: parsed.message,
+              decline_code: parsed.decline_code,
+              param: parsed.param,
+            });
+          }
+        } catch {
+          // Not JSON, use raw message
+          errorMessage = error.message;
         }
-        // Format address for Stripe: street, postalCode city, notes
-        const streetLine = addr.streetAddress.trim();
-        const cityLine = [addr.postalCode.trim(), addr.city.trim()]
-          .filter(Boolean)
-          .join(" ")
-          .trim();
-        const notesLine = addr.deliveryNotes.trim();
-        return [streetLine, cityLine, notesLine].filter(Boolean).join("\n").trim();
-      })(),
-      metadata,
-      paymentMethodId: args.paymentMethodId,
-      description: `${args.customer.name} order`,
-    });
+      } else {
+        errorMessage = String(error);
+      }
+
+      // Return error in lastError field
+      return {
+        paymentIntentId: "", // No payment intent created
+        status: "failed" as PaymentStatus,
+        lastError: errorMessage,
+      };
+    }
 
     await ctx.runMutation(internal.paymentMutations.createPaymentRecord, {
       userId: draft.userId,
@@ -244,7 +281,49 @@ export const syncPaymentIntentStatus = action({
       return null;
     }
 
-    const intent = await retrieveStripePaymentIntent(args.paymentIntentId);
+    let intent: StripeIntentSummary;
+    try {
+      intent = await retrieveStripePaymentIntent(args.paymentIntentId);
+    } catch (error) {
+      // Extract error message from Stripe error
+      let errorMessage: string | undefined;
+
+      if (error instanceof Error) {
+        // Check if error message is JSON (structured Stripe error)
+        try {
+          const parsed = JSON.parse(error.message);
+          if (parsed && typeof parsed === "object") {
+            errorMessage = JSON.stringify({
+              type: parsed.type,
+              code: parsed.code,
+              message: parsed.message,
+              decline_code: parsed.decline_code,
+              param: parsed.param,
+            });
+          }
+        } catch {
+          // Not JSON, use raw message
+          errorMessage = error.message;
+        }
+      } else {
+        errorMessage = String(error);
+      }
+
+      // Update payment with error status
+      await ctx.runMutation(internal.paymentMutations.updatePaymentStatus, {
+        paymentIntentId: args.paymentIntentId,
+        status: "failed" as PaymentStatus,
+        lastError: errorMessage,
+      });
+
+      return {
+        paymentIntentId: args.paymentIntentId,
+        status: "failed" as PaymentStatus,
+        paymentId: paymentRecord._id,
+        orderId: paymentRecord.orderId,
+        lastError: errorMessage,
+      };
+    }
 
     await ctx.runMutation(internal.paymentMutations.updatePaymentStatus, {
       paymentIntentId: args.paymentIntentId,
@@ -280,37 +359,210 @@ const createStripePaymentIntent = async (
 ): Promise<StripeIntentSummary> => {
   const stripe = getStripeClient();
 
-  const intent = await stripe.paymentIntents.create({
-    amount: args.amountMinor,
-    currency: args.currency,
-    payment_method_types: ["card"],
-    payment_method: args.paymentMethodId,
-    confirm: true,
-    automatic_payment_methods: {
-      enabled: false,
-    },
-    receipt_email: args.receiptEmail,
-    description: args.description,
-    shipping: {
-      name: args.customerName,
-      phone: args.customerPhone,
-      address: {
-        line1: args.shippingAddress,
+  try {
+    const intent = await stripe.paymentIntents.create({
+      amount: args.amountMinor,
+      currency: args.currency,
+      payment_method_types: ["card"],
+      payment_method: args.paymentMethodId,
+      confirm: true,
+      automatic_payment_methods: {
+        enabled: false,
       },
-    },
-    metadata: args.metadata,
-  });
+      receipt_email: args.receiptEmail,
+      description: args.description,
+      shipping: {
+        name: args.customerName,
+        phone: args.customerPhone,
+        address: {
+          line1: args.shippingAddress,
+        },
+      },
+      metadata: args.metadata,
+    });
 
-  return mapIntent(intent);
+    return mapIntent(intent);
+  } catch (error) {
+    // Handle Stripe errors according to official documentation
+    if (error && typeof error === "object" && "type" in error) {
+      const stripeError = error as Stripe.errors.StripeError;
+
+      // For card errors, check charge outcome for fraud blocking
+      if (stripeError.type === "StripeCardError") {
+        const cardError = stripeError as Stripe.errors.StripeCardError;
+
+        // If payment intent exists, check charge outcome
+        if (cardError.payment_intent?.latest_charge) {
+          try {
+            const chargeId =
+              typeof cardError.payment_intent.latest_charge === "string"
+                ? cardError.payment_intent.latest_charge
+                : cardError.payment_intent.latest_charge.id;
+
+            const charge = await stripe.charges.retrieve(chargeId);
+
+            // Check if payment was blocked for fraud
+            if (charge.outcome?.type === "blocked") {
+              throw new Error(
+                JSON.stringify({
+                  type: "card_error",
+                  code: "fraud_detected",
+                  message:
+                    cardError.message ||
+                    "Payment was blocked for suspected fraud. Please try a different payment method.",
+                  decline_code: cardError.decline_code,
+                }),
+              );
+            }
+          } catch (_chargeError) {
+            // If charge retrieval fails, continue with original error
+            // This could happen if charge doesn't exist yet
+          }
+        }
+
+        // Build structured error message for card errors
+        const errorDetails: Record<string, string> = {
+          type: "card_error",
+          code: cardError.code || "card_declined",
+          message:
+            cardError.message ||
+            "Your card was declined. Please try a different payment method.",
+        };
+
+        if (cardError.decline_code) {
+          errorDetails.decline_code = cardError.decline_code;
+        }
+        if (cardError.param) {
+          errorDetails.param = cardError.param;
+        }
+
+        throw new Error(JSON.stringify(errorDetails));
+      }
+
+      // Handle invalid request errors
+      if (stripeError.type === "StripeInvalidRequestError") {
+        const invalidError =
+          stripeError as Stripe.errors.StripeInvalidRequestError;
+
+        throw new Error(
+          JSON.stringify({
+            type: "invalid_request_error",
+            code: invalidError.code || "invalid_request",
+            message:
+              invalidError.message ||
+              "Invalid request. Please check your payment information and try again.",
+            param: invalidError.param,
+          }),
+        );
+      }
+
+      // Handle connection errors
+      if (stripeError.type === "StripeConnectionError") {
+        throw new Error(
+          JSON.stringify({
+            type: "api_connection_error",
+            code: "connection_error",
+            message:
+              "Network error. Please check your connection and try again.",
+          }),
+        );
+      }
+
+      // Handle API errors (rare)
+      if (stripeError.type === "StripeAPIError") {
+        throw new Error(
+          JSON.stringify({
+            type: "api_error",
+            code: "api_error",
+            message:
+              "Payment service temporarily unavailable. Please try again later.",
+          }),
+        );
+      }
+
+      // Handle authentication errors
+      if (stripeError.type === "StripeAuthenticationError") {
+        throw new Error(
+          JSON.stringify({
+            type: "authentication_error",
+            code: "authentication_error",
+            message: "Authentication error. Please contact support.",
+          }),
+        );
+      }
+
+      // Handle rate limit errors
+      if (stripeError.type === "StripeRateLimitError") {
+        throw new Error(
+          JSON.stringify({
+            type: "rate_limit_error",
+            code: "rate_limit_error",
+            message: "Too many requests. Please wait a moment and try again.",
+          }),
+        );
+      }
+
+      // Handle idempotency errors
+      if (stripeError.type === "StripeIdempotencyError") {
+        throw new Error(
+          JSON.stringify({
+            type: "idempotency_error",
+            code: "idempotency_error",
+            message: "Duplicate request detected. Please try again.",
+          }),
+        );
+      }
+
+      // Generic Stripe error fallback
+      throw new Error(
+        JSON.stringify({
+          type: stripeError.type || "stripe_error",
+          code: (stripeError as { code?: string }).code || "unknown",
+          message:
+            stripeError.message ||
+            "An error occurred while processing your payment. Please try again.",
+        }),
+      );
+    }
+
+    // Non-Stripe error
+    throw error;
+  }
 };
 
 const retrieveStripePaymentIntent = async (
   paymentIntentId: string,
 ): Promise<StripeIntentSummary> => {
   const stripe = getStripeClient();
-  const intent = await stripe.paymentIntents.retrieve(paymentIntentId, {
-    expand: ["latest_charge"],
-  });
 
-  return mapIntent(intent, { expectClientSecret: false });
+  try {
+    const intent = await stripe.paymentIntents.retrieve(paymentIntentId, {
+      expand: ["latest_charge"],
+    });
+
+    return mapIntent(intent, { expectClientSecret: false });
+  } catch (error) {
+    // Handle Stripe errors for retrieve operations
+    if (error && typeof error === "object" && "type" in error) {
+      const stripeError = error as Stripe.errors.StripeError;
+
+      // Build structured error message
+      const errorDetails: Record<string, string> = {
+        type: stripeError.type || "stripe_error",
+        code: (stripeError as { code?: string }).code || "unknown",
+        message:
+          stripeError.message ||
+          "Failed to retrieve payment information. Please try again.",
+      };
+
+      if ((stripeError as { param?: string }).param) {
+        errorDetails.param = (stripeError as { param: string }).param;
+      }
+
+      throw new Error(JSON.stringify(errorDetails));
+    }
+
+    // Non-Stripe error
+    throw error;
+  }
 };
