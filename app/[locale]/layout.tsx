@@ -10,7 +10,6 @@ import { SpeedInsights } from "@vercel/speed-insights/next";
 import { DM_Sans } from "next/font/google";
 import { Toaster } from "sonner";
 import { Footer, Header } from "@/components/Containers";
-import { LanguageDetector } from "@/components/LanguageDetector";
 import { ConvexProvider } from "@/components/Providers/ConvexProvider";
 import AppImageKitProvider from "@/components/Providers/ImageKitProvider";
 import { routing } from "@/i18n/routing";
@@ -58,7 +57,6 @@ export default async function LocaleLayout({
           <ConvexAuthNextjsServerProvider>
             <ConvexProvider>
               <AppImageKitProvider>
-                <LanguageDetector />
                 <Header />
                 <main className="flex h-full w-full flex-1 flex-col">
                   {children}

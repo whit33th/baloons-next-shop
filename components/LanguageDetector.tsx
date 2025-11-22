@@ -1,9 +1,9 @@
 "use client";
 
-
 import { useLocale } from "next-intl";
 import { useEffect, useRef } from "react";
 import { usePathname, useRouter } from "@/i18n/routing";
+import { removeLocaleFromPathname } from "@/i18n/utils";
 import { persistLocalePreference } from "@/lib/localePreference";
 
 // Map country codes to locale codes
@@ -44,7 +44,8 @@ export function LanguageDetector() {
     // If user has a saved preference that doesn't match, redirect once
     if (savedLocaleCookie && savedLocaleCookie !== locale) {
       hasDetected.current = true;
-      const pathnameWithoutLocale = pathname.replace(`/${locale}`, "") || "/";
+      // Remove any locale prefix that might be present
+      const pathnameWithoutLocale = removeLocaleFromPathname(pathname);
       router.push(`/${savedLocaleCookie}${pathnameWithoutLocale}`);
       return;
     }
@@ -65,8 +66,8 @@ export function LanguageDetector() {
           if (detectedLocale !== locale) {
             // Save preference
             void persistLocalePreference(detectedLocale);
-            const pathnameWithoutLocale =
-              pathname.replace(`/${locale}`, "") || "/";
+            // Remove any locale prefix that might be present
+            const pathnameWithoutLocale = removeLocaleFromPathname(pathname);
             router.push(`/${detectedLocale}${pathnameWithoutLocale}`);
           }
         })

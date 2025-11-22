@@ -10,6 +10,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { usePathname, useRouter } from "@/i18n/routing";
+import { removeLocaleFromPathname } from "@/i18n/utils";
 import { persistLocalePreference } from "@/lib/localePreference";
 import { cn } from "@/lib/utils";
 import {
@@ -62,9 +63,9 @@ export function LanguageSwitcher() {
     startTransition(() => {
       // Save user preference in both cookie and localStorage
       void persistLocalePreference(newLocale);
-      // pathname from @/i18n/routing should exclude the locale, but handle both cases
-      const pathnameWithoutLocale =
-        pathname?.replace(`/${locale}`, "") || pathname || "/";
+      // Remove any locale prefix that might be present (for safety)
+      const pathnameWithoutLocale = removeLocaleFromPathname(pathname);
+      
       // Preserve search params
       const searchParamsString = searchParams.toString();
       const newUrl = `/${newLocale}${pathnameWithoutLocale}${searchParamsString ? `?${searchParamsString}` : ""}`;
