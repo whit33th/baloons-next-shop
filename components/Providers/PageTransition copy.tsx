@@ -1,8 +1,8 @@
 "use client";
 
 import { motion } from "motion/react";
-import { usePathname } from "next/navigation";
 import type { PropsWithChildren } from "react";
+import { usePathname } from "@/i18n/routing";
 
 export function PageTransition({ children }: PropsWithChildren) {
   const pathname = usePathname();

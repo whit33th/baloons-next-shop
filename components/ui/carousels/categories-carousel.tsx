@@ -1,7 +1,6 @@
 "use client";
 
 import type { Route } from "next";
-import Link from "next/link";
 import { useEffect, useLayoutEffect, useState } from "react";
 import {
   Carousel,
@@ -12,6 +11,7 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousels/carousel";
 import ImageKitPicture from "@/components/ui/ImageKitPicture";
+import { Link } from "@/i18n/routing";
 
 export interface Category {
   name: string;

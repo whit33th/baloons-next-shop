@@ -1,10 +1,13 @@
 "use client";
 
 import { Search as SearchIcon } from "lucide-react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useRef } from "react";
+import { useRouter } from "@/i18n/routing";
 
 export function SearchInput() {
+  const t = useTranslations("catalog");
   const router = useRouter();
   const searchParams = useSearchParams();
   const searchValue = searchParams.get("search") || "";
@@ -49,7 +52,7 @@ export function SearchInput() {
         <SearchIcon className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-black/60" />
         <input
           type="text"
-          placeholder="Search balloons..."
+          placeholder={t("searchPlaceholder")}
           defaultValue={searchValue}
           onChange={(e) => handleSearch(e.target.value)}
           className="focus:border-accent/50 h-10 w-full rounded-full border border-black/20 bg-white/60 py-2 pr-4 pl-10 text-base transition-[border-color] duration-200 outline-none"

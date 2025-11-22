@@ -1,7 +1,8 @@
 "use client";
 
 import { SlidersHorizontal } from "lucide-react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
+import { useTranslations } from 'next-intl';
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,6 +16,7 @@ import {
   DrawerTrigger,
 } from "@/components/ui/drawer";
 import { BALLOON_COLORS, getColorStyle } from "@/constants/colors";
+import { useRouter } from "@/i18n/routing";
 
 const PRICE_RANGES = [
   { label: "Up to €5", min: 0, max: 5 },
@@ -26,6 +28,7 @@ const PRICE_RANGES = [
 ];
 
 export function FiltersDrawer() {
+  const t = useTranslations('catalog');
   const router = useRouter();
   const searchParams = useSearchParams();
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -95,16 +98,16 @@ export function FiltersDrawer() {
           className="border-border/50 text-deep flex h-10 items-center gap-2 text-sm font-medium tracking-wide underline-offset-1 transition-colors hover:underline"
         >
           <SlidersHorizontal className="h-4 w-4" />
-          Filters
+          {t('filters')}
         </button>
       </DrawerTrigger>
       <DrawerContent className="bg-primary max-h-[85vh] rounded-t-2xl">
         <DrawerHeader className="pb-4">
           <DrawerTitle className="text-deep text-center text-2xl font-bold tracking-wide uppercase">
-            Filters
+            {t('filtersTitle')}
           </DrawerTitle>
           <DrawerDescription className="text-deep/70 text-center">
-            Select your preferred filters for balloons
+            {t('selectPreferredFilters')}
           </DrawerDescription>
         </DrawerHeader>
 
@@ -113,7 +116,7 @@ export function FiltersDrawer() {
             {/* Available Toggle */}
             <div>
               <h3 className="text-deep mb-3 text-lg font-semibold tracking-wide uppercase">
-                Availability
+                {t('availability')}
               </h3>
               <Button
                 size="sm"
@@ -126,14 +129,14 @@ export function FiltersDrawer() {
                     : "border-border/30 hover:border-secondary/50 bg-white/50"
                 }`}
               >
-                In Stock
+                {t('inStock')}
               </Button>
             </div>
 
             {/* Color Filter */}
             <div>
               <h3 className="text-deep mb-3 text-lg font-semibold tracking-wide uppercase">
-                Balloon Color
+                {t('balloonColor')}
               </h3>
               <div className="grid grid-cols-3 gap-2">
                 {BALLOON_COLORS.map((color) => (
@@ -171,7 +174,7 @@ export function FiltersDrawer() {
             {/* Price Range Buttons */}
             <div>
               <h3 className="text-deep mb-3 text-lg font-semibold tracking-wide uppercase">
-                Price Range
+                {t('priceRange')}
               </h3>
               <div className="grid grid-cols-2 gap-3">
                 {PRICE_RANGES.map((range) => (
@@ -203,11 +206,11 @@ export function FiltersDrawer() {
             onClick={clearFilters}
             className="border-secondary text-deep hover:bg-secondary/10 w-full rounded-xl bg-transparent tracking-wide uppercase transition-[background-color,box-shadow] duration-200 hover:shadow-sm"
           >
-            Clear All Filters
+            {t('clearAllFilters')}
           </Button>
           <DrawerClose asChild>
             <Button className="btn-secondary text-on-secondary w-full rounded-xl transition-colors hover:brightness-95">
-              Apply Filters
+              {t('applyFilters')}
             </Button>
           </DrawerClose>
         </DrawerFooter>

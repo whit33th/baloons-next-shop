@@ -1,11 +1,12 @@
 "use client";
 
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { useCallback, useMemo } from "react";
 import {
   CATEGORY_TO_GROUP,
   PRODUCT_CATEGORY_GROUPS,
 } from "@/constants/categories";
+import { useRouter } from "@/i18n/routing";
 import { FiltersDrawer } from "./FiltersDrawer";
 import { SearchInput } from "./SearchInput";
 import { SortByButton } from "./SortByButton";

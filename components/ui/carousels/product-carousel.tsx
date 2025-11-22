@@ -1,7 +1,7 @@
 "use client";
 
 import { ArrowRight } from "lucide-react";
-import Link from "next/link";
+import { useTranslations } from 'next-intl';
 import { useEffect, useLayoutEffect, useState } from "react";
 import {
   Carousel,
@@ -12,6 +12,7 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousels/carousel";
 import type { ProductWithImage } from "@/convex/helpers/products";
+import { Link } from '@/i18n/routing';
 import ProductCard from "../productCard";
 
 export interface ProductCarouselProps {
@@ -29,6 +30,7 @@ export function ProductCarousel({
   secondaryLabel,
   transitionGroup,
 }: ProductCarouselProps) {
+  const t = useTranslations('home');
   const [isMobile, setIsMobile] = useState<boolean>(false);
 
   useEffect(() => {
@@ -78,7 +80,7 @@ export function ProductCarousel({
           href="/catalog"
           className="flex items-center gap-2 text-sm transition-[gap] duration-200 hover:gap-3"
         >
-          All products
+          {t('allProducts')}
           <ArrowRight className="h-4 w-4" />
         </Link>
       </div>

@@ -1,83 +1,85 @@
-import { Facebook, Instagram } from "lucide-react";
-import Link from "next/link";
+"use client";
 
+import { Facebook, Instagram } from "lucide-react";
+import { useTranslations } from 'next-intl';
 import { STORE_INFO, WHATSAPP_NUMBER } from "@/constants/config";
+import { Link } from '@/i18n/routing';
 
 type InternalLink = {
-  label: string;
-  href: { pathname: string };
+  labelKey: string;
+  href: string;
 };
 
 type ExternalLink = {
-  label: string;
+  labelKey: string;
   href: string;
   external: true;
 };
 
 type FooterSection = {
-  title: string;
+  titleKey: string;
   links: Array<InternalLink | ExternalLink>;
 };
 
 const sections: FooterSection[] = [
   {
-    title: "Shop",
+    titleKey: "footer.shop",
     links: [
-      { label: "Home", href: { pathname: "/" as const } },
-      { label: "Catalog", href: { pathname: "/catalog" as const } },
-      { label: "Cart", href: { pathname: "/cart" as const } },
-      { label: "Checkout", href: { pathname: "/checkout" as const } },
+      { labelKey: "footer.home", href: "/" },
+      { labelKey: "footer.catalog", href: "/catalog" },
+      { labelKey: "footer.cart", href: "/cart" },
+      { labelKey: "footer.checkout", href: "/checkout" },
     ],
   },
   {
-    title: "Customer Care",
+    titleKey: "footer.customerCare",
     links: [
       {
-        label: "Delivery & Pickup",
-        href: { pathname: "/delivery" as const },
+        labelKey: "footer.deliveryPickup",
+        href: "/delivery",
       },
       {
-        label: "My Orders",
-        href: { pathname: "/profile" as const },
+        labelKey: "footer.myOrders",
+        href: "/profile",
       },
       {
-        label: "WhatsApp",
+        labelKey: "footer.whatsapp",
         href: `https://wa.me/${WHATSAPP_NUMBER}`,
         external: true,
       },
     ],
   },
   {
-    title: "Company",
+    titleKey: "footer.company",
     links: [
       {
-        label: "Imprint",
-        href: { pathname: "/legal/imprint" as const },
+        labelKey: "footer.imprint",
+        href: "/legal/imprint",
       },
       {
-        label: "Terms & Conditions",
-        href: { pathname: "/legal/terms" as const },
+        labelKey: "footer.terms",
+        href: "/legal/terms",
       },
       {
-        label: "Privacy Policy",
-        href: { pathname: "/legal/privacy" as const },
+        labelKey: "footer.privacy",
+        href: "/legal/privacy",
       },
       {
-        label: "Cancellation Policy",
-        href: { pathname: "/legal/cancellation" as const },
+        labelKey: "footer.cancellation",
+        href: "/legal/cancellation",
       },
     ],
   },
   {
-    title: "Social",
+    titleKey: "footer.social",
     links: [
       {
-        label: "Instagram",
+        labelKey: "footer.instagram",
         href: STORE_INFO.social.instagram,
         external: true,
       },
       {
-        label: "Facebook",
+        labelKey: "footer.facebook",
         href: STORE_INFO.social.facebook,
         external: true,
       },
@@ -86,16 +88,14 @@ const sections: FooterSection[] = [
 ];
 
 const legalLinks: InternalLink[] = [
-  { label: "Terms & Conditions", href: { pathname: "/legal/terms" as const } },
-  { label: "Privacy Policy", href: { pathname: "/legal/privacy" as const } },
-  {
-    label: "Cancellation Policy",
-    href: { pathname: "/legal/cancellation" as const },
-  },
-  { label: "Imprint", href: { pathname: "/legal/imprint" as const } },
+  { labelKey: "footer.terms", href: "/legal/terms" },
+  { labelKey: "footer.privacy", href: "/legal/privacy" },
+  { labelKey: "footer.cancellation", href: "/legal/cancellation" },
+  { labelKey: "footer.imprint", href: "/legal/imprint" },
 ];
 
 export const Footer = () => {
+  const t = useTranslations();
   const year = new Date().getFullYear();
 
   return (
@@ -104,14 +104,13 @@ export const Footer = () => {
         <div className="flex flex-col gap-8 lg:flex-row lg:items-start lg:justify-between">
           <div className="space-y-4">
             <Link
-              href={{ pathname: "/" }}
+              href="/"
               className="text-xl font-semibold tracking-tight text-white"
             >
-              {STORE_INFO.name}
+              {t('store.name')}
             </Link>
             <p className="max-w-sm text-sm text-white/75">
-              Bespoke balloon decor delivered across Styria, crafted for moments
-              that linger long after the last guest leaves.
+              {t('footer.description')}
             </p>
             <div className="flex flex-wrap items-center gap-2">
               {/* <div className="flex items-center gap-2" aria-hidden="true">
@@ -163,34 +162,34 @@ export const Footer = () => {
 
           <div className="flex flex-col gap-6 text-sm text-white/75 lg:flex-row lg:items-start lg:gap-10">
             {sections.map((section) => (
-              <div key={section.title} className="min-w-[140px] space-y-3">
+              <div key={section.titleKey} className="min-w-[140px] space-y-3">
                 <p className="text-xs font-semibold tracking-[0.18em] text-white/60 uppercase">
-                  {section.title}
+                  {t(section.titleKey)}
                 </p>
                 <ul className="space-y-1.5">
                   {section.links.map((link) => {
                     if ("external" in link) {
                       return (
-                        <li key={link.label}>
+                        <li key={link.labelKey}>
                           <a
                             href={link.href}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="transition-opacity hover:opacity-80"
                           >
-                            {link.label}
+                            {t(link.labelKey)}
                           </a>
                         </li>
                       );
                     }
 
                     return (
-                      <li key={link.label}>
+                      <li key={link.labelKey}>
                         <Link
                           href={link.href}
                           className="transition-opacity hover:opacity-80"
                         >
-                          {link.label}
+                          {t(link.labelKey)}
                         </Link>
                       </li>
                     );
@@ -204,16 +203,16 @@ export const Footer = () => {
         <div className="mt-8 border-t border-white/10 pt-4 text-xs text-white/60">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <p>
-              &copy; {year} {STORE_INFO.name}. All rights reserved.
+              &copy; {year} {t('store.name')}. {t('footer.allRightsReserved')}
             </p>
             <nav className="flex flex-wrap gap-x-5 gap-y-2">
               {legalLinks.map((link) => (
                 <Link
-                  key={link.label}
+                  key={link.labelKey}
                   href={link.href}
                   className="transition-opacity hover:opacity-80"
                 >
-                  {link.label}
+                  {t(link.labelKey)}
                 </Link>
               ))}
             </nav>

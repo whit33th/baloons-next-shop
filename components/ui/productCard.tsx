@@ -1,11 +1,10 @@
 "use client";
 
 import type { Route } from "next";
-import Link from "next/link";
 import { type ReactNode, ViewTransition } from "react";
-
 import ImageKitPicture from "@/components/ui/ImageKitPicture";
 import type { Doc } from "@/convex/_generated/dataModel";
+import { Link } from "@/i18n/routing";
 import { DEFAULT_PRODUCT_IMAGE_TRANSFORMATION } from "@/lib/imagekit";
 import { balloonColors } from "../ProductGrid";
 
@@ -37,15 +36,7 @@ export default function ProductCard({
       ? transitionGroups.map((group) => `product-image-${group}-${product._id}`)
       : [`product-image-${product._id}`];
 
-  const fallbackImages = [
-    "/baloons2.png",
-    "/baloons3.png",
-    "/img.jpg",
-    "/baloons4.png",
-  ];
-
-  const displayImage =
-    product.primaryImageUrl ?? fallbackImages[index % fallbackImages.length];
+  const displayImage = product.primaryImageUrl ?? product.imageUrls[0] ?? null;
 
   const tags: ProductTag[] = product.tags ?? [];
   const formattedPrice = `${product.price.toFixed(2)} €`;
@@ -61,25 +52,31 @@ export default function ProductCard({
           className="relative aspect-3/4 w-full"
           style={{ backgroundColor: bgColor }}
         >
-          {transitionNames.reduceRight<ReactNode>(
-            (child, name) => (
-              <ViewTransition key={name} name={name}>
-                {child}
-              </ViewTransition>
-            ),
-            (
-              <ImageKitPicture
-                src={displayImage}
-                alt={product.name}
-                width={400}
-                height={600}
-                className="aspect-3/4 h-full w-full object-cover"
-                loading={index < 2 ? "eager" : "lazy"}
-                transformation={DEFAULT_PRODUCT_IMAGE_TRANSFORMATION}
-                placeholderOptions={{ width: 36, quality: 12, blur: 40 }}
-                sizes="(min-width: 1280px) 20vw, (min-width: 768px) 30vw, 90vw"
-              />
-            ) as ReactNode,
+          {displayImage ? (
+            transitionNames.reduceRight<ReactNode>(
+              (child, name) => (
+                <ViewTransition key={name} name={name}>
+                  {child}
+                </ViewTransition>
+              ),
+              (
+                <ImageKitPicture
+                  src={displayImage}
+                  alt={product.name}
+                  width={400}
+                  height={600}
+                  className="aspect-3/4 h-full w-full object-cover"
+                  loading={index < 2 ? "eager" : "lazy"}
+                  transformation={DEFAULT_PRODUCT_IMAGE_TRANSFORMATION}
+                  placeholderOptions={{ width: 36, quality: 12, blur: 40 }}
+                  sizes="(min-width: 1280px) 20vw, (min-width: 768px) 30vw, 90vw"
+                />
+              ) as ReactNode,
+            )
+          ) : (
+            <div className="bg-card flex h-full w-full items-center justify-center text-xs tracking-wide text-black/60 uppercase">
+              {product.name}
+            </div>
           )}
         </div>
 

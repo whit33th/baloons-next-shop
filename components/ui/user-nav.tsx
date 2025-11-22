@@ -4,7 +4,7 @@ import { useAuthActions } from "@convex-dev/auth/react";
 import { useQuery } from "convex-helpers/react/cache";
 import { History, LogOut, User } from "lucide-react";
 import Image from "next/image";
-import Link from "next/link";
+import { useTranslations } from 'next-intl';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { api } from "@/convex/_generated/api";
 import { useConvexAvatarStorage } from "@/hooks/useConvexAvatarStorage";
+import { Link } from '@/i18n/routing';
 
 interface UserNavProps {
   user?: {
@@ -26,6 +27,8 @@ interface UserNavProps {
 }
 
 export function UserNav({ user }: UserNavProps) {
+  const t = useTranslations('userNav');
+  const _tCommon = useTranslations('common');
   const queriedUser = useQuery(api.auth.loggedInUser);
   const currentUser = user ?? queriedUser;
 
@@ -101,7 +104,7 @@ export function UserNav({ user }: UserNavProps) {
         {/* Account Section */}
         <div className="p-2">
           <DropdownMenuLabel className="px-2 py-2 text-xs font-semibold tracking-wide text-[#8B7F76] uppercase">
-            Account
+            {t('account')}
           </DropdownMenuLabel>
           <div className="space-y-1">
             <DropdownMenuItem asChild>
@@ -115,10 +118,10 @@ export function UserNav({ user }: UserNavProps) {
                   </div>
                   <div className="flex-1">
                     <p className="text-deep group-hover:text-background text-sm font-medium transition-colors">
-                      Profile
+                      {t('profile')}
                     </p>
                     <p className="text-deep/60 group-hover:text-background text-xs transition-colors">
-                      View and edit profile
+                      {t('viewAndEditProfile')}
                     </p>
                   </div>
                 </div>
@@ -136,10 +139,10 @@ export function UserNav({ user }: UserNavProps) {
                   </div>
                   <div className="flex-1">
                     <p className="text-deep group-hover:text-background text-sm font-medium transition-colors">
-                      Orders
+                      {t('orders')}
                     </p>
                     <p className="text-deep/60 group-hover:text-background text-xs transition-colors">
-                      Track your orders
+                      {t('trackYourOrders')}
                     </p>
                   </div>
                 </div>
@@ -224,8 +227,8 @@ export function UserNav({ user }: UserNavProps) {
                 <LogOut className="size-4 text-red-600" />
               </div>
               <div className="flex-1">
-                <p className="text-sm font-medium text-red-600">Log out</p>
-                <p className="text-xs text-red-500/70">Sign out of account</p>
+                <p className="text-sm font-medium text-red-600">{t('logOut')}</p>
+                <p className="text-xs text-red-500/70">{t('signOutOfAccount')}</p>
               </div>
             </div>
           </DropdownMenuItem>

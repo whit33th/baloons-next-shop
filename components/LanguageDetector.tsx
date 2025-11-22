@@ -1,0 +1,81 @@
+"use client";
+
+
+import { useLocale } from "next-intl";
+import { useEffect, useRef } from "react";
+import { usePathname, useRouter } from "@/i18n/routing";
+import { persistLocalePreference } from "@/lib/localePreference";
+
+// Map country codes to locale codes
+const countryToLocale: Record<string, string> = {
+  AT: "at", // Austria
+  DE: "at", // Germany
+  UA: "ua", // Ukraine
+  RU: "ru", // Russia
+  BY: "ru", // Belarus
+  KZ: "ru", // Kazakhstan
+  // Default to Austria for other countries
+};
+
+export function LanguageDetector() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const locale = useLocale();
+  const hasDetected = useRef(false);
+
+  useEffect(() => {
+    // Only run detection once per session
+    if (hasDetected.current) {
+      return;
+    }
+
+    // Check if user has already selected a language (from cookie)
+    const savedLocaleCookie = document.cookie
+      .split("; ")
+      .find((row) => row.startsWith("NEXT_LOCALE="))
+      ?.split("=")[1];
+
+    // If user has a saved preference that matches current locale, do nothing
+    if (savedLocaleCookie && savedLocaleCookie === locale) {
+      hasDetected.current = true;
+      return;
+    }
+
+    // If user has a saved preference that doesn't match, redirect once
+    if (savedLocaleCookie && savedLocaleCookie !== locale) {
+      hasDetected.current = true;
+      const pathnameWithoutLocale = pathname.replace(`/${locale}`, "") || "/";
+      router.push(`/${savedLocaleCookie}${pathnameWithoutLocale}`);
+      return;
+    }
+
+    // Only detect from geolocation if no saved preference exists
+    // and we haven't detected yet
+    if (!savedLocaleCookie && !hasDetected.current) {
+      hasDetected.current = true;
+
+      // Use a free geolocation API
+      fetch("https://ipapi.co/json/")
+        .then((res) => res.json())
+        .then((data) => {
+          const countryCode = data.country_code;
+          const detectedLocale = countryToLocale[countryCode] || "at"; // Default to Austria
+
+          // Only redirect if detected locale is different from current
+          if (detectedLocale !== locale) {
+            // Save preference
+            void persistLocalePreference(detectedLocale);
+            const pathnameWithoutLocale =
+              pathname.replace(`/${locale}`, "") || "/";
+            router.push(`/${detectedLocale}${pathnameWithoutLocale}`);
+          }
+        })
+        .catch((error) => {
+          // Silently fail - user stays on current locale
+          console.error("Failed to detect location:", error);
+        });
+    }
+  }, [locale, pathname, router]);
+
+  return null; // This component doesn't render anything
+}

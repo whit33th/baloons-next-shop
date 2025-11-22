@@ -2,8 +2,9 @@
 
 import { motion } from "motion/react";
 import Image from "next/image";
-import Link from "next/link";
+import { useTranslations } from "next-intl";
 import type { CategoryGroup } from "@/constants/categories";
+import { Link } from "@/i18n/routing";
 
 // We render category-like cards (styled similarly to ProductCard) but they
 // should link to the catalog filtered by category, not product details.
@@ -15,6 +16,8 @@ interface CategoryCardsProps {
 // No longer rendering ProductCard directly so these types are unused.
 
 export default function CategoryCards({ group }: CategoryCardsProps) {
+  const tHome = useTranslations("home");
+  const tCatalog = useTranslations("catalog");
   const SUBCATEGORY_IMAGES: Record<string, string> = {
     "for kids boys": "/imgs/subcategories/balloons/kids-for-him.jpg",
     "for kids girls": "/imgs/subcategories/balloons/kids-for-her.jpg",
@@ -61,7 +64,7 @@ export default function CategoryCards({ group }: CategoryCardsProps) {
               >
                 <Image
                   src={imgFromMap}
-                  alt={subcategory.label}
+                  alt={tCatalog(`subcategories.${subcategory.value}`)}
                   fill
                   className="object-cover"
                   sizes="(max-width: 640px) 50vw, (max-width: 1280px) 260px, 300px"
@@ -70,10 +73,10 @@ export default function CategoryCards({ group }: CategoryCardsProps) {
 
               <div className="border-foreground relative flex flex-col gap-1 border-t px-4 py-3">
                 <h3 className="text-sm leading-tight wrap-break-word">
-                  {subcategory.label}
+                  {tCatalog(`subcategories.${subcategory.value}`)}
                 </h3>
                 <span className="text-sm font-semibold text-black/70">
-                  Browse sets
+                  {tHome("browseSets")}
                 </span>
               </div>
             </div>

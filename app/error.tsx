@@ -2,10 +2,10 @@
 
 import { Facebook, Home, Instagram, Mail, ShoppingBag } from "lucide-react";
 import { motion } from "motion/react";
-import Link from "next/link";
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { STORE_INFO } from "@/constants/config";
+import { Link } from "@/i18n/routing";
 import "./globals.css";
 
 export default function ErrorPage({

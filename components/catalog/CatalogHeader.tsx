@@ -1,3 +1,6 @@
+"use client";
+
+import { useTranslations } from 'next-intl';
 import type { CategoryDescriptor, CategoryGroup } from "@/constants/categories";
 
 interface CatalogHeaderProps {
@@ -6,17 +9,18 @@ interface CatalogHeaderProps {
 }
 
 export function CatalogHeader({ group, subcategory }: CatalogHeaderProps) {
+  const t = useTranslations('catalog');
   return (
     <div className="relative">
       <div className="grid grid-cols-1 items-center gap-6 p-4 pb-0 sm:grid-cols-[1fr_auto] sm:p-8 sm:pb-0">
         <div className="relative z-10 flex flex-col gap-3 sm:pr-6">
           <div className="text-deep/50 flex flex-wrap items-center gap-3 text-xs font-semibold tracking-[0.35em] uppercase">
-            <span>Catalog</span>
+            <span>{t('title')}</span>
           </div>
           <div>
             <div className="flex flex-wrap items-center gap-4 sm:flex-nowrap">
               <h1 className="text-3xl font-semibold text-slate-900 sm:text-4xl">
-                {group ? group.label : "All Products"}
+                {group ? group.label : t('allProducts')}
               </h1>
               {group && subcategory ? (
                 <span className="inline-flex items-center gap-3 self-center">

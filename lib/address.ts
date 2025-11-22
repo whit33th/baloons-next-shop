@@ -1,3 +1,4 @@
+import type { useTranslations } from "next-intl";
 import { z } from "zod";
 import { STORE_INFO } from "@/constants/config";
 
@@ -9,6 +10,34 @@ export type AddressFields = {
 };
 
 // Base address schema with required fields (for checkout)
+// Takes a translation function to support i18n
+export const createAddressSchema = (
+  t: ReturnType<typeof useTranslations<"checkout">>,
+) =>
+  z.object({
+    streetAddress: z
+      .string()
+      .min(1, t("validation.streetAddressRequired"))
+      .min(3, t("validation.streetAddressMin3Chars"))
+      .max(200, t("validation.streetAddressMax200Chars")),
+    city: z
+      .string()
+      .min(1, t("validation.cityRequired"))
+      .min(2, t("validation.cityMin2Chars"))
+      .max(100, t("validation.cityMax100Chars")),
+    postalCode: z
+      .string()
+      .min(1, t("validation.postalCodeRequired"))
+      .regex(/^\d{3,10}$/, t("validation.postalCodeInvalid")),
+    deliveryNotes: z
+      .string()
+      .max(500, t("validation.deliveryNotesMax500Chars"))
+      .default("")
+      .transform((val) => val || ""),
+  });
+
+// Legacy export for backward compatibility (will use English messages)
+// This should be replaced with createAddressSchema in all usages
 export const addressSchema = z.object({
   streetAddress: z
     .string()

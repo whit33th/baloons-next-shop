@@ -1,30 +1,29 @@
+"use client";
+
 import Image from "next/image";
-import Link from "next/link";
+import { useTranslations } from "next-intl";
 import {
   buildCatalogLink,
   buildCategoryPagePath,
   PRODUCT_CATEGORY_GROUPS,
 } from "@/constants/categories";
+import { Link } from "@/i18n/routing";
 
 export function CategorySection() {
+  const t = useTranslations("home");
+  const tCatalog = useTranslations("catalog");
   return (
     <section className="relative w-full overflow-hidden">
       <div className="flex items-center justify-between p-4 px-4">
         <h2 className="flex max-w-2xl gap-1.5 truncate text-xl leading-tight md:text-2xl">
-          <span>Shop by</span>
+          <span>{t("shopBy")}</span>
           <span>✧</span>
-          <span>Category</span>
+          <span>{t("category")}</span>
         </h2>
       </div>
       <div className="border-foreground grid w-full grid-cols-2 gap-0 border-t md:grid-cols-4">
         {PRODUCT_CATEGORY_GROUPS.map((group, index) => {
           const hasSubcategories = group.subcategories.length > 0;
-          const href = hasSubcategories
-            ? buildCategoryPagePath(group.value)
-            : group.categoryValue
-              ? buildCatalogLink(group.value, { category: group.categoryValue })
-              : buildCatalogLink(group.value);
-
           // Assign colors based on category - matching product card theme
           const balloonColors = [
             "#FFB3BA", // pastel pink
@@ -37,10 +36,17 @@ export function CategorySection() {
           const colorIndex = index % balloonColors.length;
           const bgColor = balloonColors[colorIndex];
 
+          // Build href - for category pages use string path, for catalog use object
+          const href = hasSubcategories
+            ? buildCategoryPagePath(group.value)
+            : group.categoryValue
+              ? buildCatalogLink(group.value, { category: group.categoryValue })
+              : buildCatalogLink(group.value);
+
           return (
             <Link
               key={group.value}
-              href={typeof href === "string" ? { pathname: href } : href}
+              href={href}
               className="focus-visible:ring-accent focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
             >
               <div className="border-foreground flex h-full flex-col border-r border-b">
@@ -51,7 +57,7 @@ export function CategorySection() {
                 >
                   <Image
                     src={group.icon}
-                    alt={group.label}
+                    alt={tCatalog(`categoryGroups.${group.value}`)}
                     fill
                     className="object-cover"
                     priority
@@ -63,12 +69,12 @@ export function CategorySection() {
                 {/* Category Info */}
                 <div className="border-foreground relative flex flex-col gap-0.5 border-t px-3 py-2 sm:gap-1 sm:px-4 sm:py-3">
                   <h3 className="text-xs leading-tight font-semibold sm:text-sm">
-                    {group.label}
+                    {tCatalog(`categoryGroups.${group.value}`)}
                   </h3>
                   <span className="text-[10px] font-medium text-[rgba(var(--deep-rgb),0.55)] sm:text-xs">
                     {group.subcategories.length > 0
-                      ? `${group.subcategories.length} collections`
-                      : "View collection"}
+                      ? `${group.subcategories.length} ${t("collections")}`
+                      : t("viewCollection")}
                   </span>
                 </div>
               </div>
@@ -87,7 +93,7 @@ export function CategorySection() {
             >
               <Image
                 src="/imgs/categories/all-products.webp"
-                alt="All Products"
+                alt={t("allProducts")}
                 fill
                 className="object-cover"
                 priority
@@ -98,10 +104,10 @@ export function CategorySection() {
 
             <div className="border-foreground relative flex flex-col gap-0.5 border-t px-3 py-2 sm:gap-1 sm:px-4 sm:py-3">
               <h3 className="text-xs leading-tight font-semibold sm:text-sm">
-                All Products
+                {t("allProducts")}
               </h3>
               <span className="text-[10px] font-medium text-[rgba(var(--deep-rgb),0.55)] sm:text-xs">
-                View all items
+                {t("viewAllItems")}
               </span>
             </div>
           </div>

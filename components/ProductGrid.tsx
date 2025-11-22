@@ -3,6 +3,7 @@
 import { usePaginatedQuery } from "convex/react";
 import { motion } from "motion/react";
 import Image from "next/image";
+import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useState } from "react";
 import { api } from "@/convex/_generated/api";
 import { calculateItemsToLoad, getItemsToLoad } from "@/lib/pagination";
@@ -65,6 +66,7 @@ type TagOption = (typeof TAG_OPTIONS)[number];
 const TAG_OPTION_SET = new Set<TagOption>(TAG_OPTIONS);
 
 export function ProductGrid({ filters }: ProductGridProps) {
+  const t = useTranslations("catalog");
   const {
     search,
     minPrice,
@@ -245,14 +247,14 @@ export function ProductGrid({ filters }: ProductGridProps) {
       <div className="flex min-h-[calc(100vh-305px)] w-full flex-1 flex-col items-center justify-center py-16 text-center">
         <Image
           src="/imgs/cat.png"
-          alt="No balloons found"
+          alt={t("noBalloonsFound")}
           width={200}
           height={200}
         />
         <h3 className="mb-2 text-xl font-semibold text-black">
-          No balloons found
+          {t("noBalloonsFound")}
         </h3>
-        <p className="text-black">Try adjusting your search or filters</p>
+        <p className="text-black">{t("tryAdjustingSearch")}</p>
       </div>
     );
   }

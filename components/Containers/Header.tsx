@@ -4,15 +4,17 @@ import { Authenticated, Unauthenticated, useMutation } from "convex/react";
 import { useQuery } from "convex-helpers/react/cache";
 import { ShieldCheck, ShoppingBag, User } from "lucide-react";
 import Image from "next/image";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useEffect, useRef } from "react";
+import { LanguageSwitcher } from "@/components/ui/language-switcher";
 import { UserNav } from "@/components/ui/user-nav";
+import { api } from "@/convex/_generated/api";
+import { Link, useRouter } from "@/i18n/routing";
 import { mapGuestCartForImport, useGuestCart } from "@/lib/guestCart";
-import { api } from "../../convex/_generated/api";
 import IconButton from "../ui/icon-button";
 
 export function Header() {
+  const t = useTranslations("header");
   const cartTotal = useQuery(api.cart.getTotal);
   const user = useQuery(api.auth.loggedInUser);
   const {
@@ -95,12 +97,13 @@ export function Header() {
             priority
             loading="eager"
           />
-          Ballon Boutique
+          {t("logo")}
         </Link>
       </nav>
       <div className="flex items-center justify-center"></div>
 
       <div className="flex items-center gap-0.5 justify-self-end px-1 sm:gap-3 sm:px-3">
+        <LanguageSwitcher />
         {user?.isAdmin ? (
           <Link href="/admin">
             <IconButton Icon={ShieldCheck} ariaLabel="Admin" />
@@ -108,7 +111,7 @@ export function Header() {
         ) : null}
         <AuthAction />
         <Link href="/cart" className="relative">
-          <IconButton Icon={ShoppingBag} ariaLabel="Open cart" />
+          <IconButton Icon={ShoppingBag} ariaLabel={t("openCart")} />
           {badgeCount > 0 && (
             <span className="bg-accent text-on-accent absolute top-0 right-2.5 flex min-h-[1.2rem] min-w-[1.2rem] translate-x-1/2 items-center justify-center rounded-full px-1 py-0.5 text-[0.7rem] md:right-1.5">
               {badgeCount > 99 ? "99+" : badgeCount}
@@ -121,6 +124,7 @@ export function Header() {
 }
 
 function AuthAction() {
+  const t = useTranslations("header");
   const user = useQuery(api.auth.loggedInUser);
 
   return (
@@ -142,7 +146,7 @@ function AuthAction() {
             <User className="h-5 w-5 text-current" />
           </button>
           <span className="border-deep hidden h-10 w-auto items-center justify-center rounded-lg border-2 px-3 sm:flex">
-            Log In
+            {t("logIn")}
           </span>
         </Link>
       </Unauthenticated>

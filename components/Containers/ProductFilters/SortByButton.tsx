@@ -1,7 +1,8 @@
 "use client";
 
 import { ArrowUpDown } from "lucide-react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,18 +15,20 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "@/components/ui/drawer";
-
-const sortOptions = [
-  { value: "default", label: "Default" },
-  { value: "name-asc", label: "Name: A to Z" },
-  { value: "name-desc", label: "Name: Z to A" },
-];
+import { useRouter } from "@/i18n/routing";
 
 export function SortByButton() {
+  const t = useTranslations("catalog");
   const router = useRouter();
   const searchParams = useSearchParams();
   const currentSort = searchParams.get("sort") || "default";
   const [drawerOpen, setDrawerOpen] = useState(false);
+
+  const sortOptions = [
+    { value: "default", label: t("default") },
+    { value: "name-asc", label: t("nameAsc") },
+    { value: "name-desc", label: t("nameDesc") },
+  ];
 
   const handleSortChange = (value: string) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -42,7 +45,7 @@ export function SortByButton() {
   };
 
   const currentSortLabel =
-    sortOptions.find((opt) => opt.value === currentSort)?.label ?? "Sort by";
+    sortOptions.find((opt) => opt.value === currentSort)?.label ?? t("sortBy");
 
   return (
     <Drawer open={drawerOpen} onOpenChange={setDrawerOpen}>
@@ -52,16 +55,16 @@ export function SortByButton() {
           className="border-border/50 text-deep flex h-10 items-center justify-center gap-2 text-sm font-medium tracking-wide underline-offset-1 transition-colors hover:underline"
         >
           <ArrowUpDown className="h-4 w-4" />
-          Sort By: {currentSortLabel}
+          {t("sortBy")}: {currentSortLabel}
         </button>
       </DrawerTrigger>
       <DrawerContent className="bg-primary max-h-[70vh] rounded-t-2xl">
         <DrawerHeader className="pb-4">
           <DrawerTitle className="text-deep text-center text-2xl font-bold tracking-wide uppercase">
-            Sort By
+            {t("sortByTitle")}
           </DrawerTitle>
           <DrawerDescription className="text-deep/70 text-center">
-            Choose how to sort your products
+            {t("chooseHowToSort")}
           </DrawerDescription>
         </DrawerHeader>
 
@@ -86,10 +89,10 @@ export function SortByButton() {
 
         <DrawerFooter className="pt-4">
           <DrawerClose
-            className="btn-accent text-on-accent w-full rounded-sm text-center"
+            className="btn-accent text-on-accent w-full rounded-sm py-2 text-center"
             type="button"
           >
-            Close
+            {t("close")}
           </DrawerClose>
         </DrawerFooter>
       </DrawerContent>
