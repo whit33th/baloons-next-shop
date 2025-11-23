@@ -2,10 +2,10 @@
 
 import { Facebook, Home, Instagram, Mail, ShoppingBag } from "lucide-react";
 import { motion } from "motion/react";
+import Link from "next/link";
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { STORE_INFO } from "@/constants/config";
-import { Link } from "@/i18n/routing";
 import "./globals.css";
 
 export default function ErrorPage({
@@ -17,9 +17,6 @@ export default function ErrorPage({
     console.error(error);
   }, [error]);
 
-  const handleReset = () => {
-    window.location.reload();
-  };
   return (
     <div className="bg-background flex min-h-[calc(100vh-56px)] items-center justify-center px-4 antialiased">
       <div className="w-full max-w-2xl text-center">
@@ -47,9 +44,6 @@ export default function ErrorPage({
 
         {/* Action buttons */}
         <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
-          <Button size="lg" className="min-w-40" onClick={handleReset}>
-            Try again
-          </Button>
           <Button asChild size="lg" className="min-w-40">
             <Link href="/">
               <Home className="mr-2 h-5 w-5" />
@@ -62,7 +56,7 @@ export default function ErrorPage({
             size="lg"
             className="min-w-40 bg-transparent"
           >
-            <Link href="/catalog">
+            <Link href="/at/catalog">
               <ShoppingBag className="mr-2 h-5 w-5" />
               Browse Catalog
             </Link>

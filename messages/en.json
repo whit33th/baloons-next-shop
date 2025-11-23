@@ -29,6 +29,7 @@
     "status": "Status",
     "date": "Date",
     "time": "Time",
+    "home": "Home",
     "editorialImage": "Ballon Boutique Editorial",
     "ballonBoutique": "Ballon Boutique",
     "noBalloonsFound": "No balloons found",
@@ -65,6 +66,8 @@
     "deliveryPickup": "Delivery & Pickup",
     "myOrders": "My Orders",
     "whatsapp": "WhatsApp",
+    "email": "Email",
+    "phone": "Phone",
     "company": "Company",
     "imprint": "Imprint",
     "terms": "Terms & Conditions",
@@ -77,6 +80,7 @@
     "allRightsReserved": "All rights reserved."
   },
   "home": {
+    "title": "Balloons for every occasion",
     "heroTitle": "When Moments Become Emotions",
     "heroSubtitle": "Designer balloon sets for every celebration",
     "rainbowText": "Celebrate with Color",
@@ -426,31 +430,9 @@
       }
     }
   },
-  "delivery": {
-    "selfPickup": "Self-Pickup",
-    "delivery": "Delivery",
-    "importantInfo": "Important Information",
-    "address": "Address",
-    "openingHours": "Opening hours: 7 days a week, 24 hours a day, no breaks or holidays",
-    "confirmPickup": "Please confirm the date and time of pickup in advance",
-    "paymentCash": "Payment: Cash only on-site (when choosing cash payment option)",
-    "availableCities": "Available to nearby cities from 16:00 to 21:00",
-    "cost": "Cost: +€16 to order total",
-    "deliveryTime": "Delivery time: Between 16:00 and 21:00",
-    "reservation": "Reservation and cancellation: Order is confirmed after payment or WhatsApp confirmation. Cancellation possible up to 48 hours before pickup",
-    "preparationTime": "Preparation time: 72 hours (3 days)",
-    "contact": "Contact: WhatsApp only",
-    "title": "Delivery and Self-Pickup Options",
-    "subtitle": "We offer convenient delivery and self-pickup options for your orders. Choose what works best for you.",
-    "orderConfirmation": "Order Confirmation",
-    "orderConfirmationDescription": "Your order is confirmed after payment or WhatsApp confirmation. Once confirmed, we start preparing your order which typically takes 3 days (72 hours). We will contact you to confirm the exact pickup or delivery time.",
-    "paymentMethods": "Payment Methods",
-    "paymentMethodsDescription": "For self-pickup with cash payment, you settle the amount on-site. For online payments, your order is secured immediately. Delivery costs are added to your order total.",
-    "contactSupport": "Contact & Support",
-    "contactSupportDescription": "For any questions regarding delivery or pickup, please contact us via WhatsApp. We are here to help and will respond promptly."
-  },
   "catalog": {
     "title": "Catalog",
+    "metaDescription": "Browse our complete catalog of balloons and decorations. {defaultDescription}",
     "filters": "Filters",
     "noProducts": "No products found",
     "allProducts": "All Products",
@@ -495,11 +477,49 @@
       "nameOrMessage": "Name or message",
       "placeholder": "Happy Birthday Anna...",
       "characters": "characters"
+    },
+    "colors": {
+      "Gold": "Gold",
+      "Rose Gold": "Rose Gold",
+      "Silver": "Silver",
+      "Pink": "Pink",
+      "Hot Pink": "Hot Pink",
+      "Blush": "Blush",
+      "Blue": "Blue",
+      "Light Blue": "Light Blue",
+      "Navy": "Navy",
+      "Red": "Red",
+      "White": "White",
+      "Black": "Black",
+      "Purple": "Purple",
+      "Lavender": "Lavender",
+      "Green": "Green",
+      "Mint": "Mint",
+      "Yellow": "Yellow",
+      "Orange": "Orange",
+      "Peach": "Peach",
+      "Coral": "Coral",
+      "Teal": "Teal",
+      "Turquoise": "Turquoise",
+      "Champagne": "Champagne",
+      "Burgundy": "Burgundy",
+      "Emerald": "Emerald",
+      "Mix": "Mix"
+    },
+    "priceRanges": {
+      "upTo5": "Up to €5",
+      "upTo10": "Up to €10",
+      "upTo15": "Up to €15",
+      "upTo20": "Up to €20",
+      "upTo30": "Up to €30",
+      "upTo50": "Up to €50"
     }
   },
   "product": {
     "notFound": "Product not found",
     "notFoundDescription": "The product you're looking for doesn't exist.",
+    "back": "Back",
+    "premiumCollection": "Premium Collection",
     "backToHome": "Back to home",
     "outOfStock": "Product is out of stock",
     "inStock": "In stock",
@@ -521,6 +541,34 @@
     "numberPlaceholder": "18, 25, 30...",
     "textPlaceholder": "Happy Birthday Anna...",
     "characters": "characters",
+    "colors": {
+      "Gold": "Gold",
+      "Rose Gold": "Rose Gold",
+      "Silver": "Silver",
+      "Pink": "Pink",
+      "Hot Pink": "Hot Pink",
+      "Blush": "Blush",
+      "Blue": "Blue",
+      "Light Blue": "Light Blue",
+      "Navy": "Navy",
+      "Red": "Red",
+      "White": "White",
+      "Black": "Black",
+      "Purple": "Purple",
+      "Lavender": "Lavender",
+      "Green": "Green",
+      "Mint": "Mint",
+      "Yellow": "Yellow",
+      "Orange": "Orange",
+      "Peach": "Peach",
+      "Coral": "Coral",
+      "Teal": "Teal",
+      "Turquoise": "Turquoise",
+      "Champagne": "Champagne",
+      "Burgundy": "Burgundy",
+      "Emerald": "Emerald",
+      "Mix": "Mix"
+    },
     "gallery": {
       "previousImage": "Previous image",
       "nextImage": "Next image"
@@ -545,70 +593,210 @@
   },
   "legal": {
     "terms": {
-      "title": "Terms & Conditions",
       "header": {
-        "subtitle": "Terms and Conditions",
-        "title": "General Terms and Conditions (AGB)",
-        "description": "Valid for all distance contracts of {companyName} as of 1 November 2025. These conditions complement mandatory consumer rights and do not limit statutory protections under Austrian law."
+        "title": "Terms & Conditions (AGB)",
+        "subtitle": "General Terms and Conditions",
+        "description": "These General Terms and Conditions (AGB) apply to all orders placed through the seller's online shop."
       },
       "clause1": {
-        "title": "1. Scope",
-        "body": "These Terms and Conditions govern all orders placed via the online shop of {companyName}. They are based on the Austrian Consumer Protection Act (KSchG), the E-Commerce Act (ECG) and the Austrian Civil Code (ABGB)."
+        "title": "AGB – General Terms and Conditions",
+        "body": "These General Terms and Conditions (AGB) apply to all orders placed through the seller's online shop. Deviating conditions of the customer will not be recognized unless the seller expressly agrees to them in writing. This applies until the seller confirms this via WhatsApp."
       },
       "clause2": {
-        "title": "2. Contract language and conclusion",
-        "body": "The contract languages are German, Russian and English. Products presented in the shop are non-binding invitations to order. A contract is formed when we confirm your order in writing (e-mail) or dispatch the goods."
+        "title": "2. Contracting Party",
+        "body": "The purchase contract is concluded between the customer and:\n\n{companyName},\n\nSandgasse 3/3, Knittelfeld 8720\n\n{email} / {phone}"
       },
       "clause3": {
-        "title": "3. Prices and payment",
-        "body": "All prices are stated in euros and include statutory Austrian VAT. Payment can be made either via full online payment (Stripe) or cash upon pickup. Part-payment or deposit models are not offered. Online payments are processed immediately, ensuring reservation of the selected bouquet or arrangement."
+        "title": "3. Offer and Product Presentation",
+        "body": "All product images in the online shop are for illustration purposes only and are non-binding. Minor deviations in color, shape or design may occur."
+      },
+      "clause3_1": {
+        "title": "3.1 Right to Exchange Equivalent Components",
+        "body": "The seller reserves the right to replace individual components of a set (e.g., balloons or decorative elements) with equivalent or higher-quality alternatives, provided that:\n\nthe total value is maintained,\nthe function is not impaired,\nno price change occurs.\n\nOptical deviations that do not significantly affect the overall impression are permissible."
       },
       "clause4": {
-        "title": "4. Delivery and pickup",
-        "body": "We currently deliver within Styria, Austria, according to the times listed on the Delivery page. Pickup is available at the showroom in Knittelfeld around the clock by appointment. Risk passes to the customer once the goods are handed over to the customer or their authorised representative."
+        "title": "4. Order Process and Contract Conclusion",
+        "body": "By submitting the order, the customer makes a binding offer to purchase.\n\nThe purchase contract is concluded as soon as the seller has clearly and in writing confirmed the order via WhatsApp."
       },
       "clause5": {
-        "title": "5. Retention of title",
-        "body": "Goods remain the property of Ballon Boutique until full payment has been received."
+        "title": "5. Prices and Shipping Costs",
+        "body": "All prices are final prices without value-added tax, as the seller does not charge value-added tax in accordance with § 6 para. 1 no. 27 UStG (small business regulation).\n\nShipping costs are shown separately in the ordering process."
       },
       "clause6": {
-        "title": "6. Right of withdrawal",
-        "body": "Consumers have a right to withdraw within 14 days as described in our Cancellation and Refund Policy. Due to the personalised nature of balloon arrangements, customised orders may be excluded pursuant to Section 18 paragraph 1 lit. c FAGG."
+        "title": "6. Delivery",
+        "body": "Delivery takes place by agreement within the specified delivery area. Delivery times may vary depending on the order situation. Delays caused by shipping service providers are outside the seller's responsibility."
       },
       "clause7": {
-        "title": "7. Warranty and defects",
-        "body": "The statutory warranty period of two years applies. Please notify us of any defects without undue delay. For natural latex products, minor colour deviations or changes in volume caused by ambient temperature do not constitute defects."
+        "title": "7. Payment",
+        "body": "The seller offers various payment methods, such as:\n\nCredit card\n\nPayment on pickup"
       },
       "clause8": {
-        "title": "8. Liability",
-        "body": "We are liable for intent and gross negligence in accordance with Austrian law. Liability for slightly negligent damage, consequential damage and loss of profit is excluded, unless mandatory consumer protection provisions provide otherwise."
+        "title": "8. Right of Withdrawal / Right of Cancellation (14 Days)",
+        "body": "Customers have a right of withdrawal of 14 days in accordance with the Austrian Distance and Off-Premises Transactions Act (FAGG).\n\nExcluded from withdrawal are:\n\npersonalized products,\nperishable goods (e.g., helium balloons due to limited float time)."
       },
       "clause9": {
-        "title": "9. Force majeure",
-        "body": "Events outside our control (e.g. strikes, power outages, extreme weather) may delay delivery. We will inform you immediately and propose alternative dates or a refund."
+        "title": "9. Warranty and Liability",
+        "body": "The statutory warranty provisions (VGG) apply.\n\nNo liability is assumed for damage caused by:\n\nimproper handling,\nheat, cold, fire or sharp objects,\nincorrect storage by customers,\nnatural fluctuations in helium float time."
       },
       "clause10": {
-        "title": "10. Dispute resolution",
-        "body": "The competent court for disputes with consumers is determined by Section 14 KSchG. Austrian law applies under exclusion of the UN Convention on Contracts for the International Sale of Goods. Consumers can submit complaints via the EU platform for online dispute resolution."
+        "title": "10. Retention of Title",
+        "body": "The goods remain the property of the seller until full payment has been made."
+      },
+      "clause11": {
+        "title": "11. Data Protection",
+        "body": "The processing of personal data is carried out in accordance with GDPR and the privacy policy on the seller's website."
+      },
+      "clause12": {
+        "title": "12. Online Dispute Resolution (ODR Platform)",
+        "body": "In accordance with the EU Regulation on Online Dispute Resolution, we refer to the platform of the European Commission:\n\n{euDisputeResolutionUrl}\n\nWe are neither obliged nor willing to participate in a dispute resolution procedure before a consumer arbitration board."
+      },
+      "clause13": {
+        "title": "13. Jurisdiction and Applicable Law",
+        "body": "Austrian law applies. The place of jurisdiction is the registered office of the company, unless mandatory consumer protection provisions provide otherwise."
       },
       "footer": {
-        "description": "Clarifications regarding withdrawal, privacy and company details are provided separately:",
-        "cancellation": "Cancellation and Refund Policy",
-        "privacy": "Privacy Policy (GDPR)",
-        "imprint": "Imprint (Impressum)"
+        "description": "Further information can be found in our",
+        "privacy": "Privacy Policy",
+        "imprint": "Imprint"
       }
     },
     "privacy": {
-      "title": "Privacy Policy"
-    },
-    "cancellation": {
-      "title": "Cancellation Policy"
+      "header": {
+        "title": "Privacy Policy",
+        "subtitle": "Datenschutz",
+        "description": "Responsible for data processing on this website:"
+      },
+      "section1": {
+        "title": "1. Responsible Party",
+        "intro": "Responsible for data processing on this website is:",
+        "company": "{companyName}",
+        "address": "Sandgasse 3/3, Knittelfeld 8720",
+        "email": "{email}",
+        "phone": "{phone}"
+      },
+      "section2": {
+        "title": "2. Collection and Processing of Personal Data",
+        "intro": "We process personal data that you voluntarily provide to us, such as:",
+        "dataList": [
+          "Name, address, email",
+          "Phone number",
+          "Order data (products, quantity, date)"
+        ],
+        "purposeIntro": "This data is used for the following purposes:",
+        "purposeList": [
+          "Processing of orders and shipping",
+          "Communication with customers (including WhatsApp)",
+          "Invoicing",
+          "Fulfillment of legal obligations"
+        ]
+      },
+      "section3": {
+        "title": "3. Legal Basis for Processing",
+        "body": "Processing is carried out in accordance with Art. 6 para. 1 lit. b GDPR (contract fulfillment) and lit. c (legal obligations)."
+      },
+      "section4": {
+        "title": "4. Storage",
+        "body": "Your data will only be stored for as long as is necessary for the fulfillment of the purposes or legal retention obligations exist (e.g., tax retention obligations)."
+      },
+      "section5": {
+        "title": "5. Disclosure to Third Parties",
+        "intro": "Personal data will only be disclosed to third parties insofar as this is necessary for the processing of the order, such as:",
+        "thirdPartiesList": [
+          "Shipping service providers",
+          "Payment providers (Credit/Debit card)"
+        ],
+        "conclusion": "No other disclosure will take place without your express consent."
+      },
+      "section6": {
+        "title": "6. Cookies",
+        "body": "Only necessary cookies are used on this website to ensure the functionality of the website."
+      },
+      "section7": {
+        "title": "7. Rights of Data Subjects",
+        "intro": "You have the right:",
+        "rightsList": [
+          "To obtain information about your stored data",
+          "To request correction of incorrect data",
+          "To request deletion or restriction of processing",
+          "To object to processing",
+          "To request data portability",
+          "To file a complaint with the data protection authority"
+        ]
+      },
+      "section8": {
+        "title": "8. Contact",
+        "intro": "For questions regarding data protection, please contact:",
+        "whatsapp": "WhatsApp: {phone}",
+        "email": "{email}",
+        "phone": "Phone: {phone}"
+      }
     },
     "imprint": {
-      "title": "Imprint",
-      "responsibleForContent": "Responsible for content",
-      "contact": "Contact",
-      "registrationDetails": "Registration details"
+      "header": {
+        "title": "Imprint",
+        "subtitle": "Impressum",
+        "description": "Legal information and company details according to Austrian law."
+      },
+      "section1": {
+        "title": "1. Company Name",
+        "value": "{companyName}"
+      },
+      "section2": {
+        "title": "2. Legal Form:",
+        "value": "{legalForm}"
+      },
+      "section3": {
+        "title": "3. Business Address:",
+        "street": "{street}",
+        "city": "{postalCode} {city}",
+        "country": "Austria"
+      },
+      "section4": {
+        "title": "4. Contact Information:",
+        "phone": "Phone: {phone}",
+        "email": "Email: {email}",
+        "website": "Website: {website}"
+      },
+      "section5": {
+        "title": "5. Represented by:",
+        "value": "{owner}"
+      },
+      "section6": {
+        "title": "6. Company Register Number (if available):",
+        "value": "[Number or \"not available\"]"
+      },
+      "section7": {
+        "title": "7. Company Register Court (if available):",
+        "value": "[e.g., Handelsgericht Wien]"
+      },
+      "section8": {
+        "title": "8. UID Number (ATU…):",
+        "value": "[Your number or \"no UID number\"]"
+      },
+      "section9": {
+        "title": "9. Trade License:",
+        "license": "[e.g., Handelsgewerbe]",
+        "issuedBy": "Issued by: [Authority]"
+      },
+      "section10": {
+        "title": "10. Member of the Economic Chamber (WKO):",
+        "value": "[e.g., Wirtschaftskammer Niederösterreich]"
+      },
+      "section11": {
+        "title": "11. Professional Legal Regulations:",
+        "intro": "Applicable legal regulations:",
+        "link": "{applicableLaw}"
+      },
+      "section12": {
+        "title": "12. Disclaimer:",
+        "paragraph1": "Despite careful control, we assume no liability for the content of external links.",
+        "paragraph2": "The operators of the linked pages are solely responsible for the content of the linked pages."
+      },
+      "section13": {
+        "title": "13. Copyright:",
+        "paragraph1": "All content, images and texts on this website are subject to copyright.",
+        "paragraph2": "Use without written permission is not permitted."
+      }
     }
   },
   "notFound": {

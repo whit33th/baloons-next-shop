@@ -15,38 +15,114 @@ export const STORE_INFO = {
   name: "Ballon Boutique",
   slogan: "Wenn Momente zu Emotionen werden",
   sloganRu: "Когда мгновение становится эмоциями",
+  sloganEn: "When moments become memories",
+  sloganUa: "Коли миті стають спогадами",
+
+  // SEO & Branding
+  logo: "/logo.png",
+  favicon: "/favicon.ico",
+  appleIcon: "/apple-icon.png",
+  manifest: "/manifest.json",
+  backgroundColor: "#ffffff",
+
+  // Business Information
+  foundingDate: "fix", // "2020-01-01" - дата основания бизнеса
+  businessType: "Retail Store",
+  industry: "Party Supplies & Decorations",
+
+  // Geographic Information
+  geo: {
+    latitude: "fix", // "47.2133" - широта
+    longitude: "fix", // "14.8306" - долгота
+    region: "Styria",
+    regionCode: "ST",
+    timezone: "Europe/Vienna",
+  },
 
   address: {
-    street: "Sandgasse 3",
+    street: "Sandgasse 3/3",
     city: "Knittelfeld",
     postalCode: "8720",
     country: "Austria",
     countryCode: "AT",
+    formatted: "Sandgasse 3/3, 8720 Knittelfeld, Austria",
   },
 
   contact: {
     email: "ballonboutique.at@gmail.com",
     phone: "+43 690 200 84085",
     phoneDisplay: "+43 690 200 84085",
+    phoneE164: "+4369020084085",
+    whatsapp: "4369020084085",
+  },
+
+  // Website
+  website: "https://ballon-boutique.vercel.app/",
+
+  // Business Hours
+  businessHours: {
+    monday: "fix", // "09:00-18:00"
+    tuesday: "fix",
+    wednesday: "fix",
+    thursday: "fix",
+    friday: "fix",
+    saturday: "fix",
+    sunday: "fix",
+    timezone: "Europe/Vienna",
   },
 
   social: {
     instagram: "https://www.instagram.com/ballonboutique.at",
     facebook: "https://www.facebook.com/share/1JrBrLkJ1M/",
+    twitter: "fix", // Twitter/X URL если есть
+    youtube: "fix", // YouTube URL если есть
+    pinterest: "fix", // Pinterest URL если есть
+    linkedin: "fix", // LinkedIn URL если есть
+    tiktok: "fix", // TikTok URL если есть
+  },
+
+  // SEO Keywords
+  keywords: {
+    primary: [
+      "balloons",
+      "balloon decorations",
+      "party supplies",
+      "event decorations",
+    ],
+    secondary: [
+      "birthday balloons",
+      "wedding balloons",
+      "custom balloons",
+      "balloon bouquets",
+    ],
+    local: ["ballons österreich", "ballons steiermark", "ballons knittelfeld"],
+  },
+
+  // Content & Description
+  longDescription: {
+    de: "fix", // Полное описание бизнеса на немецком
+    en: "fix", // Полное описание бизнеса на английском
+    ru: "fix", // Полное описание бизнеса на русском
+    ua: "fix", // Полное описание бизнеса на украинском
   },
 
   legal: {
-    companyName: "Ballon Boutique .",
-    owner: "Alexandra Sidak",
-    registrationNumber: "FN 582931 z",
-    vatNumber: "ATU78965432",
+    companyName: "Ballon Boutique",
+    owner: "Oleksandra Sidak",
+    legalForm:
+      "Einzelunternehmerin (Kleinunternehmerin gemäß § 6 Abs. 1 Z 27 UStG)",
+    registrationNumber: "fix", // Firmenbuchnummer (falls vorhanden): [Номер oder «не имеется»]
+    vatNumber: "fix", // UID-Nummer (ATU…): [Ваш номер oder «нет номера UID»]
     competentAuthority: "Bezirkshauptmannschaft Murtal",
     tradeAuthority: "Bezirkshauptmannschaft Murtal - Gewerberecht",
     professionalRegulation: "Gewerbeordnung 1994 (GewO 1994)",
-    chamberMembership:
-      "Mitglied der Wirtschaftskammer Steiermark (Sparte Handel)",
+    chamberMembership: "fix", // Mitglied der Wirtschaftskammer (WKO): [z. B. Wirtschaftskammer Niederösterreich]
     supervisoryAuthority: "Bezirkshauptmannschaft Murtal",
     euDisputeResolutionUrl: "https://ec.europa.eu/consumers/odr",
+    companyRegisterCourt: "fix", // Firmenbuchgericht (falls vorhanden): [z. B. Handelsgericht Wien]
+    businessLicense: "fix", // Gewerbeberechtigung: [z. B. Handelsgewerbe]
+    businessLicenseIssuedBy: "fix", // Ausgestellt von: [Behörde]
+    applicableLaw: "www.ris.bka.gv.at",
   },
 
   pickup: {
@@ -211,4 +287,11 @@ export function getWhatsAppLink(message: string): string {
 export function getFormattedAddress(): string {
   const { street, postalCode, city, country } = STORE_INFO.address;
   return `${street}, ${postalCode} ${city}, ${country}`;
+}
+
+/**
+ * Get full address with apartment number
+ */
+export function getFullAddress(): string {
+  return `Sandgasse 3/3, ${STORE_INFO.address.postalCode} ${STORE_INFO.address.city}`;
 }

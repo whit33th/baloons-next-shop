@@ -31,6 +31,9 @@
       },
       "correctness": {
         "useJsxKeyInIterable": "off"
+      },
+      "security": {
+        "noDangerouslySetInnerHtml": "off"
       }
     },
     "domains": {

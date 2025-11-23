@@ -1,9 +1,9 @@
 "use client";
 
 import { Facebook, Instagram } from "lucide-react";
-import { useTranslations } from 'next-intl';
+import { useTranslations } from "next-intl";
 import { STORE_INFO, WHATSAPP_NUMBER } from "@/constants/config";
-import { Link } from '@/i18n/routing';
+import { Link } from "@/i18n/routing";
 
 type InternalLink = {
   labelKey: string;
@@ -35,41 +35,38 @@ const sections: FooterSection[] = [
     titleKey: "footer.customerCare",
     links: [
       {
-        labelKey: "footer.deliveryPickup",
-        href: "/delivery",
-      },
-      {
-        labelKey: "footer.myOrders",
-        href: "/profile",
-      },
-      {
         labelKey: "footer.whatsapp",
         href: `https://wa.me/${WHATSAPP_NUMBER}`,
         external: true,
       },
-    ],
-  },
-  {
-    titleKey: "footer.company",
-    links: [
       {
-        labelKey: "footer.imprint",
-        href: "/legal/imprint",
+        labelKey: "footer.email",
+        href: `mailto:${STORE_INFO.contact.email}`,
       },
       {
-        labelKey: "footer.terms",
-        href: "/legal/terms",
-      },
-      {
-        labelKey: "footer.privacy",
-        href: "/legal/privacy",
-      },
-      {
-        labelKey: "footer.cancellation",
-        href: "/legal/cancellation",
+        labelKey: "footer.phone",
+        href: `tel:${STORE_INFO.contact.phone}`,
       },
     ],
   },
+  // {
+  //   titleKey: "footer.company",
+  //   links: [
+  //     {
+  //       labelKey: "footer.imprint",
+  //       href: "/legal/imprint",
+  //     },
+  //     {
+  //       labelKey: "footer.terms",
+  //       href: "/legal/terms",
+  //     },
+  //     {
+  //       labelKey: "footer.privacy",
+  //       href: "/legal/privacy",
+  //     },
+  //
+  //   ],
+  // },
   {
     titleKey: "footer.social",
     links: [
@@ -90,7 +87,6 @@ const sections: FooterSection[] = [
 const legalLinks: InternalLink[] = [
   { labelKey: "footer.terms", href: "/legal/terms" },
   { labelKey: "footer.privacy", href: "/legal/privacy" },
-  { labelKey: "footer.cancellation", href: "/legal/cancellation" },
   { labelKey: "footer.imprint", href: "/legal/imprint" },
 ];
 
@@ -115,10 +111,10 @@ export const Footer = () => {
               prefetch={true}
               className="text-xl font-semibold tracking-tight text-white"
             >
-              {t('store.name')}
+              {t("store.name")}
             </Link>
             <p className="max-w-sm text-sm text-white/75">
-              {t('footer.description')}
+              {t("footer.description")}
             </p>
             <div className="flex flex-wrap items-center gap-2">
               {/* <div className="flex items-center gap-2" aria-hidden="true">
@@ -212,7 +208,7 @@ export const Footer = () => {
         <div className="mt-8 border-t border-white/10 pt-4 text-xs text-white/60">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <p>
-              &copy; {year} {t('store.name')}. {t('footer.allRightsReserved')}
+              &copy; {year} {t("store.name")}. {t("footer.allRightsReserved")}
             </p>
             <nav className="flex flex-wrap gap-x-5 gap-y-2">
               {legalLinks.map((link) => (

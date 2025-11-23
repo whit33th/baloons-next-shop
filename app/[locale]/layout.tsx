@@ -13,16 +13,33 @@ import { Footer, Header } from "@/components/Containers";
 import { ConvexProvider } from "@/components/Providers/ConvexProvider";
 import AppImageKitProvider from "@/components/Providers/ImageKitProvider";
 import { routing } from "@/i18n/routing";
+import { getDefaultDescription, getSiteName } from "@/SEO";
 
 const dmSans = DM_Sans({
   variable: "--font-dm-sans",
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
-  title: "Ballon Boutique",
-  description: "Balloons for every occasion. When moments - become memories.",
-};
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const siteName = getSiteName();
+  const description = getDefaultDescription(locale);
+
+  return {
+    title: {
+      default: siteName,
+      template: `${siteName} | %s`,
+    },
+    description,
+    metadataBase: new URL(
+      process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000",
+    ),
+  };
+}
 
 export default async function LocaleLayout({
   children,

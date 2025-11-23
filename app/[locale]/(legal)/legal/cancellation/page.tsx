@@ -1,5 +1,16 @@
+import { setRequestLocale } from "next-intl/server";
 import { STORE_INFO } from "@/constants/config";
 import { Link } from "@/i18n/routing";
+import { generateLegalMetadata } from "@/SEO";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
+  const { locale } = await params;
+  return generateLegalMetadata(locale, "cancellation");
+}
 
 const sampleForm = `To ${STORE_INFO.legal.companyName}, ${STORE_INFO.address.street}, ${STORE_INFO.address.postalCode} ${STORE_INFO.address.city}, ${STORE_INFO.contact.email}
 
@@ -11,7 +22,14 @@ Address of consumer(s):
 Signature of consumer(s) (only if this form is notified on paper):
 Date:`;
 
-export default function CancellationPolicyPage() {
+export default async function CancellationPolicyPage({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
+  const { locale } = await params;
+  setRequestLocale(locale);
+
   return (
     <main className="bg-primary/20 text-deep min-h-screen px-6 py-12">
       <div className="mx-auto flex w-full max-w-3xl flex-col gap-10 rounded-3xl bg-white/95 p-8 shadow-xl">

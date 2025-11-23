@@ -19,12 +19,12 @@ import { BALLOON_COLORS, getColorStyle } from "@/constants/colors";
 import { useRouter } from "@/i18n/routing";
 
 const PRICE_RANGES = [
-  { label: "Up to €5", min: 0, max: 5 },
-  { label: "Up to €10", min: 0, max: 10 },
-  { label: "Up to €15", min: 0, max: 15 },
-  { label: "Up to €20", min: 0, max: 20 },
-  { label: "Up to €30", min: 0, max: 30 },
-  { label: "Up to €50", min: 0, max: 50 },
+  { key: "upTo5", min: 0, max: 5 },
+  { key: "upTo10", min: 0, max: 10 },
+  { key: "upTo15", min: 0, max: 15 },
+  { key: "upTo20", min: 0, max: 20 },
+  { key: "upTo30", min: 0, max: 30 },
+  { key: "upTo50", min: 0, max: 50 },
 ];
 
 export function FiltersDrawer() {
@@ -164,7 +164,7 @@ export function FiltersDrawer() {
                       }}
                     />
                     <span className="text-deep truncate text-xs font-medium">
-                      {color.label}
+                      {t(`colors.${color.name}`)}
                     </span>
                   </button>
                 ))}
@@ -179,7 +179,7 @@ export function FiltersDrawer() {
               <div className="grid grid-cols-2 gap-3">
                 {PRICE_RANGES.map((range) => (
                   <Button
-                    key={range.label}
+                    key={range.key}
                     size="sm"
                     onClick={() =>
                       isRangeActive(range.min, range.max)
@@ -192,7 +192,7 @@ export function FiltersDrawer() {
                         : "border-border/30 hover:border-secondary/50 bg-white/50"
                     }`}
                   >
-                    {range.label}
+                    {t(`priceRanges.${range.key}`)}
                   </Button>
                 ))}
               </div>

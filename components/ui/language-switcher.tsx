@@ -65,7 +65,7 @@ export function LanguageSwitcher() {
       void persistLocalePreference(newLocale);
       // Remove any locale prefix that might be present (for safety)
       const pathnameWithoutLocale = removeLocaleFromPathname(pathname);
-      
+
       // Preserve search params
       const searchParamsString = searchParams.toString();
       const newUrl = `/${newLocale}${pathnameWithoutLocale}${searchParamsString ? `?${searchParamsString}` : ""}`;

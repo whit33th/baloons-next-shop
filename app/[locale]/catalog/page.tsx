@@ -5,6 +5,7 @@ import {
   type CategoryGroupValue,
   PRODUCT_CATEGORY_GROUPS,
 } from "@/constants/categories";
+import { BreadcrumbJsonLd, generateCatalogMetadata } from "@/SEO";
 
 const normalizeGroup = (value?: string | null): CategoryGroupValue | null => {
   if (!value) return null;
@@ -42,6 +43,26 @@ const normalizeGroup = (value?: string | null): CategoryGroupValue | null => {
   return null;
 };
 
+export async function generateMetadata({
+  params: localeParams,
+  searchParams,
+}: {
+  params: Promise<{ locale: string }>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
+  const { locale } = await localeParams;
+  const params = await searchParams;
+
+  const categoryGroup = (params.categoryGroup as string) || null;
+  const category = (params.category as string) || null;
+
+  return generateCatalogMetadata(
+    locale,
+    categoryGroup as CategoryGroupValue | null,
+    category,
+  );
+}
+
 export default async function CatalogPage({
   params: localeParams,
   searchParams,
@@ -55,6 +76,7 @@ export default async function CatalogPage({
   setRequestLocale(locale);
 
   const t = await getTranslations({ locale, namespace: "catalog" });
+  const tCommon = await getTranslations({ locale, namespace: "common" });
   const params = await searchParams;
 
   const filters = {
@@ -85,7 +107,30 @@ export default async function CatalogPage({
       (s) => s.value.toLowerCase() === normalizedCategory,
     ) ?? null;
 
+  const breadcrumbItems = [
+    { name: tCommon("home", { default: "Home" }), url: `/${locale}` },
+    { name: t("title", { default: "Catalog" }), url: `/${locale}/catalog` },
+  ];
+
+  if (group) {
+    breadcrumbItems.push({
+      name: t(`categoryGroups.${group.value}`, { default: group.label }),
+      url: `/${locale}/catalog?categoryGroup=${group.value}`,
+    });
+  }
+
+  if (subcategory) {
+    breadcrumbItems.push({
+      name: t(`subcategories.${subcategory.value}`, {
+        default: subcategory.label,
+      }),
+      url: `/${locale}/catalog?categoryGroup=${group?.value}&category=${subcategory.value}`,
+    });
+  }
+
   return (
+    <>
+      <BreadcrumbJsonLd locale={locale} items={breadcrumbItems} />
     <div className="flex h-full w-full flex-1 flex-col">
       <div className="relative">
         <div className="grid grid-cols-1 items-center gap-6 p-4 pb-0 sm:grid-cols-[1fr_auto] sm:p-8 sm:pb-0">
@@ -131,5 +176,6 @@ export default async function CatalogPage({
       <ProductFilters />
       <ProductGrid filters={filters} />
     </div>
+    </>
   );
 }

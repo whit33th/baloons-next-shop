@@ -7,6 +7,7 @@ import {
   SLUG_TO_CATEGORY_GROUP,
 } from "@/constants/categories";
 import { routing } from "@/i18n/routing";
+import { BreadcrumbJsonLd, generateCategoryMetadata } from "@/SEO";
 
 export const dynamicParams = false;
 export const dynamic = "force-static";
@@ -22,6 +23,28 @@ export function generateStaticParams() {
     }
   }
   return params;
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string; category: string }>;
+}) {
+  const { locale, category } = await params;
+  const groupValue = SLUG_TO_CATEGORY_GROUP[category];
+  if (!groupValue) {
+    return {};
+  }
+
+  const group = PRODUCT_CATEGORY_GROUPS.find(
+    (candidate) => candidate.value === groupValue,
+  );
+
+  if (!group) {
+    return {};
+  }
+
+  return generateCategoryMetadata(locale, group);
 }
 export default async function CategoryLandingPage({
   params,
@@ -46,5 +69,16 @@ export default async function CategoryLandingPage({
     notFound();
   }
 
-  return <SelectedGroupShowcase group={group} />;
+  return (
+    <>
+      <BreadcrumbJsonLd
+        locale={locale}
+        items={[
+          { name: "Home", url: `/${locale}` },
+          { name: group.label, url: `/${locale}/${category}` },
+        ]}
+      />
+      <SelectedGroupShowcase group={group} />
+    </>
+  );
 }

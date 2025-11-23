@@ -1,6 +1,6 @@
 "use client";
 
-import { useTranslations } from 'next-intl';
+import { useTranslations } from "next-intl";
 import { forwardRef, type RefObject, useState } from "react";
 import { BALLOON_COLORS, getColorStyle } from "@/constants/colors";
 
@@ -33,7 +33,7 @@ export const ProductPersonalization = forwardRef<
   },
   numberInputRef,
 ) {
-  const t = useTranslations('product');
+  const t = useTranslations("product");
   const [text, setText] = useState("");
   const [selectedColor, setSelectedColor] = useState("");
   const [number, setNumber] = useState("");
@@ -75,21 +75,18 @@ export const ProductPersonalization = forwardRef<
 
   return (
     <div className="mt-8 space-y-6 border-t border-black/10 pt-6">
-      <h3 className="text-deep text-xl font-bold tracking-wide">{t('personalize')}</h3>
+      <h3 className="text-deep text-xl font-bold tracking-wide">
+        {t("personalize")}
+      </h3>
 
       {/* Color Selector */}
       {availableColors.length > 1 && (
         <div ref={colorSectionRef}>
           <div className="mb-3 flex items-center gap-2">
             <span className="text-deep/70 text-xs font-semibold tracking-wider uppercase">
-              {t('color')}
+              {t("color")}
               {requireColorSelection && <span className="text-accent">*</span>}
             </span>
-            {selectedColor && (
-              <span className="text-accent text-xs font-medium">
-                ({selectedColor})
-              </span>
-            )}
           </div>
           <div className="grid grid-cols-4 gap-3">
             {filteredColors.map((color) => (
@@ -111,7 +108,7 @@ export const ProductPersonalization = forwardRef<
                   }}
                 />
                 <span className="text-deep/70 text-center text-xs font-medium">
-                  {color.label}
+                  {t(`colors.${color.name}`)}
                 </span>
               </button>
             ))}
@@ -127,10 +124,11 @@ export const ProductPersonalization = forwardRef<
               htmlFor="personalization-number"
               className="text-deep/70 text-xs font-semibold tracking-wider uppercase"
             >
-              {t('number')}<span className="text-accent">*</span>
+              {t("number")}
+              <span className="text-accent">*</span>
             </label>
             <span className="text-deep/50 text-[10px] font-medium">
-              {t('ageOrSpecialNumber')}
+              {t("ageOrSpecialNumber")}
             </span>
           </div>
           <input
@@ -139,7 +137,7 @@ export const ProductPersonalization = forwardRef<
             type="number"
             value={number}
             onChange={(e) => handleNumberChange(e.target.value)}
-            placeholder={t('numberPlaceholder')}
+            placeholder={t("numberPlaceholder")}
             min="0"
             max="99"
             required
@@ -160,10 +158,10 @@ export const ProductPersonalization = forwardRef<
               htmlFor="personalization-text"
               className="text-deep/70 text-xs font-semibold tracking-wider uppercase"
             >
-              {t('customText')}
+              {t("customText")}
             </label>
             <span className="text-deep/50 text-[10px] font-medium">
-              {t('nameOrMessage')}
+              {t("nameOrMessage")}
             </span>
           </div>
           <input
@@ -171,12 +169,14 @@ export const ProductPersonalization = forwardRef<
             type="text"
             value={text}
             onChange={(e) => handleTextChange(e.target.value)}
-            placeholder={t('textPlaceholder')}
+            placeholder={t("textPlaceholder")}
             maxLength={50}
             className="text-deep focus:border-accent focus:ring-accent/30 h-11 w-full rounded-xl border-2 border-black/20 bg-white px-4 font-semibold transition-colors outline-none focus:ring-2"
           />
           {text.length > 0 && (
-            <p className="text-deep/50 mt-1 text-xs">{text.length}/50 {t('characters')}</p>
+            <p className="text-deep/50 mt-1 text-xs">
+              {text.length}/50 {t("characters")}
+            </p>
           )}
         </div>
       )}

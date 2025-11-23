@@ -29,6 +29,7 @@
     "status": "Status",
     "date": "Datum",
     "time": "Uhrzeit",
+    "home": "Startseite",
     "editorialImage": "Ballon Boutique Editorial",
     "ballonBoutique": "Ballon Boutique",
     "noBalloonsFound": "Keine Ballons gefunden",
@@ -65,6 +66,8 @@
     "deliveryPickup": "Lieferung & Abholung",
     "myOrders": "Meine Bestellungen",
     "whatsapp": "WhatsApp",
+    "email": "E-Mail",
+    "phone": "Telefon",
     "company": "Unternehmen",
     "imprint": "Impressum",
     "terms": "AGB",
@@ -77,6 +80,7 @@
     "allRightsReserved": "Alle Rechte vorbehalten."
   },
   "home": {
+    "title": "Ballons für jeden Anlass",
     "heroTitle": "Wenn Momente zu Emotionen werden",
     "heroSubtitle": "Designer-Ballonsets für jede Feier",
     "rainbowText": "Magie in der Luft",
@@ -426,31 +430,9 @@
       }
     }
   },
-  "delivery": {
-    "selfPickup": "Selbstabholung",
-    "delivery": "Lieferung",
-    "importantInfo": "Wichtige Informationen",
-    "address": "Adresse",
-    "openingHours": "Öffnungszeiten: 7 Tage die Woche, 24 Stunden am Tag, keine Pausen oder Feiertage",
-    "confirmPickup": "Bitte bestätigen Sie das Abholdatum und die -uhrzeit im Voraus",
-    "paymentCash": "Zahlung: Nur Barzahlung vor Ort (bei Wahl der Barzahlungsoption)",
-    "availableCities": "Verfügbar für nahegelegene Städte von 16:00 bis 21:00",
-    "cost": "Kosten: +€16 zum Bestellwert",
-    "deliveryTime": "Lieferzeit: Zwischen 16:00 und 21:00",
-    "reservation": "Reservierung und Stornierung: Bestellung wird nach Zahlung oder WhatsApp-Bestätigung bestätigt. Stornierung möglich bis 48 Stunden vor Abholung",
-    "preparationTime": "Vorbereitungszeit: 72 Stunden (3 Tage)",
-    "contact": "Kontakt: Nur WhatsApp",
-    "title": "Liefer- und Selbstabholoptionen",
-    "subtitle": "Wir bieten bequeme Liefer- und Selbstabholoptionen für Ihre Bestellungen. Wählen Sie, was für Sie am besten funktioniert.",
-    "orderConfirmation": "Bestellbestätigung",
-    "orderConfirmationDescription": "Ihre Bestellung wird nach Zahlung oder WhatsApp-Bestätigung bestätigt. Nach der Bestätigung beginnen wir mit der Vorbereitung Ihrer Bestellung, was in der Regel 3 Tage (72 Stunden) dauert. Wir werden Sie kontaktieren, um die genaue Abhol- oder Lieferzeit zu bestätigen.",
-    "paymentMethods": "Zahlungsmethoden",
-    "paymentMethodsDescription": "Bei Selbstabholung mit Barzahlung zahlen Sie den Betrag vor Ort. Bei Online-Zahlungen ist Ihre Bestellung sofort gesichert. Lieferkosten werden zu Ihrem Bestellwert hinzugefügt.",
-    "contactSupport": "Kontakt & Support",
-    "contactSupportDescription": "Bei Fragen zu Lieferung oder Abholung kontaktieren Sie uns bitte über WhatsApp. Wir sind hier, um zu helfen und werden schnell antworten."
-  },
   "catalog": {
     "title": "Katalog",
+    "metaDescription": "Durchsuchen Sie unseren vollständigen Katalog von Ballons und Dekorationen. {defaultDescription}",
     "filters": "Filter",
     "noProducts": "Keine Produkte gefunden",
     "allProducts": "Alle Produkte",
@@ -495,11 +477,49 @@
       "nameOrMessage": "Name oder Nachricht",
       "placeholder": "Alles Gute zum Geburtstag Anna...",
       "characters": "Zeichen"
+    },
+    "colors": {
+      "Gold": "Gold",
+      "Rose Gold": "Roségold",
+      "Silver": "Silber",
+      "Pink": "Rosa",
+      "Hot Pink": "Knallrosa",
+      "Blush": "Blush",
+      "Blue": "Blau",
+      "Light Blue": "Hellblau",
+      "Navy": "Marineblau",
+      "Red": "Rot",
+      "White": "Weiß",
+      "Black": "Schwarz",
+      "Purple": "Lila",
+      "Lavender": "Lavendel",
+      "Green": "Grün",
+      "Mint": "Minze",
+      "Yellow": "Gelb",
+      "Orange": "Orange",
+      "Peach": "Pfirsich",
+      "Coral": "Koralle",
+      "Teal": "Türkis",
+      "Turquoise": "Türkis",
+      "Champagne": "Champagner",
+      "Burgundy": "Burgunder",
+      "Emerald": "Smaragd",
+      "Mix": "Mix"
+    },
+    "priceRanges": {
+      "upTo5": "Bis zu €5",
+      "upTo10": "Bis zu €10",
+      "upTo15": "Bis zu €15",
+      "upTo20": "Bis zu €20",
+      "upTo30": "Bis zu €30",
+      "upTo50": "Bis zu €50"
     }
   },
   "product": {
     "notFound": "Produkt nicht gefunden",
     "notFoundDescription": "Das gesuchte Produkt existiert nicht.",
+    "back": "Zurück",
+    "premiumCollection": "Premium Collection",
     "backToHome": "Zurück zur Startseite",
     "outOfStock": "Produkt ist nicht vorrätig",
     "inStock": "Auf Lager",
@@ -521,6 +541,34 @@
     "numberPlaceholder": "18, 25, 30...",
     "textPlaceholder": "Alles Gute zum Geburtstag Anna...",
     "characters": "Zeichen",
+    "colors": {
+      "Gold": "Gold",
+      "Rose Gold": "Roségold",
+      "Silver": "Silber",
+      "Pink": "Rosa",
+      "Hot Pink": "Knallrosa",
+      "Blush": "Blush",
+      "Blue": "Blau",
+      "Light Blue": "Hellblau",
+      "Navy": "Marineblau",
+      "Red": "Rot",
+      "White": "Weiß",
+      "Black": "Schwarz",
+      "Purple": "Lila",
+      "Lavender": "Lavendel",
+      "Green": "Grün",
+      "Mint": "Minze",
+      "Yellow": "Gelb",
+      "Orange": "Orange",
+      "Peach": "Pfirsich",
+      "Coral": "Koralle",
+      "Teal": "Türkis",
+      "Turquoise": "Türkis",
+      "Champagne": "Champagner",
+      "Burgundy": "Burgunder",
+      "Emerald": "Smaragd",
+      "Mix": "Mix"
+    },
     "gallery": {
       "previousImage": "Vorheriges Bild",
       "nextImage": "Nächstes Bild"
@@ -545,70 +593,210 @@
   },
   "legal": {
     "terms": {
-      "title": "AGB",
       "header": {
+        "title": "AGB – Allgemeine Geschäftsbedingungen",
         "subtitle": "Allgemeine Geschäftsbedingungen",
-        "title": "Allgemeine Geschäftsbedingungen (AGB)",
-        "description": "Gültig für alle Fernabsatzverträge von {companyName} ab 1. November 2025. Diese Bedingungen ergänzen zwingende Verbraucherrechte und schränken gesetzliche Schutzmaßnahmen nach österreichischem Recht nicht ein."
+        "description": "Diese Allgemeinen Geschäftsbedingungen (AGB) gelten für alle Bestellungen, die über den Online-Shop des Verkäufers getätigt werden."
       },
       "clause1": {
-        "title": "1. Geltungsbereich",
-        "body": "Diese Allgemeinen Geschäftsbedingungen gelten für alle Bestellungen, die über den Online-Shop von {companyName} aufgegeben werden. Sie basieren auf dem österreichischen Konsumentenschutzgesetz (KSchG), dem E-Commerce-Gesetz (ECG) und dem österreichischen Allgemeinen Bürgerlichen Gesetzbuch (ABGB)."
+        "title": "AGB – Allgemeine Geschäftsbedingungen",
+        "body": "Diese Allgemeinen Geschäftsbedingungen (AGB) gelten für alle Bestellungen, die über den Online-Shop des Verkäufers getätigt werden. Abweichende Bedingungen des Kunden werden nicht anerkannt, sofern der Verkäufer ihnen nicht ausdrücklich schriftlich zustimmt. Dies gilt, bis der Verkäufer dies über WhatsApp bestätigt."
       },
       "clause2": {
-        "title": "2. Vertragssprache und Vertragsabschluss",
-        "body": "Die Vertragssprachen sind Deutsch, Russisch und Englisch. Die im Shop präsentierten Produkte sind unverbindliche Aufforderungen zur Bestellung. Ein Vertrag kommt zustande, wenn wir Ihre Bestellung schriftlich (E-Mail) bestätigen oder die Ware versenden."
+        "title": "2. Vertragspartner",
+        "body": "Der Kaufvertrag kommt zustande zwischen dem Kunden und:\n\n{companyName},\n\nSandgasse 3/3, Knittelfeld 8720\n\n{email} / {phone}"
       },
       "clause3": {
-        "title": "3. Preise und Zahlung",
-        "body": "Alle Preise sind in Euro angegeben und enthalten die gesetzliche österreichische Mehrwertsteuer. Die Zahlung kann entweder über vollständige Online-Zahlung (Stripe) oder Barzahlung bei Abholung erfolgen. Teilzahlungs- oder Anzahlungsmodelle werden nicht angeboten. Online-Zahlungen werden sofort verarbeitet, wodurch die Reservierung des ausgewählten Bouquets oder Arrangements sichergestellt wird."
+        "title": "3. Angebot und Produktdarstellung",
+        "body": "Alle Produktabbildungen im Online-Shop dienen der Illustration und sind unverbindlich. Geringfügige Abweichungen in Farbe, Form oder Gestaltung können auftreten."
+      },
+      "clause3_1": {
+        "title": "3.1 Recht auf Austausch gleichwertiger Komponenten",
+        "body": "Der Verkäufer behält sich das Recht vor, einzelne Bestandteile eines Sets (z. B. Ballons oder Dekorationselemente) durch gleichwertige oder höherwertige Alternativen zu ersetzen, sofern:\n\nder Gesamtwert erhalten bleibt,\ndie Funktion nicht beeinträchtigt wird,\nkeine Preisänderung entsteht.\n\nOptische Abweichungen, die den Gesamteindruck nicht wesentlich beeinflussen, sind zulässig."
       },
       "clause4": {
-        "title": "4. Lieferung und Abholung",
-        "body": "Wir liefern derzeit innerhalb der Steiermark, Österreich, gemäß den auf der Lieferungsseite angegebenen Zeiten. Die Abholung ist im Showroom in Knittelfeld rund um die Uhr nach Vereinbarung möglich. Das Risiko geht auf den Kunden über, sobald die Ware dem Kunden oder seinem bevollmächtigten Vertreter übergeben wird."
+        "title": "4. Bestellablauf und Vertragsabschluss",
+        "body": "Mit dem Absenden der Bestellung gibt der Kunde ein verbindliches Angebot zum Kauf ab.\n\nDer Kaufvertrag kommt zustande, sobald der Verkäufer die Bestellung eindeutig und schriftlich über WhatsApp bestätigt hat."
       },
       "clause5": {
-        "title": "5. Eigentumsvorbehalt",
-        "body": "Die Ware bleibt Eigentum der Ballon Boutique, bis die vollständige Zahlung eingegangen ist."
+        "title": "5. Preise und Versandkosten",
+        "body": "Alle Preise sind Endpreise ohne Umsatzsteuer, da der Verkäufer gemäß § 6 Abs. 1 Z 27 UStG keine Umsatzsteuer berechnet (Kleinunternehmerregelung).\n\nVersandkosten werden im Bestellprozess gesondert ausgewiesen."
       },
       "clause6": {
-        "title": "6. Widerrufsrecht",
-        "body": "Verbraucher haben ein Widerrufsrecht innerhalb von 14 Tagen, wie in unserer Widerrufs- und Rückerstattungsrichtlinie beschrieben. Aufgrund der personalisierten Natur von Ballonarrangements können angepasste Bestellungen gemäß § 18 Abs. 1 lit. c FAGG ausgeschlossen sein."
+        "title": "6. Lieferung",
+        "body": "Die Lieferung erfolgt nach Vereinbarung innerhalb des angegebenen Liefergebietes. Lieferzeiten können je nach Auftragslage variieren. Verzögerungen durch Versanddienstleister liegen außerhalb der Verantwortung des Verkäufers."
       },
       "clause7": {
-        "title": "7. Gewährleistung und Mängel",
-        "body": "Die gesetzliche Gewährleistungsfrist von zwei Jahren gilt. Bitte benachrichtigen Sie uns ohne unnötige Verzögerung über Mängel. Bei Naturlatexprodukten stellen geringfügige Farbabweichungen oder Volumenänderungen aufgrund der Umgebungstemperatur keine Mängel dar."
+        "title": "7. Zahlung",
+        "body": "Der Verkäufer bietet verschiedene Zahlungsmethoden an, wie z. B.:\n\nKreditkarte\n\nZahlung bei Abholung"
       },
       "clause8": {
-        "title": "8. Haftung",
-        "body": "Wir haften für Vorsatz und grobe Fahrlässigkeit gemäß österreichischem Recht. Die Haftung für leicht fahrlässige Schäden, Folgeschäden und entgangenen Gewinn ist ausgeschlossen, es sei denn, zwingende Verbraucherschutzbestimmungen sehen anderes vor."
+        "title": "8. Widerrufsrecht / Rücktrittsrecht (14 Tage)",
+        "body": "Kunden haben ein Widerrufsrecht von 14 Tagen gemäß dem österreichischen Fern- und Auswärtsgeschäfte-Gesetz (FAGG).\n\nVom Widerruf ausgeschlossen sind:\n\npersonalisierte Produkte,\nschnell verderbliche Waren (z. B. Heliumballons aufgrund begrenzter Schwebezeit)."
       },
       "clause9": {
-        "title": "9. Höhere Gewalt",
-        "body": "Ereignisse außerhalb unserer Kontrolle (z.B. Streiks, Stromausfälle, extremes Wetter) können die Lieferung verzögern. Wir werden Sie sofort informieren und alternative Termine oder eine Rückerstattung vorschlagen."
+        "title": "9. Gewährleistung und Haftung",
+        "body": "Es gelten die gesetzlichen Gewährleistungsbestimmungen (VGG).\n\nNicht gehaftet wird für Schäden durch:\n\nunsachgemäße Handhabung,\nHitze, Kälte, Feuer oder scharfe Gegenstände,\nfalsche Lagerung durch Kunden,\nnatürliche Schwankungen der Helium-Schwebezeit."
       },
       "clause10": {
-        "title": "10. Streitbeilegung",
-        "body": "Das zuständige Gericht für Streitigkeiten mit Verbrauchern wird durch § 14 KSchG bestimmt. Österreichisches Recht gilt unter Ausschluss des UN-Kaufrechtsübereinkommens. Verbraucher können Beschwerden über die EU-Plattform zur Online-Streitbeilegung einreichen."
+        "title": "10. Eigentumsvorbehalt",
+        "body": "Die Ware bleibt bis zur vollständigen Bezahlung Eigentum des Verkäufers."
+      },
+      "clause11": {
+        "title": "11. Datenschutz",
+        "body": "Die Verarbeitung personenbezogener Daten erfolgt gemäß DSGVO und der Datenschutzerklärung auf der Website des Verkäufers."
+      },
+      "clause12": {
+        "title": "12. Online-Streitbeilegung (OS-Plattform)",
+        "body": "Gemäß der EU-Verordnung über Online-Streitbeilegung verweisen wir auf die Plattform der Europäischen Kommission:\n\n{euDisputeResolutionUrl}\n\nWir sind weder verpflichtet noch bereit, an einem Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle teilzunehmen."
+      },
+      "clause13": {
+        "title": "13. Gerichtsstand und anwendbares Recht",
+        "body": "Es gilt österreichisches Recht. Gerichtsstand ist der Sitz des Unternehmens, sofern keine zwingenden Verbraucherschutzbestimmungen entgegenstehen."
       },
       "footer": {
-        "description": "Klärungen bezüglich Widerruf, Datenschutz und Unternehmensdetails werden separat bereitgestellt:",
-        "cancellation": "Widerrufs- und Rückerstattungsrichtlinie",
-        "privacy": "Datenschutzerklärung (DSGVO)",
+        "description": "Weitere Informationen finden Sie in unseren",
+        "privacy": "Datenschutzerklärung",
         "imprint": "Impressum"
       }
     },
     "privacy": {
-      "title": "Datenschutzerklärung"
-    },
-    "cancellation": {
-      "title": "Widerrufsrichtlinie"
+      "header": {
+        "title": "Datenschutz",
+        "subtitle": "Datenschutz",
+        "description": "Verantwortlich für die Datenverarbeitung auf dieser Website ist:"
+      },
+      "section1": {
+        "title": "1. Verantwortlicher",
+        "intro": "Verantwortlich für die Datenverarbeitung auf dieser Website ist:",
+        "company": "{companyName}",
+        "address": "Sandgasse 3/3, Knittelfeld 8720",
+        "email": "{email}",
+        "phone": "{phone}"
+      },
+      "section2": {
+        "title": "2. Erhebung und Verarbeitung personenbezogener Daten",
+        "intro": "Wir verarbeiten personenbezogene Daten, die Sie uns freiwillig zur Verfügung stellen, z. B.:",
+        "dataList": [
+          "Name, Adresse, E-Mail",
+          "Telefonnummer",
+          "Bestelldaten (Produkte, Menge, Datum)"
+        ],
+        "purposeIntro": "Diese Daten werden für folgende Zwecke verwendet:",
+        "purposeList": [
+          "Bearbeitung von Bestellungen und Versand",
+          "Kommunikation mit Kunden (inkl. WhatsApp)",
+          "Rechnungsstellung",
+          "Erfüllung gesetzlicher Pflichten"
+        ]
+      },
+      "section3": {
+        "title": "3. Rechtsgrundlage der Verarbeitung",
+        "body": "Die Verarbeitung erfolgt gemäß Art. 6 Abs. 1 lit. b DSGVO (Vertragserfüllung) und lit. c (gesetzliche Verpflichtungen)."
+      },
+      "section4": {
+        "title": "4. Speicherung",
+        "body": "Ihre Daten werden nur so lange gespeichert, wie es für die Erfüllung der Zwecke notwendig ist oder gesetzliche Aufbewahrungspflichten bestehen (z. B. steuerliche Aufbewahrungspflichten)."
+      },
+      "section5": {
+        "title": "5. Weitergabe an Dritte",
+        "intro": "Personenbezogene Daten werden nur an Dritte weitergegeben, soweit dies für die Abwicklung der Bestellung notwendig ist, z. B.:",
+        "thirdPartiesList": [
+          "Versanddienstleister",
+          "Zahlungsanbieter (Kredit-/Debitkarte)"
+        ],
+        "conclusion": "Eine andere Weitergabe erfolgt nicht ohne Ihre ausdrückliche Zustimmung."
+      },
+      "section6": {
+        "title": "6. Cookies",
+        "body": "Auf dieser Website werden nur notwendige Cookies verwendet, um die Funktionsfähigkeit der Website zu gewährleisten."
+      },
+      "section7": {
+        "title": "7. Rechte der betroffenen Personen",
+        "intro": "Sie haben das Recht:",
+        "rightsList": [
+          "Auskunft über Ihre gespeicherten Daten zu erhalten",
+          "Berichtigung unrichtiger Daten zu verlangen",
+          "Löschung oder Einschränkung der Verarbeitung zu verlangen",
+          "Widerspruch gegen die Verarbeitung einzulegen",
+          "Datenübertragbarkeit zu verlangen",
+          "Beschwerde bei der Datenschutzbehörde einzulegen"
+        ]
+      },
+      "section8": {
+        "title": "8. Kontakt",
+        "intro": "Für Fragen zum Datenschutz kontaktieren Sie bitte:",
+        "whatsapp": "WhatsApp: {phone}",
+        "email": "{email}",
+        "phone": "Telefon: {phone}"
+      }
     },
     "imprint": {
-      "title": "Impressum",
-      "responsibleForContent": "Verantwortlich für den Inhalt",
-      "contact": "Kontakt",
-      "registrationDetails": "Registrierungsdetails"
+      "header": {
+        "title": "Impressum",
+        "subtitle": "Impressum",
+        "description": "Rechtliche Informationen und Firmenangaben gemäß österreichischem Recht."
+      },
+      "section1": {
+        "title": "1. Firmenname",
+        "value": "{companyName}"
+      },
+      "section2": {
+        "title": "2. Rechtsform:",
+        "value": "{legalForm}"
+      },
+      "section3": {
+        "title": "3. Geschäftsadresse:",
+        "street": "{street}",
+        "city": "{postalCode} {city}",
+        "country": "Österreich"
+      },
+      "section4": {
+        "title": "4. Kontaktinformationen:",
+        "phone": "Telefon: {phone}",
+        "email": "E-Mail: {email}",
+        "website": "Website: {website}"
+      },
+      "section5": {
+        "title": "5. Vertreten durch:",
+        "value": "{owner}"
+      },
+      "section6": {
+        "title": "6. Firmenbuchnummer (falls vorhanden):",
+        "value": "[Номер oder «не имеется»]"
+      },
+      "section7": {
+        "title": "7. Firmenbuchgericht (falls vorhanden):",
+        "value": "[z. B. Handelsgericht Wien]"
+      },
+      "section8": {
+        "title": "8. UID-Nummer (ATU…):",
+        "value": "[Ваш номер oder «нет номера UID»]"
+      },
+      "section9": {
+        "title": "9. Gewerbeberechtigung:",
+        "license": "[z. B. Handelsgewerbe]",
+        "issuedBy": "Ausgestellt von: [Behörde]"
+      },
+      "section10": {
+        "title": "10. Mitglied der Wirtschaftskammer (WKO):",
+        "value": "[z. B. Wirtschaftskammer Niederösterreich]"
+      },
+      "section11": {
+        "title": "11. Berufsrechtliche Vorschriften:",
+        "intro": "Anwendbare Rechtsvorschriften:",
+        "link": "{applicableLaw}"
+      },
+      "section12": {
+        "title": "12. Haftungsausschluss (Disclaimer):",
+        "paragraph1": "Trotz sorgfältiger Kontrolle übernehmen wir keine Haftung für Inhalte externer Links.",
+        "paragraph2": "Für den Inhalt verlinkter Seiten sind ausschließlich deren Betreiber verantwortlich."
+      },
+      "section13": {
+        "title": "13. Urheberrecht:",
+        "paragraph1": "Alle Inhalte, Bilder und Texte dieser Website unterliegen dem Urheberrecht.",
+        "paragraph2": "Eine Nutzung ohne schriftliche Genehmigung ist nicht gestattet."
+      }
     }
   },
   "notFound": {
