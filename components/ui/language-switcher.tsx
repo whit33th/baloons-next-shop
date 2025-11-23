@@ -1,5 +1,8 @@
 "use client";
 
+import { useSearchParams } from "next/navigation";
+import { useLocale, useTranslations } from "next-intl";
+import { useTransition } from "react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,9 +13,6 @@ import { usePathname } from "@/i18n/routing";
 import { removeLocaleFromPathname } from "@/i18n/utils";
 import { persistLocalePreference } from "@/lib/localePreference";
 import { cn } from "@/lib/utils";
-import { useLocale, useTranslations } from "next-intl";
-import { useSearchParams } from "next/navigation";
-import { useTransition } from "react";
 import {
   AustriaFlag,
   GreatBritainFlag,

@@ -12,7 +12,7 @@ if (!convexUrl) {
 }
 
 const convex = new ConvexReactClient(convexUrl, {
-  verbose: true,
+  verbose: process.env.NODE_ENV === "development",
 });
 
 export function ConvexProvider({ children }: { children: ReactNode }) {

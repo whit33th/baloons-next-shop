@@ -140,7 +140,7 @@ export const Footer = () => {
                 href={STORE_INFO.social.instagram}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center transition-opacity hover:opacity-80"
+                className="flex min-h-[24px] items-center px-1 py-1 transition-opacity hover:opacity-80"
                 aria-label="Instagram profile"
               >
                 <Instagram className="size-5" />
@@ -149,14 +149,14 @@ export const Footer = () => {
                 href={STORE_INFO.social.facebook}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center transition-opacity hover:opacity-80"
+                className="flex min-h-[24px] items-center px-1 py-1 transition-opacity hover:opacity-80"
                 aria-label="Facebook profile"
               >
                 <Facebook className="size-5" />
               </a>
               <a
                 href={`mailto:${STORE_INFO.contact.email}`}
-                className="flex items-center transition-opacity hover:opacity-80"
+                className="flex min-h-[24px] items-center px-1 py-1 transition-opacity hover:opacity-80"
                 aria-label="Email"
               >
                 {STORE_INFO.contact.email}
@@ -179,7 +179,7 @@ export const Footer = () => {
                             href={link.href}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="transition-opacity hover:opacity-80"
+                            className="block min-h-[24px] py-1 transition-opacity hover:opacity-80"
                           >
                             {t(link.labelKey)}
                           </a>
@@ -192,7 +192,7 @@ export const Footer = () => {
                         <Link
                           href={link.href}
                           prefetch={shouldPrefetch(link.href)}
-                          className="transition-opacity hover:opacity-80"
+                          className="block min-h-[24px] py-1 transition-opacity hover:opacity-80"
                         >
                           {t(link.labelKey)}
                         </Link>
@@ -216,7 +216,7 @@ export const Footer = () => {
                   key={link.labelKey}
                   href={link.href}
                   prefetch={false}
-                  className="transition-opacity hover:opacity-80"
+                  className="block min-h-[24px] py-1 transition-opacity hover:opacity-80"
                 >
                   {t(link.labelKey)}
                 </Link>
