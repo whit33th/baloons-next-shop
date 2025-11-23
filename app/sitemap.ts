@@ -7,7 +7,6 @@ import { routing } from "@/i18n/routing";
 
 const baseUrl = STORE_INFO.website.replace(/\/$/, "");
 const locales = routing.locales;
-const PRODUCTS_PER_SITEMAP = 50000; // Google's limit
 
 // Static pages that should be in sitemap
 const staticPages = [
@@ -19,114 +18,67 @@ const staticPages = [
 ];
 
 /**
- * Generate sitemaps for products
- * Split products into multiple sitemaps if needed (max 50,000 per sitemap)
+ * Generate sitemap entries for all pages
  */
-export async function generateSitemaps() {
-  try {
-    // Get all products to calculate how many sitemaps we need
-    const _allProducts = await fetchQuery(api.products.list, {
-      paginationOpts: { numItems: 1, cursor: "" },
-      available: true,
-    });
-
-    // We need to get the total count, but the API returns paginated results
-    // So we'll fetch all products in chunks to count them
-    let totalProducts = 0;
-    let cursor = "";
-    let hasMore = true;
-
-    while (hasMore) {
-      const result = await fetchQuery(api.products.list, {
-        paginationOpts: { numItems: 1000, cursor },
-        available: true,
-      });
-      totalProducts += result.page.length;
-      cursor = result.continueCursor;
-      hasMore = !result.isDone && cursor !== "";
-    }
-
-    const numSitemaps = Math.ceil(totalProducts / PRODUCTS_PER_SITEMAP);
-    return Array.from({ length: numSitemaps }, (_, i) => ({ id: i }));
-  } catch {
-    // If there's an error, return at least one sitemap
-    return [{ id: 0 }];
-  }
-}
-
-/**
- * Generate sitemap entries for products
- */
-export default async function sitemap(props?: {
-  id: Promise<number>;
-}): Promise<MetadataRoute.Sitemap> {
-  const sitemapId = props?.id ? await props.id : 0;
-
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const entries: MetadataRoute.Sitemap = [];
 
-  // Add static pages and categories only to the first sitemap (id: 0)
-  if (sitemapId === 0) {
-    // Add static pages with localization
-    for (const page of staticPages) {
-      for (const locale of locales) {
-        const url = `${baseUrl}/${locale}${page.path ? `/${page.path}` : ""}`;
-        const alternates: Record<string, string> = {};
+  // Add static pages with localization
+  for (const page of staticPages) {
+    for (const locale of locales) {
+      const url = `${baseUrl}/${locale}${page.path ? `/${page.path}` : ""}`;
+      const alternates: Record<string, string> = {};
 
-        // Add alternate language URLs
-        for (const altLocale of locales) {
-          if (altLocale !== locale) {
-            alternates[altLocale] =
-              `${baseUrl}/${altLocale}${page.path ? `/${page.path}` : ""}`;
-          }
+      // Add alternate language URLs
+      for (const altLocale of locales) {
+        if (altLocale !== locale) {
+          alternates[altLocale] =
+            `${baseUrl}/${altLocale}${page.path ? `/${page.path}` : ""}`;
         }
-
-        entries.push({
-          url,
-          lastModified: new Date(),
-          changeFrequency: page.changeFrequency,
-          priority: page.priority,
-          alternates: {
-            languages: alternates,
-          },
-        });
       }
+
+      entries.push({
+        url,
+        lastModified: new Date(),
+        changeFrequency: page.changeFrequency,
+        priority: page.priority,
+        alternates: {
+          languages: alternates,
+        },
+      });
     }
+  }
 
-    // Add category pages with localization
-    for (const categoryGroup of PRODUCT_CATEGORY_GROUPS) {
-      for (const locale of locales) {
-        const url = `${baseUrl}/${locale}/${categoryGroup.value}`;
-        const alternates: Record<string, string> = {};
+  // Add category pages with localization
+  for (const categoryGroup of PRODUCT_CATEGORY_GROUPS) {
+    for (const locale of locales) {
+      const url = `${baseUrl}/${locale}/${categoryGroup.value}`;
+      const alternates: Record<string, string> = {};
 
-        for (const altLocale of locales) {
-          if (altLocale !== locale) {
-            alternates[altLocale] =
-              `${baseUrl}/${altLocale}/${categoryGroup.value}`;
-          }
+      for (const altLocale of locales) {
+        if (altLocale !== locale) {
+          alternates[altLocale] =
+            `${baseUrl}/${altLocale}/${categoryGroup.value}`;
         }
-
-        entries.push({
-          url,
-          lastModified: new Date(),
-          changeFrequency: "weekly" as const,
-          priority: 0.8,
-          alternates: {
-            languages: alternates,
-          },
-        });
       }
+
+      entries.push({
+        url,
+        lastModified: new Date(),
+        changeFrequency: "weekly" as const,
+        priority: 0.8,
+        alternates: {
+          languages: alternates,
+        },
+      });
     }
   }
 
   // Add product pages with images and localization
   try {
-    const startIdx = sitemapId * PRODUCTS_PER_SITEMAP;
-    const endIdx = startIdx + PRODUCTS_PER_SITEMAP;
-
-    // Fetch products in chunks
+    // Fetch all products
     let cursor = "";
     let hasMore = true;
-    let fetchedCount = 0;
     const products: Array<{
       _id: string;
       name: string;
@@ -134,23 +86,19 @@ export default async function sitemap(props?: {
       _creationTime: number;
     }> = [];
 
-    while (hasMore && fetchedCount < endIdx) {
+    while (hasMore) {
       const result = await fetchQuery(api.products.list, {
         paginationOpts: { numItems: 1000, cursor },
         available: true,
       });
 
       for (const product of result.page) {
-        if (fetchedCount >= startIdx && fetchedCount < endIdx) {
-          products.push({
-            _id: product._id,
-            name: product.name,
-            imageUrls: product.imageUrls,
-            _creationTime: product._creationTime,
-          });
-        }
-        fetchedCount++;
-        if (fetchedCount >= endIdx) break;
+        products.push({
+          _id: product._id,
+          name: product.name,
+          imageUrls: product.imageUrls,
+          _creationTime: product._creationTime,
+        });
       }
 
       cursor = result.continueCursor;
