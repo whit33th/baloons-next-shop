@@ -22,6 +22,7 @@ export interface ProductCarouselProps {
 
   count?: number;
   transitionGroup?: string;
+  imageSizes?: string;
 }
 
 export function ProductCarousel({
@@ -29,6 +30,7 @@ export function ProductCarousel({
   label,
   secondaryLabel,
   transitionGroup,
+  imageSizes,
 }: ProductCarouselProps) {
   const t = useTranslations("home");
   const [isMobile, setIsMobile] = useState<boolean>(false);
@@ -108,6 +110,7 @@ export function ProductCarousel({
                   transitionGroups={
                     transitionGroup ? [transitionGroup] : undefined
                   }
+                  imageSizes={imageSizes}
                 />
               </CarouselItem>
             ))}

@@ -23,12 +23,14 @@ interface ProductCardProps {
   product: ProductCardProduct;
   index: number;
   transitionGroups?: string[];
+  imageSizes?: string;
 }
 
 export default function ProductCard({
   product,
   index,
   transitionGroups,
+  imageSizes,
 }: ProductCardProps) {
   // Assign colors based on product - matching reference colorful balloon theme
   const colorIndex = index % balloonColors.length;
@@ -95,7 +97,10 @@ export default function ProductCard({
                   fill
                   className="aspect-3/4 h-full w-full object-cover"
                   transformation={DEFAULT_PRODUCT_IMAGE_TRANSFORMATION}
-                  sizes="(max-width: 720px) 50vw, (min-width: 965px) 33vw, (min-width: 1200px) 25vw, (min-width: 1440px) 20vw, (min-width: 1680px) 17vw, 400px "
+                  sizes={
+                    imageSizes ??
+                    "(max-width: 720px) 50vw, (min-width: 965px) 33vw, (min-width: 1200px) 25vw, (min-width: 1440px) 20vw, (min-width: 1680px) 17vw, 400px "
+                  }
                   style={placeholderStyle}
                   onLoad={() => {
                     setShowPlaceholder(false);

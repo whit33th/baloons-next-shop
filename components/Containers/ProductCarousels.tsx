@@ -1,7 +1,7 @@
 "use client";
 
 import { type Preloaded, usePreloadedQuery } from "convex/react";
-import { useTranslations } from 'next-intl';
+import { useTranslations } from "next-intl";
 import { AnimatedSection } from "@/components/ui/animated-section";
 import { ProductCarousel } from "@/components/ui/carousels/product-carousel";
 import type { api } from "@/convex/_generated/api";
@@ -15,7 +15,7 @@ export function ProductCarousels({
   preloadedBestsellers,
   preloadedNewArrivals,
 }: ProductCarouselsProps) {
-  const t = useTranslations('home');
+  const t = useTranslations("home");
   // Use preloaded query for instant data - no loading state!
   const bestsellersResult = usePreloadedQuery(preloadedBestsellers);
   const newArrivalsResult = usePreloadedQuery(preloadedNewArrivals);
@@ -30,14 +30,15 @@ export function ProductCarousels({
         {bestsellersProducts.length > 0 ? (
           <ProductCarousel
             data={bestsellersProducts}
-            label={t('bestselling')}
-            secondaryLabel={t('products')}
+            label={t("bestselling")}
+            secondaryLabel={t("products")}
             transitionGroup="bestseller"
+            imageSizes="(max-width: 639px) 40vw, (max-width: 767px) 28.57vw, (max-width: 1023px) 22.22vw, (max-width: 1279px) 18.18vw, 15.38vw"
           />
         ) : (
           <div className="flex h-32 items-center justify-center">
             <div className="text-center text-gray-500">
-              {t('noProductsAvailable')}
+              {t("noProductsAvailable")}
             </div>
           </div>
         )}
@@ -48,14 +49,15 @@ export function ProductCarousels({
         {newArrivalsProducts.length > 0 ? (
           <ProductCarousel
             data={newArrivalsProducts}
-            label={t('new')}
-            secondaryLabel={t('arrivals')}
+            label={t("new")}
+            secondaryLabel={t("arrivals")}
             transitionGroup="new-arrival"
+            imageSizes="(max-width: 639px) 40vw, (max-width: 767px) 28.57vw, (max-width: 1023px) 22.22vw, (max-width: 1279px) 18.18vw, 15.38vw"
           />
         ) : (
           <div className="flex h-32 items-center justify-center">
             <div className="text-center text-gray-500">
-              {t('noProductsAvailable')}
+              {t("noProductsAvailable")}
             </div>
           </div>
         )}

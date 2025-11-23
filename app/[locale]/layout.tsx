@@ -15,7 +15,6 @@ import AppImageKitProvider from "@/components/Providers/ImageKitProvider";
 import { routing } from "@/i18n/routing";
 import {
   getBaseUrl,
-  getCanonicalUrl,
   getDefaultDescription,
   getSiteName,
 } from "@/SEO";

@@ -59,7 +59,7 @@ export async function CategorySection() {
                     alt={tCatalog(`categoryGroups.${group.value}`)}
                     fill
                     className="object-cover"
-                    sizes="(max-width: 768px) 50vw, 33vw"
+                    sizes="(max-width: 768px) 50vw, 25vw"
                     priority
                     fetchPriority="high"
                   />
@@ -95,7 +95,7 @@ export async function CategorySection() {
                 alt={t("allProducts")}
                 fill
                 className="object-cover"
-                sizes="(max-width: 768px) 50vw, 33vw"
+                sizes="(max-width: 768px) 50vw, 25vw"
                 priority
                 fetchPriority="high"
               />
