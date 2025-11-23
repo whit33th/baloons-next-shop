@@ -82,13 +82,11 @@ a:hover:is(:not(:disabled, :active)) {
   height: 10px;
 }
 
-/* Minimal, accessible scrollbar that matches the site palette */
 ::-webkit-scrollbar-track {
-  background: rgba(var(--primary-rgb), 0.35); /* subtle cream track */
+  background: rgba(var(--primary-rgb), 0.35);
   border-radius: 999px;
 }
 
-/* thumb: small gradient using blue -> terracotta from palette, rounded and with subtle outline */
 ::-webkit-scrollbar-thumb {
   background: linear-gradient(
     180deg,
@@ -97,26 +95,22 @@ a:hover:is(:not(:disabled, :active)) {
   );
   border-radius: 999px;
   border: 2px solid rgba(var(--primary-rgb), 0.65);
-  min-height: 36px; /* better hit area */
+  min-height: 36px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
   filter: brightness(0.95);
 }
 
-/* corner */
 ::-webkit-scrollbar-corner {
   background: transparent;
 }
 
-/* Firefox support */
 html,
 body {
   scrollbar-width: thin;
   scrollbar-color: rgba(var(--color-blue-rgb), 0.95)
     rgba(var(--primary-rgb), 0.25);
-  /* overscroll-behavior: contain; */
-  /* overflow: hidden; */
 }
 input {
   caret-color: var(--accent);
@@ -124,14 +118,11 @@ input {
 
 :root {
   --radius: 0.625rem;
-  /* Palette sampled from the provided photo (rounded swatches)
-     Colors (left->right): blue, warm orange, light beige, terracotta, deep brown
-  */
-  --color-blue: #348998; /* чуть ярче и свежее — морская бирюза */
-  --color-warm: #f3a766; /* теплее и светлее — апельсиновый акцент */
-  --color-light: #fcf8ef; /* чуть белее, чтобы всё «дышало» */
-  --color-terracotta: #e25536; /* коралл с энергией, но не кислотный */
-  --color-deep: #4a2620; /* капельку темнее для контраста */
+  --color-blue: #348998;
+  --color-warm: #f3a766;
+  --color-light: #fcf8ef;
+  --color-terracotta: #e25536;
+  --color-deep: #4a2620;
 
   --color-blue-rgb: 47, 109, 122;
   --color-warm-rgb: 232, 154, 90;
@@ -139,12 +130,6 @@ input {
   --color-terracotta-rgb: 196, 74, 47;
   --color-deep-rgb: 90, 47, 40;
 
-  /* 60/30/10 semantic mapping (recommended)
-     - primary (60%): light cream background
-     - secondary (30%): blue (blocks/sections)
-     - accent (10%): terracotta (CTAs/highlights)
-     Support: warm (peach) and deep (text/strong accents)
-  */
   --primary: var(--color-light);
   --primary-rgb: var(--color-light-rgb);
   --primary-foreground: var(--color-deep);
@@ -162,7 +147,6 @@ input {
   --deep: var(--color-deep);
   --deep-rgb: var(--color-deep-rgb);
 
-  /* app background uses the light cream */
   --background: var(--primary);
   --foreground: var(--primary-foreground);
 
@@ -191,16 +175,13 @@ input {
 
 @layer base {
   * {
-    /* keep Tailwind utility application here; handled by Tailwind/PostCSS at build time */
     @apply border-border outline-ring/50;
   }
   body {
-    /* use the new cream background and deep foreground by default */
     @apply bg-background text-foreground;
   }
 }
 
-/* small utility helpers for semantic tokens (so components can use `bg-primary`, `btn-accent` etc.) */
 @layer utilities {
   .bg-primary {
     background-color: var(--primary);
@@ -230,7 +211,6 @@ input {
   .text-on-secondary {
     color: var(--secondary-foreground);
   }
-  /* literal helper requested: text-background -> uses the page background color */
   .text-background {
     color: var(--background);
   }

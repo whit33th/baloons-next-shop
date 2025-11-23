@@ -1,4 +1,3 @@
-// Root layout - middleware handles locale redirection
 export default function RootLayout({
   children,
 }: {

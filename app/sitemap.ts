@@ -5,6 +5,9 @@ import { STORE_INFO } from "@/constants/config";
 import { api } from "@/convex/_generated/api";
 import { routing } from "@/i18n/routing";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 7200;
+
 const baseUrl = STORE_INFO.website.replace(/\/$/, "");
 const locales = routing.locales;
 
@@ -23,13 +26,11 @@ const staticPages = [
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const entries: MetadataRoute.Sitemap = [];
 
-  // Add static pages with localization
   for (const page of staticPages) {
     for (const locale of locales) {
       const url = `${baseUrl}/${locale}${page.path ? `/${page.path}` : ""}`;
       const alternates: Record<string, string> = {};
 
-      // Add alternate language URLs
       for (const altLocale of locales) {
         if (altLocale !== locale) {
           alternates[altLocale] =

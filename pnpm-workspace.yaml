@@ -1,0 +1,7 @@
+ignoredBuiltDependencies:
+  - esbuild
+
+onlyBuiltDependencies:
+  - '@swc/core'
+  - '@vercel/speed-insights'
+  - sharp
