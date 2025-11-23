@@ -89,11 +89,11 @@ export async function generateLegalMetadata(
     alternates: {
       canonical: canonicalUrl,
       languages: {
-        "de-AT": `${baseUrl}/de${pagePath}`,
-        "en-US": `${baseUrl}/en${pagePath}`,
-        "ru-RU": `${baseUrl}/ru${pagePath}`,
-        "uk-UA": `${baseUrl}/uk${pagePath}`,
-        "x-default": `${baseUrl}${pagePath}`,
+        "de-AT": getCanonicalUrl(pagePath, "de"),
+        "en-US": getCanonicalUrl(pagePath, "en"),
+        "ru-RU": getCanonicalUrl(pagePath, "ru"),
+        "uk-UA": getCanonicalUrl(pagePath, "uk"),
+        "x-default": getCanonicalUrl(pagePath, routing.defaultLocale),
       },
     },
 

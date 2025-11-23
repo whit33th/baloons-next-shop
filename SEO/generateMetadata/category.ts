@@ -78,11 +78,11 @@ export async function generateCategoryMetadata(
     alternates: {
       canonical: canonicalUrl,
       languages: {
-        "de-AT": `${baseUrl}/de${categoryPath}`,
-        "en-US": `${baseUrl}/en${categoryPath}`,
-        "ru-RU": `${baseUrl}/ru${categoryPath}`,
-        "uk-UA": `${baseUrl}/uk${categoryPath}`,
-        "x-default": `${baseUrl}${categoryPath}`,
+        "de-AT": getCanonicalUrl(categoryPath, "de"),
+        "en-US": getCanonicalUrl(categoryPath, "en"),
+        "ru-RU": getCanonicalUrl(categoryPath, "ru"),
+        "uk-UA": getCanonicalUrl(categoryPath, "uk"),
+        "x-default": getCanonicalUrl(categoryPath, routing.defaultLocale),
       },
     },
 

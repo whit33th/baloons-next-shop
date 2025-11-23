@@ -13,7 +13,12 @@ import { Footer, Header } from "@/components/Containers";
 import { ConvexProvider } from "@/components/Providers/ConvexProvider";
 import AppImageKitProvider from "@/components/Providers/ImageKitProvider";
 import { routing } from "@/i18n/routing";
-import { getDefaultDescription, getSiteName } from "@/SEO";
+import {
+  getBaseUrl,
+  getCanonicalUrl,
+  getDefaultDescription,
+  getSiteName,
+} from "@/SEO";
 
 /**
  * Maps routing locale codes to valid BCP 47 language codes
@@ -44,10 +49,7 @@ export async function generateMetadata({
   const { locale } = await params;
   const siteName = getSiteName();
   const description = getDefaultDescription(locale);
-
-  const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL;
-  const convexDomain = convexUrl ? new URL(convexUrl).origin : null;
-  const imageKitDomain = "https://ik.imagekit.io";
+  const baseUrl = getBaseUrl();
 
   return {
     title: {
@@ -55,14 +57,9 @@ export async function generateMetadata({
       template: `${siteName} | %s`,
     },
     description,
-    metadataBase: new URL(
-      process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000",
-    ),
+    metadataBase: new URL(baseUrl),
     other: {
-      ...(convexDomain && {
-        "preconnect-convex": convexDomain,
-      }),
-      "preconnect-imagekit": imageKitDomain,
+      "apple-mobile-web-app-title": "Ballon Boutique",
     },
   };
 }
@@ -85,16 +82,14 @@ export default async function LocaleLayout({
   const messages = await getMessages();
   const langCode = getLanguageCode(locale);
 
+  const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL;
+  const convexDomain = convexUrl ? new URL(convexUrl).origin : null;
+
   return (
     <html lang={langCode}>
       <head>
-        <meta name="apple-mobile-web-app-title" content="Ballon Boutique" />
-        {process.env.NEXT_PUBLIC_CONVEX_URL && (
-          <link
-            rel="preconnect"
-            href={new URL(process.env.NEXT_PUBLIC_CONVEX_URL).origin}
-            crossOrigin="anonymous"
-          />
+        {convexDomain && (
+          <link rel="preconnect" href={convexDomain} crossOrigin="anonymous" />
         )}
         <link
           rel="preconnect"

@@ -63,9 +63,8 @@
     "typescript": "^5.9.3"
   },
   "browserslist": [
-    "chrome >= 92",
-    "firefox >= 90",
-    "safari >= 15.4",
-    "edge >= 92"
+    "> 0.25%",
+    "not dead",
+    "not op_mini all"
   ]
 }

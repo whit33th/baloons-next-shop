@@ -101,11 +101,11 @@ export async function generateHomeMetadata(locale: string): Promise<Metadata> {
     alternates: {
       canonical: canonicalUrl,
       languages: {
-        "de-AT": `${baseUrl}/de`,
-        "en-US": `${baseUrl}/en`,
-        "ru-RU": `${baseUrl}/ru`,
-        "uk-UA": `${baseUrl}/uk`,
-        "x-default": baseUrl,
+        "de-AT": getCanonicalUrl("/", "de"),
+        "en-US": getCanonicalUrl("/", "en"),
+        "ru-RU": getCanonicalUrl("/", "ru"),
+        "uk-UA": getCanonicalUrl("/", "uk"),
+        "x-default": getCanonicalUrl("/", routing.defaultLocale),
       },
     },
 

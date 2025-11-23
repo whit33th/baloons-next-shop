@@ -125,11 +125,11 @@ export async function generateCatalogMetadata(
     alternates: {
       canonical: canonicalUrl,
       languages: {
-        "de-AT": `${baseUrl}/de${catalogPath}`,
-        "en-US": `${baseUrl}/en${catalogPath}`,
-        "ru-RU": `${baseUrl}/ru${catalogPath}`,
-        "uk-UA": `${baseUrl}/uk${catalogPath}`,
-        "x-default": `${baseUrl}${catalogPath}`,
+        "de-AT": getCanonicalUrl(catalogPath, "de"),
+        "en-US": getCanonicalUrl(catalogPath, "en"),
+        "ru-RU": getCanonicalUrl(catalogPath, "ru"),
+        "uk-UA": getCanonicalUrl(catalogPath, "uk"),
+        "x-default": getCanonicalUrl(catalogPath, routing.defaultLocale),
       },
     },
 

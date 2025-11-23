@@ -87,11 +87,11 @@ export async function generateProductMetadata(
     alternates: {
       canonical: canonicalUrl,
       languages: {
-        "de-AT": `${baseUrl}/de${productPath}`,
-        "en-US": `${baseUrl}/en${productPath}`,
-        "ru-RU": `${baseUrl}/ru${productPath}`,
-        "uk-UA": `${baseUrl}/uk${productPath}`,
-        "x-default": `${baseUrl}${productPath}`,
+        "de-AT": getCanonicalUrl(productPath, "de"),
+        "en-US": getCanonicalUrl(productPath, "en"),
+        "ru-RU": getCanonicalUrl(productPath, "ru"),
+        "uk-UA": getCanonicalUrl(productPath, "uk"),
+        "x-default": getCanonicalUrl(productPath, routing.defaultLocale),
       },
     },
 

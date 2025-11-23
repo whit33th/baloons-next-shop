@@ -20,6 +20,7 @@ const nextConfig: NextConfig = {
         : false,
   },
   typedRoutes: true,
+  transpilePackages: ["convex"],
   images: {
     remotePatterns: [
       {
