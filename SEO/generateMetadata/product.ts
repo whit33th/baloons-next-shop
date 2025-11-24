@@ -37,7 +37,7 @@ export async function generateProductMetadata(
   const productImages =
     product.imageUrls && product.imageUrls.length > 0
       ? product.imageUrls
-      : [`${baseUrl}${STORE_INFO.logo}`];
+      : [`${baseUrl}/${locale}/opengraph-image`];
 
   // Get keywords for this product and locale
   const keywords = getKeywords(

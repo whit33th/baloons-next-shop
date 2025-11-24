@@ -134,9 +134,9 @@ export async function generateHomeMetadata(locale: string): Promise<Metadata> {
       description,
       images: [
         {
-          url: `${baseUrl}/${locale}/opengraph-image`,
-          width: 1200,
-          height: 630,
+          url: `${baseUrl}${STORE_INFO.webAppManifest}`,
+          width: 512,
+          height: 512,
           alt: `${siteName} - ${slogan}`,
           type: "image/png",
         },
@@ -158,9 +158,9 @@ export async function generateHomeMetadata(locale: string): Promise<Metadata> {
           : undefined,
       images: [
         {
-          url: `${baseUrl}/${locale}/twitter-image`,
-          width: 1200,
-          height: 630,
+          url: `${baseUrl}${STORE_INFO.webAppManifest}`,
+          width: 512,
+          height: 512,
           alt: title,
         },
       ],
