@@ -35,7 +35,9 @@ export default convexAuthNextjsMiddleware(
       pathname.startsWith("/sitemap/") ||
       pathname === "/robots.txt" ||
       pathname === "/manifest.json" ||
-      pathname === "/manifest.webmanifest"
+      pathname === "/manifest.webmanifest" ||
+      pathname.includes("/opengraph-image") ||
+      pathname.includes("/twitter-image")
     ) {
       return NextResponse.next();
     }

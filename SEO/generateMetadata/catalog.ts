@@ -161,7 +161,7 @@ export async function generateCatalogMetadata(
       description,
       images: [
         {
-          url: `${baseUrl}${STORE_INFO.logo}`,
+          url: `${baseUrl}/${locale}/opengraph-image`,
           width: 1200,
           height: 630,
           alt: title,
@@ -183,7 +183,14 @@ export async function generateCatalogMetadata(
         STORE_INFO.social.twitter !== "fix"
           ? `@${STORE_INFO.social.twitter.split("/").pop()}`
           : undefined,
-      images: [`${baseUrl}${STORE_INFO.webAppManifest}`],
+      images: [
+        {
+          url: `${baseUrl}/${locale}/twitter-image`,
+          width: 1200,
+          height: 630,
+          alt: title,
+        },
+      ],
     },
 
     // Robots
