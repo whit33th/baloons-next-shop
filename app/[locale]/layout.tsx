@@ -13,11 +13,7 @@ import { Footer, Header } from "@/components/Containers";
 import { ConvexProvider } from "@/components/Providers/ConvexProvider";
 import AppImageKitProvider from "@/components/Providers/ImageKitProvider";
 import { routing } from "@/i18n/routing";
-import {
-  getBaseUrl,
-  getDefaultDescription,
-  getSiteName,
-} from "@/SEO";
+import { getBaseUrl, getDefaultDescription, getSiteName } from "@/SEO";
 
 /**
  * Maps routing locale codes to valid BCP 47 language codes

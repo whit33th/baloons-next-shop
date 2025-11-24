@@ -203,10 +203,10 @@ export async function generateHomeMetadata(locale: string): Promise<Metadata> {
 
     // Additional metadata
     category: STORE_INFO.industry,
-    classification: "Business",
 
     // Custom meta tags
     other: {
+      classification: "Business",
       "geo.region": `${STORE_INFO.address.countryCode}-${STORE_INFO.geo.regionCode}`,
       "geo.placename": STORE_INFO.address.city,
       "geo.position":

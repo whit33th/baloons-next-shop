@@ -156,10 +156,10 @@ export async function generateCategoryMetadata(
 
     // Category
     category: category.value,
-    classification: "Category",
 
     // Custom meta tags
     other: {
+      classification: "Category",
       // Category specific
       "og:type": "website",
       "og:section": category.value,

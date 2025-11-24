@@ -168,10 +168,10 @@ export async function generateProductMetadata(
 
     // Category
     category: product.categoryGroup,
-    classification: "Product",
 
     // Custom meta tags for products
     other: {
+      classification: "Product",
       // Product specific
       "product:price:amount": product.price.toString(),
       "product:price:currency": "EUR",

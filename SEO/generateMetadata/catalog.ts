@@ -203,10 +203,10 @@ export async function generateCatalogMetadata(
 
     // Category
     category: "E-commerce",
-    classification: "Catalog",
 
     // Custom meta tags
     other: {
+      classification: "Catalog",
       // Catalog specific
       "og:type": "website",
       "og:section": "catalog",

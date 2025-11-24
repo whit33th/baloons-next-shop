@@ -89,5 +89,11 @@ export default convexAuthNextjsMiddleware(
 );
 
 export const config = {
-  matcher: ["/((?!.*\\..*|_next).*)", "/", "/(api|trpc)(.*)"],
+  matcher: [
+    "/((?!.*\\..*|_next).*)",
+    "/",
+    "/(api|trpc)(.*)",
+    // Explicitly allow manifest files
+    "/(manifest.json|manifest.webmanifest)",
+  ],
 };

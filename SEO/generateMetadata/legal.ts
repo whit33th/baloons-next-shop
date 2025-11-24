@@ -167,10 +167,10 @@ export async function generateLegalMetadata(
 
     // Category
     category: "Legal",
-    classification: "Legal Document",
 
     // Custom meta tags
     other: {
+      classification: "Legal Document",
       // Legal page specific
       "og:type": "website",
       "og:section": "legal",
