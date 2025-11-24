@@ -21,16 +21,13 @@ import { getBaseUrl, getDefaultDescription, getSiteName } from "@/SEO";
  * for the HTML lang attribute
  */
 
-export const dynamicParams = false;
-export const dynamic = "force-static";
-
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
 }
 
 function getLanguageCode(locale: string): string {
   const localeToLang: Record<string, string> = {
-    de: "de-AT", // German as used in Austria (RFC 5646)
+    de: "de-AT", // German as used in Austria 
     en: "en",
     uk: "uk",
     ru: "ru",
