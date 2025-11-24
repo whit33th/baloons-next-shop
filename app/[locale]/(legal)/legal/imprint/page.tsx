@@ -21,7 +21,7 @@ export default async function ImprintPage({
   const t = await getTranslations({ locale, namespace: "legal.imprint" });
 
   return (
-    <main className="bg-primary/20 text-deep min-h-screen px-6 py-12">
+    <section className="bg-primary/20 text-deep min-h-screen px-6 py-12">
       <div className="mx-auto flex w-full max-w-4xl flex-col gap-10 rounded-3xl bg-white/95 p-8 shadow-xl">
         <header className="space-y-3">
           <p className="text-xs font-semibold tracking-[0.25em] text-[rgba(var(--deep-rgb),0.6)] uppercase">
@@ -172,6 +172,6 @@ export default async function ImprintPage({
           </div>
         </section>
       </div>
-    </main>
+    </section>
   );
 }

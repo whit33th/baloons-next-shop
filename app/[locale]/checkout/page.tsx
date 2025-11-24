@@ -1685,7 +1685,7 @@ export default function CheckoutPage() {
 
   return (
     <div className="bg-primary min-h-screen">
-      <main className="container mx-auto px-4 py-6 sm:py-10">
+      <section className="container mx-auto px-4 py-6 sm:py-10">
         <div className="mx-auto max-w-6xl space-y-6">
           <header className="flex flex-wrap items-center justify-between gap-3 rounded-3xl border border-white/20 bg-white/70 p-4 shadow-sm backdrop-blur">
             <button
@@ -1749,7 +1749,7 @@ export default function CheckoutPage() {
             />
           </div>
         </div>
-      </main>
+      </section>
     </div>
   );
 }

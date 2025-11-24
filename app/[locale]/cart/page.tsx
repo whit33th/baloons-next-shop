@@ -167,7 +167,7 @@ export default function CartPage() {
 
   return (
     <div className="bg-primary">
-      <main className="container mx-auto px-4 py-8">
+      <section className="container mx-auto px-4 py-8">
         <div className="mx-auto max-w-4xl">
           <div className="overflow-hidden rounded-xl bg-white shadow-sm">
             <div className="border-b p-4 sm:p-6">
@@ -316,7 +316,7 @@ export default function CartPage() {
             </div> */}
           </div>
         </div>
-      </main>
+      </section>
     </div>
   );
 }

@@ -183,7 +183,7 @@ export async function generateCatalogMetadata(
         STORE_INFO.social.twitter !== "fix"
           ? `@${STORE_INFO.social.twitter.split("/").pop()}`
           : undefined,
-      images: [`${baseUrl}${STORE_INFO.logo}`],
+      images: [`${baseUrl}${STORE_INFO.webAppManifest}`],
     },
 
     // Robots

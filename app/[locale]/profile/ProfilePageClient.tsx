@@ -345,7 +345,7 @@ export default function ProfilePageClient({
 
   return (
     <div className="bg-primary text-deep min-h-screen pb-16">
-      <main className="mx-auto w-full max-w-6xl px-4 pt-12">
+      <section className="mx-auto w-full max-w-6xl px-4 pt-12">
         <motion.section
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
@@ -798,7 +798,7 @@ export default function ProfilePageClient({
             </motion.div>
           ) : null}
         </section>
-      </main>
+      </section>
     </div>
   );
 }

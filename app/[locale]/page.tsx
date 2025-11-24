@@ -40,7 +40,7 @@ export default async function HomePage({
   return (
     <>
       <OrganizationJsonLd locale={locale} />
-      <main className="flex min-h-screen flex-col">
+      <section className="flex min-h-screen flex-col">
         {/* Static content - pre-rendered at build time */}
         <Hero />
 
@@ -60,7 +60,7 @@ export default async function HomePage({
           className="py-5 text-[10vw] sm:text-[8vw]"
           text={t("rainbowText")}
         />
-      </main>
+      </section>
     </>
   );
 }

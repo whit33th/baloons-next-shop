@@ -21,7 +21,7 @@ export default async function PrivacyPolicyPage({
   const t = await getTranslations({ locale, namespace: "legal.privacy" });
 
   return (
-    <main className="bg-primary/20 text-deep min-h-screen px-6 py-12">
+    <section className="bg-primary/20 text-deep min-h-screen px-6 py-12">
       <div className="mx-auto flex w-full max-w-4xl flex-col gap-10 rounded-3xl bg-white/95 p-8 shadow-xl">
         <header className="space-y-3">
           <p className="text-xs font-semibold tracking-[0.25em] text-[rgba(var(--deep-rgb),0.6)] uppercase">
@@ -135,7 +135,9 @@ export default async function PrivacyPolicyPage({
                 rel="noopener noreferrer"
                 className="hover:text-secondary underline"
               >
-                {t("section8.whatsapp", { phone: STORE_INFO.contact.phoneDisplay })}
+                {t("section8.whatsapp", {
+                  phone: STORE_INFO.contact.phoneDisplay,
+                })}
               </a>
               <br />
               <a
@@ -149,12 +151,14 @@ export default async function PrivacyPolicyPage({
                 href={`tel:${STORE_INFO.contact.phone}`}
                 className="hover:text-secondary underline"
               >
-                {t("section8.phone", { phone: STORE_INFO.contact.phoneDisplay })}
+                {t("section8.phone", {
+                  phone: STORE_INFO.contact.phoneDisplay,
+                })}
               </a>
             </p>
           </div>
         </section>
       </div>
-    </main>
+    </section>
   );
 }

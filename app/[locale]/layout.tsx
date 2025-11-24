@@ -8,6 +8,7 @@ import { ConvexAuthNextjsServerProvider } from "@convex-dev/auth/nextjs/server";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { DM_Sans } from "next/font/google";
+import NextTopLoader from "nextjs-toploader";
 import { Toaster } from "sonner";
 import { Footer, Header } from "@/components/Containers";
 import { ConvexProvider } from "@/components/Providers/ConvexProvider";
@@ -97,6 +98,13 @@ export default async function LocaleLayout({
       <body
         className={`${dmSans.variable} relative flex min-h-screen w-full flex-col overflow-x-hidden antialiased`}
       >
+        <NextTopLoader
+          color="#ff2f00"
+          easing="ease"
+          shadow="0 0 10px 0 rgba(0, 0, 0, 0.1)"
+          height={2}
+          showSpinner={false}
+        />
         <NextIntlClientProvider locale={locale} messages={messages}>
           <ConvexAuthNextjsServerProvider>
             <ConvexProvider>

@@ -31,7 +31,7 @@ export function CheckoutResultShell({
 
   return (
     <div className="bg-primary min-h-screen">
-      <main className="container mx-auto px-4 py-8">
+      <section className="container mx-auto px-4 py-8">
         <div className="mx-auto max-w-3xl space-y-6">
           <div className="overflow-hidden rounded-3xl bg-white/95 shadow-lg ring-1 ring-black/5">
             <div className={cn("p-6 text-center sm:p-10", accentClasses)}>
@@ -50,7 +50,7 @@ export function CheckoutResultShell({
             <div className={cn("p-6 sm:p-8", toneClasses)}>{children}</div>
           </div>
         </div>
-      </main>
+      </section>
     </div>
   );
 }
