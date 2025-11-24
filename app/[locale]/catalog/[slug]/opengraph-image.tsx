@@ -87,7 +87,6 @@ export default async function Image({
               alignItems: "center",
               justifyContent: "center",
               background: "#ffffff",
-              padding: "40px",
             }}
           >
             {imageSrc ? (
@@ -98,7 +97,7 @@ export default async function Image({
                 style={{
                   width: "100%",
                   height: "100%",
-                  objectFit: "contain",
+                  objectFit: "cover",
                 }}
               />
             ) : (
@@ -224,4 +223,3 @@ function getDefaultImage() {
     },
   );
 }
-
