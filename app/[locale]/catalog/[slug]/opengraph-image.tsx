@@ -2,7 +2,7 @@ import { fetchQuery } from "convex/nextjs";
 import { ImageResponse } from "next/og";
 import { STORE_INFO } from "@/constants/config";
 import { api } from "@/convex/_generated/api";
-import type { Id } from "@/convex/_generated/dataModel";
+import { extractProductIdFromSlug } from "@/lib/catalog-utils";
 
 export const alt = "Product";
 export const size = {
@@ -14,9 +14,14 @@ export const contentType = "image/png";
 export default async function Image({
   params,
 }: {
-  params: Promise<{ id: Id<"products"> }>;
+  params: Promise<{ slug: string }>;
 }) {
-  const { id } = await params;
+  const { slug } = await params;
+
+  const id = extractProductIdFromSlug(slug);
+  if (!id) {
+    return getDefaultImage();
+  }
 
   try {
     const product = await fetchQuery(api.products.get, { id });
@@ -219,3 +224,4 @@ function getDefaultImage() {
     },
   );
 }
+

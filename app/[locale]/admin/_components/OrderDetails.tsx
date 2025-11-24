@@ -2,7 +2,7 @@
 
 import { Image } from "@imagekit/next";
 import { useMutation, useQuery } from "convex/react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
 import {
@@ -16,6 +16,7 @@ import {
 import { api } from "@/convex/_generated/api";
 // removed per-item queries to comply with Rules of Hooks
 import type { Doc, Id } from "@/convex/_generated/dataModel";
+import { generateProductSlug } from "@/lib/catalog-utils";
 import { ADMIN_PREVIEW_IMAGE_TRANSFORMATION } from "@/lib/imagekit";
 import type { OrderStatus } from "./types";
 import { ORDER_STATUS_META } from "./types";
@@ -48,6 +49,7 @@ const getProductImageUrl = (item: OrderItem): string | null => {
 };
 
 export function OrderDetails({ order }: Props) {
+  const locale = useLocale();
   const t = useTranslations("admin.payments");
   const tOrderDetails = useTranslations("admin.orderDetails");
   const tOrdersTable = useTranslations("admin.ordersTable");
@@ -159,9 +161,7 @@ export function OrderDetails({ order }: Props) {
               >
                 <DialogContent>
                   <DialogHeader>
-                    <DialogTitle>
-                      {tOrdersTable("status")}
-                    </DialogTitle>
+                    <DialogTitle>{tOrdersTable("status")}</DialogTitle>
                     <DialogDescription>
                       {pendingStatus
                         ? `${t(`orderStatus.${localStatus}`)} → ${t(`orderStatus.${pendingStatus}`)}`
@@ -292,10 +292,14 @@ export function OrderDetails({ order }: Props) {
               getProductImageUrl(item) ??
               productImageById.get(item.productId) ??
               null;
+            const productSlug = generateProductSlug(
+              item.productName,
+              item.productId,
+            );
             return (
               <a
                 key={`${order._id}-${item.productId}-${idx}`}
-                href={`/catalog/${item.productId}`}
+                href={`/${locale}/catalog/${productSlug}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="group block rounded-md border border-slate-100 bg-white/80 p-3 transition hover:shadow-sm"
@@ -391,9 +395,7 @@ export function OrderDetails({ order }: Props) {
           <div>
             {tOrdersTable("status")}: {t(`orderStatus.${localStatus}`)}
           </div>
-          <div>
-            Währung: {order.currency ?? "EUR"}
-          </div>
+          <div>Währung: {order.currency ?? "EUR"}</div>
         </div>
       </section>
     </aside>

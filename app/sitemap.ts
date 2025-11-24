@@ -3,7 +3,9 @@ import type { MetadataRoute } from "next";
 import { PRODUCT_CATEGORY_GROUPS } from "@/constants/categories";
 import { STORE_INFO } from "@/constants/config";
 import { api } from "@/convex/_generated/api";
+import type { Id } from "@/convex/_generated/dataModel";
 import { routing } from "@/i18n/routing";
+import { generateProductSlug } from "@/lib/catalog-utils";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 7200;
@@ -123,13 +125,17 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
           : [];
 
       for (const locale of locales) {
-        const url = `${baseUrl}/${locale}/catalog/${product._id}`;
+        const productSlug = generateProductSlug(
+          product.name,
+          product._id as Id<"products">,
+        );
+        const url = `${baseUrl}/${locale}/catalog/${productSlug}`;
         const alternates: Record<string, string> = {};
 
         for (const altLocale of locales) {
           if (altLocale !== locale) {
             alternates[altLocale] =
-              `${baseUrl}/${altLocale}/catalog/${product._id}`;
+              `${baseUrl}/${altLocale}/catalog/${productSlug}`;
           }
         }
 

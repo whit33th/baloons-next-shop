@@ -16,11 +16,12 @@ type Product = Doc<"products">;
 interface ProductJsonLdProps {
   product: Product;
   locale: string;
+  slug: string;
 }
 
-export function ProductJsonLd({ product, locale }: ProductJsonLdProps) {
+export function ProductJsonLd({ product, locale, slug }: ProductJsonLdProps) {
   const baseUrl = getBaseUrl();
-  const productUrl = `${baseUrl}/${locale}/catalog/${product._id}`;
+  const productUrl = `${baseUrl}/${locale}/catalog/${slug}`;
   const _imageUrl =
     product.imageUrls && product.imageUrls.length > 0
       ? product.imageUrls[0]

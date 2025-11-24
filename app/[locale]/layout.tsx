@@ -20,6 +20,14 @@ import { getBaseUrl, getDefaultDescription, getSiteName } from "@/SEO";
  * Maps routing locale codes to valid BCP 47 language codes
  * for the HTML lang attribute
  */
+
+export const dynamicParams = false;
+export const dynamic = "force-static";
+
+export function generateStaticParams() {
+  return routing.locales.map((locale) => ({ locale }));
+}
+
 function getLanguageCode(locale: string): string {
   const localeToLang: Record<string, string> = {
     de: "de-AT", // German as used in Austria (RFC 5646)

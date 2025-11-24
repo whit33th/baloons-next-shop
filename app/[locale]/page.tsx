@@ -3,18 +3,9 @@ import { Suspense } from "react";
 import { CategorySection } from "@/components/CategorySection";
 import { Hero } from "@/components/Containers";
 import RainbowArcText from "@/components/ui/rainbow-text";
-import { routing } from "@/i18n/routing";
 import { generateHomeMetadata, OrganizationJsonLd } from "@/SEO";
 import { ProductCarouselsFallback } from "./_components/ProductCarouselsFallback";
 import { ProductCarouselsWrapper } from "./_components/ProductCarouselsWrapper";
-
-export const dynamicParams = false;
-
-export function generateStaticParams() {
-  return routing.locales.map((locale) => ({
-    locale,
-  }));
-}
 
 export async function generateMetadata({
   params,
@@ -49,7 +40,6 @@ export default async function HomePage({
           <CategorySection />
 
           {/* Product Carousels - Dynamic content wrapped in Suspense for streaming */}
-          {/* Static shell renders immediately, dynamic content loads asynchronously */}
           <Suspense fallback={<ProductCarouselsFallback />}>
             <ProductCarouselsWrapper />
           </Suspense>

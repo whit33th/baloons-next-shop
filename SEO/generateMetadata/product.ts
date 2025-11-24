@@ -16,10 +16,11 @@ type Product = Doc<"products">;
 export async function generateProductMetadata(
   locale: string,
   product: Product,
+  slug: string,
 ): Promise<Metadata> {
   const siteName = getSiteName();
   const baseUrl = getBaseUrl();
-  const productPath = `/catalog/${product._id}`;
+  const productPath = `/catalog/${slug}`;
   const canonicalUrl = getCanonicalUrl(productPath, locale);
 
   const title = `${product.name} | ${siteName}`;

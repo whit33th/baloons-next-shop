@@ -5,6 +5,7 @@ import type { Route } from "next";
 import { type ReactNode, useMemo, useState, ViewTransition } from "react";
 import type { Doc } from "@/convex/_generated/dataModel";
 import { Link } from "@/i18n/routing";
+import { generateProductSlug } from "@/lib/catalog-utils";
 import {
   DEFAULT_PRODUCT_IMAGE_TRANSFORMATION,
   imageKitConfig,
@@ -35,7 +36,8 @@ export default function ProductCard({
   // Assign colors based on product - matching reference colorful balloon theme
   const colorIndex = index % balloonColors.length;
   const bgColor = balloonColors[colorIndex];
-  const productHref = `/catalog/${product._id}` as Route;
+  const productSlug = generateProductSlug(product.name, product._id);
+  const productHref = `/catalog/${productSlug}` as Route;
   const transitionNames =
     transitionGroups && transitionGroups.length > 0
       ? transitionGroups.map((group) => `product-image-${group}-${product._id}`)

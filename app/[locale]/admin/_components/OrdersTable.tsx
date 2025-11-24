@@ -43,7 +43,7 @@ export function OrdersTable({
   return (
     <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white/80 shadow-sm">
       {/* Desktop / table view */}
-      <div className="hidden md:block">
+      <div className="hidden md:block overflow-x-auto">
         <table className="min-w-full divide-y divide-slate-200 text-sm">
           <thead className="bg-slate-50 text-xs tracking-wide text-slate-500 uppercase">
             <tr>
@@ -81,7 +81,7 @@ export function OrdersTable({
                   onClick={() => onSelect?.(order._id)}
                   style={{ cursor: onSelect ? "pointer" : undefined }}
                 >
-                  <td className="px-6 py-4 font-semibold whitespace-nowrap text-slate-900">
+                  <td className="px-6 py-4 font-semibold break-words text-slate-900">
                     #{order._id.slice(-8)}
                     <div className="text-xs font-normal text-slate-400">
                       {formatDateTime(order._creationTime)}
@@ -137,11 +137,11 @@ export function OrdersTable({
               return (
                 <div className="mb-3 rounded-lg border border-slate-200 bg-white p-3 shadow-sm">
                   <div className="flex items-start justify-between">
-                    <div>
+                    <div className="min-w-0 flex-1 text-left">
                       <div className="text-xs text-slate-500">
                         {tOrders("order")}
                       </div>
-                      <div className="font-mono font-semibold text-slate-900">
+                      <div className="font-mono font-semibold break-words text-slate-900">
                         #{selected._id.slice(-8)}
                       </div>
                       <div className="text-xs text-slate-400">
@@ -215,7 +215,7 @@ export function OrdersTable({
                 type="button"
                 id={`card-${order._id}`}
                 key={`card-${order._id}`}
-                className="cursor-pointer rounded-lg border border-slate-200 bg-white px-4 py-3 shadow-sm"
+                className="w-full cursor-pointer rounded-lg border border-slate-200 bg-white px-4 py-3 shadow-sm"
                 onClick={(e) => {
                   // Prevent parent handlers and ensure selection + expand on card click
                   e.stopPropagation();
@@ -224,8 +224,8 @@ export function OrdersTable({
                 }}
               >
                 <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <div className="font-semibold text-slate-900">
+                  <div className="min-w-0 flex-1 text-left">
+                    <div className="font-semibold break-words text-slate-900">
                       #{order._id}
                     </div>
                     <div className="text-xs text-slate-400">

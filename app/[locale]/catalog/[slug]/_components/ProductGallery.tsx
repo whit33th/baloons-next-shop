@@ -145,6 +145,7 @@ export const ProductGallery = memo(function ProductGallery({
                 className="z-50 aspect-3/4 h-full w-full object-contain drop-shadow"
                 sizes="(min-width: 1024px) 50vw, 100vw"
                 transformation={PRODUCT_DETAIL_IMAGE_TRANSFORMATION}
+                fetchPriority={slide.index === 0 ? "high" : "low"}
               />
             </button>
           </CarouselItem>
