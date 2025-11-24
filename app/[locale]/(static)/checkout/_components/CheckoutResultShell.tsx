@@ -30,28 +30,26 @@ export function CheckoutResultShell({
       : "bg-red-50 text-red-700";
 
   return (
-    <div className="bg-primary min-h-screen">
-      <section className="container mx-auto px-4 py-8">
-        <div className="mx-auto max-w-3xl space-y-6">
-          <div className="overflow-hidden rounded-3xl bg-white/95 shadow-lg ring-1 ring-black/5">
-            <div className={cn("p-6 text-center sm:p-10", accentClasses)}>
-              <div className="mb-3 flex items-center justify-center">
-                <span className="text-5xl sm:text-6xl">{icon}</span>
-              </div>
-              <span className="text-xs font-semibold tracking-[0.2em] uppercase">
-                {badge}
-              </span>
-              <h1 className="mt-3 text-2xl font-semibold text-gray-900 sm:text-3xl">
-                {title}
-              </h1>
-              <p className="mt-1 text-gray-600">{description}</p>
-              {highlight}
+    <section className="bg-primary container mx-auto min-h-screen px-4 py-8">
+      <div className="mx-auto max-w-3xl space-y-6">
+        <div className="overflow-hidden rounded-3xl bg-white/95 shadow-lg ring-1 ring-black/5">
+          <div className={cn("p-6 text-center sm:p-10", accentClasses)}>
+            <div className="mb-3 flex items-center justify-center">
+              <span className="text-5xl sm:text-6xl">{icon}</span>
             </div>
-            <div className={cn("p-6 sm:p-8", toneClasses)}>{children}</div>
+            <span className="text-xs font-semibold tracking-[0.2em] uppercase">
+              {badge}
+            </span>
+            <h1 className="mt-3 text-2xl font-semibold text-gray-900 sm:text-3xl">
+              {title}
+            </h1>
+            <p className="mt-1 text-gray-600">{description}</p>
+            {highlight}
           </div>
+          <div className={cn("p-6 sm:p-8", toneClasses)}>{children}</div>
         </div>
-      </section>
-    </div>
+      </div>
+    </section>
   );
 }
 

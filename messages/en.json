@@ -140,6 +140,7 @@
     "title": "Shopping Cart",
     "empty": "Your cart is empty",
     "emptyDescription": "Add some beautiful balloons to get started!",
+    "loadingDescription": "Please wait while we load your cart...",
     "continueShopping": "Continue Shopping",
     "items": "{count, plural, =0 {no items} =1 {one item} other {# items}}",
     "checkout": "Checkout",

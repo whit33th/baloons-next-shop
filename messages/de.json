@@ -140,6 +140,7 @@
     "title": "Warenkorb",
     "empty": "Ihr Warenkorb ist leer",
     "emptyDescription": "Fügen Sie schöne Ballons hinzu, um zu beginnen!",
+    "loadingDescription": "Bitte warten Sie, während wir Ihren Warenkorb laden...",
     "continueShopping": "Weiter einkaufen",
     "items": "{count, plural, =0 {keine Artikel} =1 {ein Artikel} other {# Artikel}}",
     "checkout": "Zur Kasse",

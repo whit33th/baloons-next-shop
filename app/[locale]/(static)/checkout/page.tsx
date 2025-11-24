@@ -1018,10 +1018,7 @@ export default function CheckoutPage() {
     postalCode: "",
     deliveryNotes: "",
   };
-  const _streetAddress = address.streetAddress;
-  const _postalCode = address.postalCode;
-  const _city = address.city;
-  const _deliveryNotes = address.deliveryNotes;
+
   const selectedCourierCity = useMemo(() => {
     if (!selectedCourierCityId) {
       return undefined;
@@ -1616,21 +1613,74 @@ export default function CheckoutPage() {
     if (!isReady) {
       // Wait a bit for error messages to render, then scroll to first error
       setTimeout(() => {
-        // Find first error message (FormMessage has role="alert")
-        const firstErrorMessage = document.querySelector('[role="alert"]');
-        if (firstErrorMessage) {
+        // Get the first field with an error from formState
+        const errors = form.formState.errors;
+        let firstErrorField: string | null = null;
+
+        // Find first error field by traversing the errors object
+        const findFirstError = (
+          obj: Record<string, unknown>,
+          path = "",
+        ): string | null => {
+          for (const key in obj) {
+            const currentPath = path ? `${path}.${key}` : key;
+            const value = obj[key];
+
+            if (value && typeof value === "object" && "message" in value) {
+              return currentPath;
+            }
+
+            if (value && typeof value === "object" && !Array.isArray(value)) {
+              const nested = findFirstError(
+                value as Record<string, unknown>,
+                currentPath,
+              );
+              if (nested) return nested;
+            }
+          }
+          return null;
+        };
+
+        firstErrorField = findFirstError(errors as Record<string, unknown>);
+
+        // Try to find the error element by field name or by role="alert"
+        let errorElement: Element | null = null;
+
+        if (firstErrorField) {
+          // Try to find input/field by name attribute
+          const fieldName = firstErrorField.replace(/\./g, "-");
+          errorElement = document.querySelector(
+            `[name="${firstErrorField}"], [name*="${fieldName}"]`,
+          );
+        }
+
+        // Fallback: find first error message by role="alert"
+        if (!errorElement) {
+          errorElement = document.querySelector('[role="alert"]');
+        }
+
+        if (errorElement) {
           // Scroll to the form item containing the error
-          const formItem = firstErrorMessage.closest('[data-slot="form-item"]');
+          const formItem = errorElement.closest('[data-slot="form-item"]');
           if (formItem) {
             formItem.scrollIntoView({ behavior: "smooth", block: "center" });
           } else {
-            firstErrorMessage.scrollIntoView({
-              behavior: "smooth",
-              block: "center",
-            });
+            // If no form item, try to find the input field
+            const inputField = errorElement.closest("input, textarea, select");
+            if (inputField) {
+              inputField.scrollIntoView({
+                behavior: "smooth",
+                block: "center",
+              });
+            } else {
+              errorElement.scrollIntoView({
+                behavior: "smooth",
+                block: "center",
+              });
+            }
           }
         }
-      }, 100);
+      }, 150);
       return;
     }
     setCurrentStep(2);
@@ -1684,73 +1734,70 @@ export default function CheckoutPage() {
   }
 
   return (
-    <div className="bg-primary min-h-screen">
-      <section className="container mx-auto px-4 py-6 sm:py-10">
-        <div className="mx-auto max-w-6xl space-y-6">
-          <header className="flex flex-wrap items-center justify-between gap-3 rounded-3xl border border-white/20 bg-white/70 p-4 shadow-sm backdrop-blur">
-            <button
-              type="button"
-              onClick={() => router.push("/cart")}
-              className="inline-flex items-center gap-2 text-sm font-medium text-gray-700 transition hover:text-gray-900"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              {t("backToCart")}
-            </button>
-            <StepIndicator currentStep={currentStep} t={t} />
-          </header>
+    <section className="container mx-auto min-h-screen px-4 py-6 sm:py-10">
+      <div className="mx-auto max-w-6xl space-y-6">
+        <header className="flex flex-wrap items-center justify-between gap-3 rounded-3xl border border-white/20 bg-white/70 p-4 shadow-sm backdrop-blur">
+          <button
+            type="button"
+            onClick={() => router.push("/cart")}
+            className="inline-flex items-center gap-2 text-sm font-medium text-gray-700 transition hover:text-gray-900"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            {t("backToCart")}
+          </button>
+          <StepIndicator currentStep={currentStep} t={t} />
+        </header>
 
-          <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
-            <section className="space-y-6">
-              {currentStep === 1 ? (
-                <StepOne
-                  form={form}
-                  deliveryType={deliveryType}
-                  selectedCourierCity={selectedCourierCity}
-                  courierCities={COURIER_DELIVERY_CITIES}
-                  onCourierCitySelect={handleCourierCitySelect}
-                  handleDeliveryTypeChange={handleDeliveryTypeChange}
-                  proceedToPaymentStep={proceedToPaymentStep}
-                  isFormValid={isFormValid}
-                  isEmailReadOnly={isEmailReadOnly}
-                />
-              ) : (
-                <StepTwo
-                  paymentMethod={paymentMethod}
-                  deliveryType={deliveryType}
-                  whatsappConfirmed={whatsappConfirmed}
-                  isFormValid={isFormValid}
-                  isCashSubmitting={isCashSubmitting}
-                  setPaymentMethod={handlePaymentMethodChange}
-                  handleWhatsAppConfirm={handleWhatsAppConfirm}
-                  handleCashCheckout={handleCashCheckout}
-                  returnToDetailsStep={returnToDetailsStep}
-                  customer={{
-                    name: customerName,
-                    email: customerEmail,
-                    phone,
-                  }}
-                  total={total}
-                  isSubmittingPayment={isSubmittingPayment}
-                  isAwaitingOrder={isAwaitingOrder}
-                  paymentError={paymentError}
-                  setPaymentError={setPaymentError}
-                  handleOnlinePayment={handleOnlinePayment}
-                />
-              )}
-            </section>
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
+          <section className="space-y-6">
+            {currentStep === 1 ? (
+              <StepOne
+                form={form}
+                deliveryType={deliveryType}
+                selectedCourierCity={selectedCourierCity}
+                courierCities={COURIER_DELIVERY_CITIES}
+                onCourierCitySelect={handleCourierCitySelect}
+                handleDeliveryTypeChange={handleDeliveryTypeChange}
+                proceedToPaymentStep={proceedToPaymentStep}
+                isEmailReadOnly={isEmailReadOnly}
+              />
+            ) : (
+              <StepTwo
+                paymentMethod={paymentMethod}
+                deliveryType={deliveryType}
+                whatsappConfirmed={whatsappConfirmed}
+                isFormValid={isFormValid}
+                isCashSubmitting={isCashSubmitting}
+                setPaymentMethod={handlePaymentMethodChange}
+                handleWhatsAppConfirm={handleWhatsAppConfirm}
+                handleCashCheckout={handleCashCheckout}
+                returnToDetailsStep={returnToDetailsStep}
+                customer={{
+                  name: customerName,
+                  email: customerEmail,
+                  phone,
+                }}
+                total={total}
+                isSubmittingPayment={isSubmittingPayment}
+                isAwaitingOrder={isAwaitingOrder}
+                paymentError={paymentError}
+                setPaymentError={setPaymentError}
+                handleOnlinePayment={handleOnlinePayment}
+              />
+            )}
+          </section>
 
-            <OrderSummary
-              items={itemsToDisplay}
-              deliveryCost={deliveryCost}
-              deliveryType={deliveryType}
-              cartOnlyTotal={cartOnlyTotal}
-              total={total}
-              selectedCourierCity={selectedCourierCity}
-            />
-          </div>
+          <OrderSummary
+            items={itemsToDisplay}
+            deliveryCost={deliveryCost}
+            deliveryType={deliveryType}
+            cartOnlyTotal={cartOnlyTotal}
+            total={total}
+            selectedCourierCity={selectedCourierCity}
+          />
         </div>
-      </section>
-    </div>
+      </div>
+    </section>
   );
 }
 
@@ -1762,7 +1809,6 @@ type StepOneProps = {
   onCourierCitySelect: (cityId: string) => void;
   handleDeliveryTypeChange: (type: DeliveryType) => void;
   proceedToPaymentStep: () => Promise<void>;
-  isFormValid: boolean;
   isEmailReadOnly: boolean;
 };
 
@@ -1774,7 +1820,6 @@ function StepOne({
   onCourierCitySelect,
   handleDeliveryTypeChange,
   proceedToPaymentStep,
-  isFormValid,
   isEmailReadOnly,
 }: StepOneProps) {
   const t = useTranslations("checkout");
@@ -2096,8 +2141,7 @@ function StepOne({
             onClick={() => {
               void proceedToPaymentStep();
             }}
-            disabled={!isFormValid}
-            className="btn-accent rounded-full px-6 py-3 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-50"
+            className="btn-accent rounded-full px-6 py-3 text-sm font-semibold"
           >
             {t("stepIndicator.goToPayment")}
           </button>
@@ -2302,21 +2346,19 @@ function StepIndicator({
 
 function CheckoutSkeleton() {
   return (
-    <div className="bg-primary min-h-screen">
-      <div className="container mx-auto px-4 py-8">
-        <div className="mx-auto max-w-5xl animate-pulse space-y-4">
-          <div className="h-12 rounded-3xl bg-white/70" />
-          <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_360px]">
-            <div className="space-y-4">
-              {Array.from({ length: 3 }).map((_, idx) => (
-                <div
-                  key={`skeleton-card-${idx}`}
-                  className="h-40 rounded-3xl bg-white"
-                />
-              ))}
-            </div>
-            <div className="h-64 rounded-3xl bg-white" />
+    <div className="container mx-auto px-4 py-6 sm:py-10">
+      <div className="mx-auto max-w-6xl animate-pulse space-y-6">
+        <div className="h-16 rounded-3xl bg-white/70" />
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_360px]">
+          <div className="space-y-4">
+            {Array.from({ length: 2 }).map((_, idx) => (
+              <div
+                key={`skeleton-card-${idx}`}
+                className="h-68.5 rounded-3xl bg-white"
+              />
+            ))}
           </div>
+          <div className="h-64 rounded-3xl bg-white" />
         </div>
       </div>
     </div>

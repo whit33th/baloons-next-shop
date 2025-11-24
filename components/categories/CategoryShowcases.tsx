@@ -24,7 +24,7 @@ export function SelectedGroupShowcase({ group }: { group: CategoryGroup }) {
       : group;
 
   return (
-    <section className="">
+    <section>
       <div className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-8">
         <div className="space-y-3 sm:text-left">
           <p className="text-deep/50 flex flex-wrap items-center gap-3 text-xs font-semibold tracking-[0.35em] uppercase">

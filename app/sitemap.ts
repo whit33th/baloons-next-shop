@@ -8,14 +8,17 @@ import { routing } from "@/i18n/routing";
 import { generateProductSlug } from "@/lib/catalog-utils";
 
 export const dynamic = "force-dynamic";
-export const revalidate = 7200;
+export const revalidate = 86400;
 
 const baseUrl = STORE_INFO.website.replace(/\/$/, "");
 const locales = routing.locales;
 
-// Static pages that should be in sitemap
 const staticPages = [
-  { path: "", priority: 1.0, changeFrequency: "daily" as const },
+  {
+    path: "",
+    priority: 1.0,
+    changeFrequency: "daily" as const,
+  },
   { path: "catalog", priority: 0.9, changeFrequency: "weekly" as const },
   { path: "legal/terms", priority: 0.5, changeFrequency: "yearly" as const },
   { path: "legal/privacy", priority: 0.5, changeFrequency: "yearly" as const },

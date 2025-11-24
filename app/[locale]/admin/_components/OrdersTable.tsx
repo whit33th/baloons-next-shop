@@ -24,13 +24,6 @@ export function OrdersTable({
   const tOrders = useTranslations("admin.ordersTable");
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
 
-  const _toggle = (id: string) =>
-    setExpanded((s) => {
-      const next = !s[id];
-      const newState = { ...s, [id]: next };
-      return newState;
-    });
-
   const mobileTopRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -43,7 +36,7 @@ export function OrdersTable({
   return (
     <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white/80 shadow-sm">
       {/* Desktop / table view */}
-      <div className="hidden md:block overflow-x-auto">
+      <div className="hidden overflow-x-auto md:block">
         <table className="min-w-full divide-y divide-slate-200 text-sm">
           <thead className="bg-slate-50 text-xs tracking-wide text-slate-500 uppercase">
             <tr>
@@ -81,7 +74,7 @@ export function OrdersTable({
                   onClick={() => onSelect?.(order._id)}
                   style={{ cursor: onSelect ? "pointer" : undefined }}
                 >
-                  <td className="px-6 py-4 font-semibold break-words text-slate-900">
+                  <td className="px-6 py-4 font-semibold wrap-break-word text-slate-900">
                     #{order._id.slice(-8)}
                     <div className="text-xs font-normal text-slate-400">
                       {formatDateTime(order._creationTime)}
@@ -141,7 +134,7 @@ export function OrdersTable({
                       <div className="text-xs text-slate-500">
                         {tOrders("order")}
                       </div>
-                      <div className="font-mono font-semibold break-words text-slate-900">
+                      <div className="font-mono font-semibold wrap-break-word text-slate-900">
                         #{selected._id.slice(-8)}
                       </div>
                       <div className="text-xs text-slate-400">
@@ -225,7 +218,7 @@ export function OrdersTable({
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0 flex-1 text-left">
-                    <div className="font-semibold break-words text-slate-900">
+                    <div className="font-semibold wrap-break-word text-slate-900">
                       #{order._id}
                     </div>
                     <div className="text-xs text-slate-400">

@@ -126,21 +126,20 @@ export default function CartPage() {
 
   if (isLoading) {
     return (
-      <div className="bg-primary">
-        <div className="container mx-auto px-4 py-8">
-          <div className="mx-auto max-w-4xl">
-            <div className="animate-pulse rounded-xl bg-white p-8 shadow-sm">
-              <div className="mb-6 h-8 rounded bg-gray-200"></div>
-              <div className="space-y-4">
-                {Array.from({ length: 3 }).map((_, i) => (
-                  <div
-                    key={`skeleton-${i}`}
-                    className="h-24 rounded bg-gray-200"
-                  ></div>
-                ))}
-              </div>
-            </div>
-          </div>
+      <div className="flex min-h-[calc(100vh-56px)] w-screen items-center justify-center text-center">
+        <div className="">
+          <ShoppingBag className="mx-auto mb-4 size-16" />
+          <h2 className="text-deep mb-2 text-2xl font-bold">
+            {tCommon("loading")}
+          </h2>
+          <p className="text-deep/70 mb-8">{t("loadingDescription")}</p>
+          <button
+            type="button"
+            onClick={() => router.push("/catalog")}
+            className="btn-accent rounded-lg px-6 py-3 font-semibold transition-opacity hover:opacity-90"
+          >
+            {t("continueShopping")}
+          </button>
         </div>
       </div>
     );
@@ -166,138 +165,137 @@ export default function CartPage() {
   }
 
   return (
-    <div className="bg-primary">
-      <section className="container mx-auto px-4 py-8">
-        <div className="mx-auto max-w-4xl">
-          <div className="overflow-hidden rounded-xl bg-white shadow-sm">
-            <div className="border-b p-4 sm:p-6">
-              <h2 className="text-deep text-xl font-bold sm:text-2xl">
-                {t("title")}
-              </h2>
-              <p className="text-deep/70 text-sm sm:text-base">
-                {t("items", { count: totals.itemCount })}
-              </p>
+    <section className="container mx-auto min-h-[calc(100vh-56px)] px-4 py-8">
+      <div className="mx-auto max-w-4xl">
+        <div className="overflow-hidden rounded-xl bg-white shadow-sm">
+          <div className="border-b p-4 sm:p-6">
+            <h2 className="text-deep text-xl font-bold sm:text-2xl">
+              {t("title")}
+            </h2>
+            <p className="text-deep/70 text-sm sm:text-base">
+              {t("items", { count: totals.itemCount })}
+            </p>
+          </div>
+          <div className="bg-secondary/5 w-full border-t p-4 sm:p-6">
+            <Link
+              href="/checkout"
+              className="btn-accent block w-full rounded-lg px-2 py-3 text-center font-semibold transition-opacity hover:opacity-90"
+            >
+              {t("checkout")}
+            </Link>
+
+            <div className="mt-4 flex items-center justify-between">
+              <span className="text-deep text-lg font-semibold sm:text-xl">
+                {tCommon("total")}:
+              </span>
+              <span className="text-accent text-xl font-bold tabular-nums sm:text-2xl">
+                €{totals.total.toFixed(2)}
+              </span>
             </div>
-            <div className="bg-secondary/5 w-full border-t p-4 sm:p-6">
-              <Link
-                href="/checkout"
-                className="btn-accent block w-full rounded-lg px-2 py-3 text-center font-semibold transition-opacity hover:opacity-90"
+          </div>
+          <div className="divide-y">
+            {itemsToDisplay.map((item) => (
+              <div
+                key={item._id}
+                className="flex flex-col items-start gap-4 p-4 sm:flex-row sm:items-center sm:p-6"
               >
-                {t("checkout")}
-              </Link>
+                <div className="bg-secondary/10 relative flex h-20 w-20 shrink-0 items-center justify-center rounded-lg">
+                  {item.product.primaryImageUrl ? (
+                    <Image
+                      src={item.product.primaryImageUrl}
+                      alt={item.product.name}
+                      fill
+                      className="rounded-lg object-cover"
+                      transformation={ADMIN_PREVIEW_IMAGE_TRANSFORMATION}
+                      sizes="80px"
+                    />
+                  ) : (
+                    <div className="text-2xl">🎈</div>
+                  )}
+                </div>
 
-              <div className="mt-4 flex items-center justify-between">
-                <span className="text-deep text-lg font-semibold sm:text-xl">
-                  {tCommon("total")}:
-                </span>
-                <span className="text-accent text-xl font-bold tabular-nums sm:text-2xl">
-                  €{totals.total.toFixed(2)}
-                </span>
-              </div>
-            </div>
-            <div className="divide-y">
-              {itemsToDisplay.map((item) => (
-                <div
-                  key={item._id}
-                  className="flex flex-col items-start gap-4 p-4 sm:flex-row sm:items-center sm:p-6"
-                >
-                  <div className="bg-secondary/10 relative flex h-20 w-20 shrink-0 items-center justify-center rounded-lg">
-                    {item.product.primaryImageUrl ? (
-                      <Image
-                        src={item.product.primaryImageUrl}
-                        alt={item.product.name}
-                        fill
-                        className="rounded-lg object-cover"
-                        transformation={ADMIN_PREVIEW_IMAGE_TRANSFORMATION}
-                        sizes="80px"
-                      />
-                    ) : (
-                      <div className="text-2xl">🎈</div>
-                    )}
+                <div className="min-w-0 flex-1">
+                  <h3 className="text-deep truncate font-semibold">
+                    {item.product.name}
+                  </h3>
+                  <p className="text-deep/70 text-xs sm:text-sm">
+                    €{item.product.price.toFixed(2)}
+                  </p>
+                  {"personalization" in item && item.personalization && (
+                    <div className="mt-2 space-y-1 text-xs text-gray-600">
+                      {item.personalization.color && (
+                        <p className="flex items-center gap-1">
+                          <span className="font-medium">
+                            {t("personalization.color")}:
+                          </span>
+                          <span>{item.personalization.color}</span>
+                        </p>
+                      )}
+                      {item.personalization.text && (
+                        <p className="flex items-center gap-1">
+                          <span className="font-medium">
+                            {t("personalization.text")}:
+                          </span>
+                          <span className="italic">
+                            "{item.personalization.text}"
+                          </span>
+                        </p>
+                      )}
+                      {item.personalization.number && (
+                        <p className="flex items-center gap-1">
+                          <span className="font-medium">
+                            {t("personalization.number")}:
+                          </span>
+                          <span>{item.personalization.number}</span>
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex w-full items-center justify-between gap-3 sm:w-auto sm:gap-4">
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        void handleQuantityChange(item, item.quantity - 1)
+                      }
+                      className="bg-secondary/20 text-deep hover:bg-secondary/30 flex h-8 w-8 items-center justify-center rounded-full transition-colors"
+                    >
+                      -
+                    </button>
+                    <span className="text-deep w-8 text-center font-semibold tabular-nums">
+                      {item.quantity}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        void handleQuantityChange(item, item.quantity + 1)
+                      }
+                      className="bg-secondary/20 text-deep hover:bg-secondary/30 flex h-8 w-8 items-center justify-center rounded-full transition-colors"
+                    >
+                      +
+                    </button>
                   </div>
 
-                  <div className="min-w-0 flex-1">
-                    <h3 className="text-deep truncate font-semibold">
-                      {item.product.name}
-                    </h3>
-                    <p className="text-deep/70 text-xs sm:text-sm">
-                      €{item.product.price.toFixed(2)}
+                  <div className="text-right">
+                    <p className="text-deep text-base font-bold tabular-nums sm:text-lg">
+                      €{(item.product.price * item.quantity).toFixed(2)}
                     </p>
-                    {"personalization" in item && item.personalization && (
-                      <div className="mt-2 space-y-1 text-xs text-gray-600">
-                        {item.personalization.color && (
-                          <p className="flex items-center gap-1">
-                            <span className="font-medium">
-                              {t("personalization.color")}:
-                            </span>
-                            <span>{item.personalization.color}</span>
-                          </p>
-                        )}
-                        {item.personalization.text && (
-                          <p className="flex items-center gap-1">
-                            <span className="font-medium">
-                              {t("personalization.text")}:
-                            </span>
-                            <span className="italic">
-                              "{item.personalization.text}"
-                            </span>
-                          </p>
-                        )}
-                        {item.personalization.number && (
-                          <p className="flex items-center gap-1">
-                            <span className="font-medium">
-                              {t("personalization.number")}:
-                            </span>
-                            <span>{item.personalization.number}</span>
-                          </p>
-                        )}
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="flex w-full items-center justify-between gap-3 sm:w-auto sm:gap-4">
-                    <div className="flex items-center gap-2 sm:gap-3">
-                      <button
-                        type="button"
-                        onClick={() =>
-                          void handleQuantityChange(item, item.quantity - 1)
-                        }
-                        className="bg-secondary/20 text-deep hover:bg-secondary/30 flex h-8 w-8 items-center justify-center rounded-full transition-colors"
-                      >
-                        -
-                      </button>
-                      <span className="text-deep w-8 text-center font-semibold tabular-nums">
-                        {item.quantity}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() =>
-                          void handleQuantityChange(item, item.quantity + 1)
-                        }
-                        className="bg-secondary/20 text-deep hover:bg-secondary/30 flex h-8 w-8 items-center justify-center rounded-full transition-colors"
-                      >
-                        +
-                      </button>
-                    </div>
-
-                    <div className="text-right">
-                      <p className="text-deep text-base font-bold tabular-nums sm:text-lg">
-                        €{(item.product.price * item.quantity).toFixed(2)}
-                      </p>
-                      <button
-                        type="button"
-                        onClick={() => void handleRemoveItem(item)}
-                        className="text-terracotta hover:text-terracotta/80 text-xs transition-colors sm:text-sm"
-                      >
-                        {tCommon("remove")}
-                      </button>
-                    </div>
+                    <button
+                      type="button"
+                      onClick={() => void handleRemoveItem(item)}
+                      className="text-terracotta hover:text-terracotta/80 text-xs transition-colors sm:text-sm"
+                    >
+                      {tCommon("remove")}
+                    </button>
                   </div>
                 </div>
-              ))}
-            </div>
+              </div>
+            ))}
+          </div>
 
-            {/* <div className="bg-secondary/5 border-t p-4 sm:p-6">
+          {/* <div className="bg-secondary/5 border-t p-4 sm:p-6">
               <div className="mb-4 flex items-center justify-between">
                 <span className="text-deep text-lg font-semibold sm:text-xl">
                   Total:
@@ -314,9 +312,8 @@ export default function CartPage() {
                 Checkout
               </button>
             </div> */}
-          </div>
         </div>
-      </section>
-    </div>
+      </div>
+    </section>
   );
 }
