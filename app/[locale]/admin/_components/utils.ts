@@ -24,10 +24,26 @@ export const formatCurrencyDynamic = (value: number, currency?: string) => {
   return formatter.format(value);
 };
 
-export const formatDateTime = (timestamp: number) =>
-  new Date(timestamp).toLocaleString("ru-RU", {
+/**
+ * Converts next-intl locale code to Intl locale code
+ */
+export const getIntlLocale = (locale: string): string => {
+  const localeMap: Record<string, string> = {
+    de: "de-AT",
+    ru: "ru-RU",
+    uk: "uk-UA",
+    en: "en-US",
+  };
+  return localeMap[locale] || locale || "en-US";
+};
+
+export const formatDateTime = (timestamp: number, locale: string = "en-US") => {
+  const localeCode = getIntlLocale(locale);
+
+  return new Date(timestamp).toLocaleString(localeCode, {
     day: "2-digit",
     month: "short",
     hour: "2-digit",
     minute: "2-digit",
   });
+};

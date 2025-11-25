@@ -116,7 +116,7 @@ export function OrderDetails({ order }: Props) {
               #{order._id.slice(-8)}
             </div>
             <div className="text-xs text-slate-400">
-              {formatDateTime(order._creationTime)}
+              {formatDateTime(order._creationTime, locale)}
             </div>
           </div>
 
@@ -244,6 +244,31 @@ export function OrderDetails({ order }: Props) {
                 </span>
                 <span>{tOrderDetails("deliveryType")}</span>
               </div>
+              {order.scheduledDateTime && (
+                <div>
+                  <span className="text-xs font-semibold text-slate-500">
+                    {tOrderDetails("deliveryDate")}:{" "}
+                  </span>
+                  <span className="text-sm text-slate-700">
+                    {new Date(order.scheduledDateTime).toLocaleString(
+                      locale === "de"
+                        ? "de-AT"
+                        : locale === "ru"
+                          ? "ru-RU"
+                          : locale === "uk"
+                            ? "uk-UA"
+                            : "en-US",
+                      {
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      },
+                    )}
+                  </span>
+                </div>
+              )}
               <div>
                 <span className="text-xs font-semibold text-slate-500">
                   {tOrderDetails("address")}:{" "}
@@ -265,13 +290,48 @@ export function OrderDetails({ order }: Props) {
                 </span>
                 <span>{tOrderDetails("pickupType")}</span>
               </div>
-              {order.pickupDateTime && (
+              {order.scheduledDateTime && (
                 <div>
                   <span className="text-xs font-semibold text-slate-500">
-                    {tOrderDetails("pickupTime")}:{" "}
+                    {order.deliveryType === "pickup"
+                      ? tOrderDetails("pickupTime")
+                      : tOrderDetails("deliveryDate")}
+                    :{" "}
                   </span>
                   <span className="text-sm text-slate-700">
-                    {new Date(order.pickupDateTime).toLocaleString()}
+                    {order.deliveryType === "pickup"
+                      ? new Date(order.scheduledDateTime).toLocaleString(
+                          locale === "de"
+                            ? "de-AT"
+                            : locale === "ru"
+                              ? "ru-RU"
+                              : locale === "uk"
+                                ? "uk-UA"
+                                : "en-US",
+                          {
+                            year: "numeric",
+                            month: "long",
+                            day: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          },
+                        )
+                      : new Date(order.scheduledDateTime).toLocaleString(
+                          locale === "de"
+                            ? "de-AT"
+                            : locale === "ru"
+                              ? "ru-RU"
+                              : locale === "uk"
+                                ? "uk-UA"
+                                : "en-US",
+                          {
+                            year: "numeric",
+                            month: "long",
+                            day: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          },
+                        )}
                   </span>
                 </div>
               )}

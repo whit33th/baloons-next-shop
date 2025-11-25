@@ -130,7 +130,7 @@ const formatPaymentRecord = (
   const shipping = {
     address: payment.shipping?.address ?? "Самовывоз",
     deliveryType: payment.shipping?.deliveryType ?? "pickup",
-    pickupDateTime: payment.shipping?.pickupDateTime,
+    scheduledDateTime: payment.shipping?.scheduledDateTime,
     deliveryFee: payment.shipping?.deliveryFee,
   } satisfies Doc<"payments">["shipping"];
 
