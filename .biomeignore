@@ -1,3 +1,0 @@
-# Ignore legacy checkout snapshots that intentionally break parsing
-app/checkout/page.broken.tsx
-app/checkout/page.original.tsx
